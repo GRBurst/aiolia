@@ -1,7 +1,7 @@
 package aioli
 
 case class HyperGraph(hyperEdges: Set[HyperEdge] = Set.empty, edges: Set[Edge] = Set.empty, incoming:List[Vertex] = Nil, outgoing:List[Vertex] = Nil)
-case class HyperEdge(label: Int, incoming:List[Vertex] = Nil, outgoing:List[Vertex] = Nil)
+case class HyperEdge(label: Int, incoming:List[Vertex], outgoing:List[Vertex])
 case class Edge(label: Int, incoming:Vertex, outgoing:Vertex)
 
 case class Grammar(axiom: HyperGraph, productions: Map[HyperEdge,() => HyperGraph])
@@ -13,44 +13,44 @@ trait AutoId {
 }
 
 object Vertex extends AutoId {
-  def apply() = {
+  def apply():Vertex = {
     Vertex(nextId)
   }
 }
 
-object HyperEdge extends AutoId{
-  def apply(incoming: List[Vertex] = Nil, outgoing: List[Vertex] = Nil) = {
+object HyperEdge extends AutoId {
+  def apply(incoming: List[Vertex] = Nil, outgoing: List[Vertex] = Nil):HyperEdge = {
     HyperEdge(nextId, incoming, outgoing)
   }
 }
 
-object Edge extends AutoId{
-  def apply(incoming: Vertex, outgoing: Vertex) = {
+object Edge extends AutoId {
+  def apply(incoming: Vertex, outgoing: Vertex):Edge = {
     Edge(nextId, incoming, outgoing)
   }
 }
 
-object Production {
-  def apply(hyperEdge: HyperEdge, hyperGraph: () => HyperGraph) = {
-    assert((hyperEdge.incoming ++ hyperEdge.outgoing).forall(hyperGraph.vertices contains _))
-    hyperEdge -> () => HyperGraph(
-      hyperGraph, hyperEdge.incoming, hyperEdge.outgoing)
+// object Production {
+//   def apply(hyperEdge: HyperEdge, hyperGraph: () => HyperGraph) = {
+//     assert((hyperEdge.incoming ++ hyperEdge.outgoing).forall(hyperGraph.vertices contains _))
+//     hyperEdge -> () => HyperGraph(
+//       hyperGraph, hyperEdge.incoming, hyperEdge.outgoing)
 
-  }
-}
+//   }
+// }
 
 
 object Main extends App {
   val (v1, v2, v3) = (Vertex(), Vertex(), Vertex())
   val h = HyperEdge(List(v1), List(v2))
-  val axiom = HyperGraph(
-    Set(v1, v2),
-    Set()
-  )
+  // val axiom = HyperGraph(
+  //   Set(v1, v2),
+  //   Set()
+  // )
 
-  val g = Grammar(axiom, Map(
-    Production(h, () => {
-      HyperGraph(Set(h.incoming.head, h.outgoing.head), edges = Set(h.incoming.head, h.outgoing.head))
-    })
-    ))
+  // val g = Grammar(axiom, Map(
+  //   Production(h, () => {
+  //     HyperGraph(Set(h.incoming.head, h.outgoing.head), edges = Set(h.incoming.head, h.outgoing.head))
+  //   })
+  //   ))
 }
