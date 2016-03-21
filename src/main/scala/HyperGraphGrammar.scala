@@ -18,45 +18,49 @@ case class HyperGraph(hyperEdges: Set[HyperEdge] = Set.empty, edges: Set[Edge] =
     Graph(edges)
   }
 }
-case class HyperEdge(label: Label, in:List[Vertex], out:List[Vertex])
 
-case class HyperGraphTemplate(hyperEdges: Set[HyperEdgeTemplate] = Set.empty, edges: Set[EdgeTemplate] = Set.empty, in: List[Label] = Nil, out:List[Label] = Nil) {
-  def vertices:Set[Label] = {
-    val hyperVertices = hyperEdges.flatMap { case HyperEdgeTemplate(_, in, out) => in ++ out }
-    val edgeVertices = edges.flatMap { case EdgeTemplate(in, out) => Set(in, out) }
-    hyperVertices ++ edgeVertices
+case class MultiPointedHyperGraph(in: List[Vertex], out:List[Vertex], hyperGraph: HyperGraph) {
+  def vertices = hyperGraph.vertices
+  def edges = hyperGraph.edges
+  def hyperEdges = hyperGraph.hyperEdges
+}
+
+object MultiPointedHyperGraph {
+  def apply(in: List[Vertex] = Nil, out:List[Vertex] = Nil, hyperEdges: Set[HyperEdge] = Set.empty, edges: Set[Edge] = Set.empty):MultiPointedHyperGraph = {
+    MultiPointedHyperGraph(in, out, HyperGraph(hyperEdges, edges))
   }
 }
-case class HyperEdgeTemplate(label:Label, in: List[Label], out:List[Label])
-case class EdgeTemplate(in:Label, out:Label)
+
+case class HyperEdge(label: Label, in:List[Vertex], out:List[Vertex])
 
 case class Graph(edges: Set[Edge]) {
   def vertices:Set[Vertex] = edges.flatMap { case Edge(in, out) => Set(in, out) }
   assert( (0 until vertices.size).forall(vertices contains Vertex(_)), s"${vertices}" )
 }
+
 case class Edge(in:Vertex, out:Vertex) {
   override def toString = s"$in -> $out"
 }
 
-case class Grammar(axiom: HyperGraph, productions: Map[Label, HyperGraphTemplate]) {
+case class Grammar(axiom: HyperGraph, productions: Map[Label, MultiPointedHyperGraph]) {
   //TODO: cycle detection
   def expand = {
     var current = axiom
     val autoId = new AutoId(axiom.vertices.size)
     while( current.hyperEdges.nonEmpty ) {
-      val nonTerminal = current.hyperEdges.head
-      val replacement = productions(nonTerminal.label)
+      val lhs = current.hyperEdges.head
+      val rhs = productions(lhs.label)
 
-      val newVertices = (replacement.vertices -- (replacement.in ++ replacement.out)).map(label => label -> Vertex(autoId.nextId)).toMap
-      val existVertices = replacement.in.zip(nonTerminal.in).toMap ++ replacement.out.zip(nonTerminal.out).toMap
-      val vertices = newVertices ++ existVertices
+      val newVertices = (rhs.vertices -- (rhs.in ++ rhs.out)).map(_.label -> Vertex(autoId.nextId)).toMap
+      val existVertices = rhs.in.map(_.label).zip(lhs.in).toMap ++ rhs.out.map(_.label).zip(lhs.out).toMap
+      val vertices:Map[Label, Vertex] = newVertices ++ existVertices
 
-      val edges = replacement.edges.map{ case EdgeTemplate(in, out) => Edge(vertices(in), vertices(out)) }
+      val edges = rhs.edges.map{ case Edge(Vertex(in), Vertex(out)) => Edge(vertices(in), vertices(out)) }
 
-      val hyperEdges = replacement.hyperEdges.map{ case HyperEdgeTemplate(label, in, out) => HyperEdge(label, in.map(vertices), out.map(vertices)) }
+      val hyperEdges = rhs.hyperEdges.map{ case HyperEdge(label, in, out) => HyperEdge(label, in.map(v => vertices(v.label)), out.map(v => vertices(v.label))) }
 
       current = HyperGraph(
-        current.hyperEdges ++ hyperEdges - nonTerminal,
+        current.hyperEdges ++ hyperEdges - lhs,
         current.edges ++ edges)
     }
 
