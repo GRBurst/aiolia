@@ -39,6 +39,7 @@ case class Edge(in:Vertex, out:Vertex) {
 }
 
 case class Grammar(axiom: HyperGraph, productions: Map[Label, HyperGraphTemplate]) {
+  //TODO: cycle detection
   def expand = {
     var current = axiom
     val autoId = new AutoId(axiom.vertices.size)
@@ -52,8 +53,10 @@ case class Grammar(axiom: HyperGraph, productions: Map[Label, HyperGraphTemplate
 
       val edges = replacement.edges.map{ case EdgeTemplate(in, out) => Edge(vertices(in), vertices(out)) }
 
+      val hyperEdges = replacement.hyperEdges.map{ case HyperEdgeTemplate(label, in, out) => HyperEdge(label, in.map(vertices), out.map(vertices)) }
+
       current = HyperGraph(
-        current.hyperEdges - nonTerminal,
+        current.hyperEdges ++ hyperEdges - nonTerminal,
         current.edges ++ edges)
     }
 
