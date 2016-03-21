@@ -6,11 +6,11 @@ object Types {
 
 import Types._
 
-case class HyperGraph(hyperEdges: Set[HyperEdge] = Set.empty, edges: Set[Edge] = Set.empty) {
+case class HyperGraph(hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.empty) {
   def vertices: Set[Vertex] = {
     val hyperVertices = hyperEdges.flatMap { case HyperEdge(_, in, out) => in ++ out }
     val edgeVertices = edges.flatMap { case Edge(in, out) => Set(in, out) }
-    hyperVertices ++ edgeVertices
+    edgeVertices ++ hyperVertices
   }
 
   def toGraph = {
@@ -26,7 +26,7 @@ case class MultiPointedHyperGraph(in: List[Vertex], out: List[Vertex], hyperGrap
 }
 
 object MultiPointedHyperGraph {
-  def apply(in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperEdges: Set[HyperEdge] = Set.empty, edges: Set[Edge] = Set.empty): MultiPointedHyperGraph = {
+  def apply(in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.empty): MultiPointedHyperGraph = {
     MultiPointedHyperGraph(in, out, HyperGraph(hyperEdges, edges))
   }
 }
@@ -41,7 +41,12 @@ case class Graph(edges: Set[Edge]) {
 case class Edge(in: Vertex, out: Vertex) {
   override def toString = s"$in -> $out"
 }
-
+object Grammar {
+  def apply(label: Label, productions: Map[Label, MultiPointedHyperGraph]): Grammar = {
+    val axiom = HyperGraph(List(HyperEdge(label, Nil, Nil)))
+    Grammar(axiom, productions)
+  }
+}
 case class Grammar(axiom: HyperGraph, productions: Map[Label, MultiPointedHyperGraph]) {
   //TODO: cycle detection
   def expand = {
@@ -60,7 +65,7 @@ case class Grammar(axiom: HyperGraph, productions: Map[Label, MultiPointedHyperG
       val hyperEdges = rhs.hyperEdges.map { case HyperEdge(label, in, out) => HyperEdge(label, in.map(v => vertices(v.label)), out.map(v => vertices(v.label))) }
 
       current = HyperGraph(
-        current.hyperEdges ++ hyperEdges - lhs,
+        (current.hyperEdges ++ hyperEdges) diff List(lhs),
         current.edges ++ edges
       )
     }
