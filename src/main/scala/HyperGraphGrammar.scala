@@ -6,7 +6,17 @@ object Types {
 
 import Types._
 
-case class HyperGraph(hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.empty) {
+case class Vertex(label: Label) {
+  override def toString = s"($label)"
+}
+
+case class Edge(in: Vertex, out: Vertex) {
+  override def toString = s"$in -> $out"
+}
+
+case class HyperEdge(label: Label, in: List[Vertex] = Nil, out: List[Vertex] = Nil)
+
+case class HyperGraph[+E,+V](hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.empty, vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
   def vertices: Set[Vertex] = {
     val hyperVertices = hyperEdges.flatMap { case HyperEdge(_, in, out) => in ++ out }
     val edgeVertices = edges.flatMap { case Edge(in, out) => Set(in, out) }
@@ -15,39 +25,24 @@ case class HyperGraph(hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.
 
   def toGraph = {
     assert(hyperEdges.isEmpty)
-    Graph(edges)
+    Graph[E,V](edges, vertexData, edgeData)
   }
 }
 
-case class MultiPointedHyperGraph(in: List[Vertex], out: List[Vertex], hyperGraph: HyperGraph) {
-  def vertices = hyperGraph.vertices
-  def edges = hyperGraph.edges
-  def hyperEdges = hyperGraph.hyperEdges
-}
-
-object MultiPointedHyperGraph {
-  def apply(in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.empty): MultiPointedHyperGraph = {
-    MultiPointedHyperGraph(in, out, HyperGraph(hyperEdges, edges))
-  }
-}
-
-case class HyperEdge(label: Label, in: List[Vertex], out: List[Vertex])
-
-case class Graph(edges: Set[Edge]) {
+case class Graph[+E,+V](edges: Set[Edge], vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
   def vertices: Set[Vertex] = edges.flatMap { case Edge(in, out) => Set(in, out) }
   assert((0 until vertices.size).forall(vertices contains Vertex(_)), s"${vertices}")
 }
 
-case class Edge(in: Vertex, out: Vertex) {
-  override def toString = s"$in -> $out"
+case class MultiPointedHyperGraph[+E,+V](in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperGraph: HyperGraph[E,V]) {
+  def vertices = hyperGraph.vertices
+  def edges = hyperGraph.edges
+  def hyperEdges = hyperGraph.hyperEdges
+  def vertexData = hyperGraph.vertexData
+  def edgeData = hyperGraph.edgeData
 }
-object Grammar {
-  def apply(label: Label, productions: Map[Label, MultiPointedHyperGraph]): Grammar = {
-    val axiom = HyperGraph(List(HyperEdge(label, Nil, Nil)))
-    Grammar(axiom, productions)
-  }
-}
-case class Grammar(axiom: HyperGraph, productions: Map[Label, MultiPointedHyperGraph]) {
+
+case class Grammar[E,V](axiom: HyperGraph[E,V], productions: Map[Label, MultiPointedHyperGraph[E,V]]) {
   //TODO: cycle detection
   def expand = {
     var current = axiom
@@ -64,17 +59,19 @@ case class Grammar(axiom: HyperGraph, productions: Map[Label, MultiPointedHyperG
 
       val hyperEdges = rhs.hyperEdges.map { case HyperEdge(label, in, out) => HyperEdge(label, in.map(v => vertices(v.label)), out.map(v => vertices(v.label))) }
 
+      val vertexData = rhs.vertexData.map { case (Vertex(label),v) => vertices(label) -> v }.toMap
+      val edgeData = rhs.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertices(in), vertices(out)) -> v }.toMap
+
       current = HyperGraph(
         (current.hyperEdges ++ hyperEdges) diff List(lhs),
-        current.edges ++ edges
+        current.edges ++ edges,
+        current.vertexData ++ vertexData,
+        current.edgeData ++ edgeData
       )
     }
 
     current.toGraph
   }
-}
-case class Vertex(label: Label) {
-  override def toString = s"($label)"
 }
 
 class AutoId(var start: Int = 0) {
