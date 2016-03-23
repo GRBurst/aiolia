@@ -36,6 +36,11 @@ case class Graph[+E, +V](edges: Set[Edge], vertexData: Map[Vertex, V] = Map.empt
   assert((0 until vertices.size).forall(vertices contains Vertex(_)), s"${vertices}")
 
   def vertices: Set[Vertex] = edges.flatMap { case Edge(in, out) => Set(in, out) }
+
+  def incomingEdges(v: Vertex) = edges.filter(_.out == v)
+  def outgoingEdges(v: Vertex) = edges.filter(_.in == v)
+  def predecessors(v: Vertex) = edges.collect { case Edge(i, v) => i }
+  def successors(v: Vertex) = edges.collect { case Edge(v, o) => o }
 }
 
 case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperGraph: HyperGraph[E, V]) {

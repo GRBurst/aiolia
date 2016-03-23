@@ -13,7 +13,7 @@ object Helpers {
 import Helpers._
 
 class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
-  "Graph Grammar" >> {
+  "graph grammar" >> {
     "expand deterministic" >> {
       val h1 = HyperEdge(1, List(0), List(1, 2))
       val h2 = HyperEdge(1, List(0), List(2, 1))
