@@ -22,6 +22,7 @@ case class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float
   def setInputData(data: List[Float]) {
     for( (neuron, datum) <- (in zip data)) {
       prevState(neuron.label) = datum
+      state(neuron.label) = datum
     }
   }
 
@@ -34,8 +35,10 @@ case class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float
       val incomingData = incoming.map( edge => prevState(edge.in.label) )
       val weights = incoming map weight
       def dot(as:List[Float], bs: List[Float]):Float = ((as zip bs) map {case (a, b) => a*b}).sum
+
       state(neuron.label) = sigmoid(dot(incomingData, weights) + bias(neuron))
     }
+
     swapStates()
   }
 }

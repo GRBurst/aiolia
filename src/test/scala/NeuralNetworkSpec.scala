@@ -22,5 +22,13 @@ class NeuralNetworkSpec extends org.specs2.mutable.Specification {
       n.think()
       n.outputData mustEqual List(0.9103665f)
     }
+
+    "two steps" >> {
+      val n = NeuralNetwork(in = List(0, 1), out = List(3), Graph(Set(0 -> 2, 1 -> 2, 0 -> 3, 2 -> 3), vertexData(2 -> -1, 3 -> 2), edgeData((0 -> 2) -> 0.4f, (1 -> 2) -> 0.6f, (0 -> 3) -> 0.1f, (2 -> 3) -> 0.5f)))
+      n.setInputData(List(2, 4))
+      n.think()
+      n.think()
+      n.outputData mustEqual List(0.9358292f)
+    }
   }
 }
