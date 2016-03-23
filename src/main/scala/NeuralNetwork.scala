@@ -20,21 +20,21 @@ case class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float
   def prevState = stateArray(1 - currentState)
 
   def setInputData(data: List[Float]) {
-    for( (neuron, datum) <- (in zip data)) {
+    for ((neuron, datum) <- (in zip data)) {
       prevState(neuron.label) = datum
       state(neuron.label) = datum
     }
   }
 
-  def outputData = out map(n => prevState(n.label))
+  def outputData = out map (n => prevState(n.label))
 
   def think() {
-    for( neuron <- neurons -- in ) {
-      def sigmoid(x: Float):Float = x / Math.sqrt(x*x + 1).toFloat
+    for (neuron <- neurons -- in) {
+      def sigmoid(x: Float): Float = x / Math.sqrt(x * x + 1).toFloat
       val incoming = graph.incomingEdges(neuron).toList
-      val incomingData = incoming.map( edge => prevState(edge.in.label) )
+      val incomingData = incoming.map(edge => prevState(edge.in.label))
       val weights = incoming map weight
-      def dot(as:List[Float], bs: List[Float]):Float = ((as zip bs) map {case (a, b) => a*b}).sum
+      def dot(as: List[Float], bs: List[Float]): Float = ((as zip bs) map { case (a, b) => a * b }).sum
 
       state(neuron.label) = sigmoid(dot(incomingData, weights) + bias(neuron))
     }

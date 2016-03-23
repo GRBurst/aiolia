@@ -1,6 +1,5 @@
 package aiolia.graph
 
-
 package object types {
   type Label = Int
 }
