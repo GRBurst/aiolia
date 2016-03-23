@@ -6,8 +6,8 @@ object Helpers {
   implicit def VertexTupleToEdge(tuple: (Int, Int)) = Edge(Vertex(tuple._1), Vertex(tuple._2))
   implicit def IntToVertex(i: Int) = Vertex(i)
   implicit def IntToAxiom(i: Int) = HyperGraph(List(HyperEdge(i)))
-  def vertexData[V](data: (Int,V)*) = data.map{case (label, data) => Vertex(label) -> data}.toMap
-  def edgeData[E](data: ((Int,Int),E)*) = data.map{case ((a,b), data) => Edge(a,b) -> data}.toMap
+  def vertexData[V](data: (Int, V)*) = data.map { case (label, data) => Vertex(label) -> data }.toMap
+  def edgeData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), data) => Edge(a, b) -> data }.toMap
 }
 
 import Helpers._
@@ -28,28 +28,28 @@ class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
       e1 mustEqual e2
     }
 
-     "expand edges" >> {
-       val h1 = HyperEdge(1, List(0), List(1, 2))
-       val h2 = HyperEdge(1, List(0), List(2, 1))
-       val axiom = HyperGraph(List(h1, h2))
+    "expand edges" >> {
+      val h1 = HyperEdge(1, List(0), List(1, 2))
+      val h2 = HyperEdge(1, List(0), List(2, 1))
+      val axiom = HyperGraph(List(h1, h2))
 
-       val g = Grammar(axiom, Map(
-         1 -> MultiPointedHyperGraph(in = List(10), out = List(20, 30), HyperGraph(edges = Set(10 -> 30, 30 -> 40, 40 -> 50, 30 -> 50, 50 -> 20)))
-       ))
+      val g = Grammar(axiom, Map(
+        1 -> MultiPointedHyperGraph(in = List(10), out = List(20, 30), HyperGraph(edges = Set(10 -> 30, 30 -> 40, 40 -> 50, 30 -> 50, 50 -> 20)))
+      ))
 
-       g.expand mustEqual Graph(Set(6 -> 2, 2 -> 4, 2 -> 3, 1 -> 5, 1 -> 6, 0 -> 1, 5 -> 6, 4 -> 1, 0 -> 2, 3 -> 4))
-     }
-    
+      g.expand mustEqual Graph(Set(6 -> 2, 2 -> 4, 2 -> 3, 1 -> 5, 1 -> 6, 0 -> 1, 5 -> 6, 4 -> 1, 0 -> 2, 3 -> 4))
+    }
+
     "expand hyperedges" >> {
       val h1 = HyperEdge(1, List(0, 1), List(2, 3))
       val axiom = HyperGraph(List(h1))
 
       val g = Grammar(axiom, Map(
         1 -> MultiPointedHyperGraph(in = List(0, 1), out = List(2, 3), HyperGraph(edges = Set(0 -> 1, 2 -> 3), hyperEdges = List(HyperEdge(2, List(0, 1), List(2))))),
-        2 -> MultiPointedHyperGraph(in = List(0, 1), out = List(2), HyperGraph(edges = Set(1 -> 2)))
+        2 -> MultiPointedHyperGraph(in = List(0, 1), out = List(2), HyperGraph(edges = Set(0 -> 2, 1 -> 2)))
       ))
 
-      g.expand mustEqual Graph(Set(0 -> 1, 1 -> 2, 2 -> 3))
+      g.expand mustEqual Graph(Set(0 -> 1, 0 -> 2, 1 -> 2, 2 -> 3))
     }
 
     "empty hyperedge axiom" >> {
@@ -106,7 +106,7 @@ class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
 
     "merge edge data" >> {
       val h1 = HyperEdge(1, List(0), List(1))
-      val axiom = HyperGraph(List(h1), Set(Edge(1,2)), edgeData = edgeData((1 -> 2) -> "Wurst"))
+      val axiom = HyperGraph(List(h1), Set(Edge(1, 2)), edgeData = edgeData((1 -> 2) -> "Wurst"))
 
       val g = Grammar(axiom, Map(
         1 -> MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(edges = Set(0 -> 2, 2 -> 1), edgeData = edgeData((2 -> 1) -> "Worst")))
@@ -114,9 +114,46 @@ class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
 
       g.expand mustEqual Graph(Set(1 -> 2, 0 -> 3, 3 -> 1), edgeData = edgeData(((1 -> 2) -> "Wurst"), (3 -> 1) -> "Worst"))
     }
-    // TODO: in graph construction, only allow vertex labels <= vertices.size
-    // TODO: create redundant vertex data
-    // TODO: create redundant edge data
-    // TODO: do not update data, grammar production rule expansion is side effect free
+
+    "redundant vertex data" >> {
+      val h1 = HyperEdge(1, List(0), List(1))
+      val h2 = HyperEdge(1, List(0), List(1))
+      val axiom = HyperGraph(List(h1, h2))
+
+      val g = Grammar(axiom, Map(
+        1 -> MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(edges = Set(0 -> 2, 2 -> 1), vertexData = vertexData(2 -> 1)))
+      ))
+
+      g.expand mustEqual Graph(Set(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), vertexData = vertexData(3 -> 1, 2 -> 1))
+    }
+
+    "redundant edge data" >> {
+      val h1 = HyperEdge(1, List(0), List(1))
+      val h2 = HyperEdge(1, List(0), List(1))
+      val axiom = HyperGraph(List(h1, h2))
+
+      val g = Grammar(axiom, Map(
+        1 -> MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(edges = Set(0 -> 2, 2 -> 1), edgeData = edgeData((2 -> 1) -> "Worst")))
+      ))
+
+      g.expand mustEqual Graph(Set(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), edgeData = edgeData(((2 -> 1) -> "Worst"), (3 -> 1) -> "Worst"))
+    }
+
+    "vertex data should only contain existing vertices" >> {
+      HyperGraph(edges = Set(0 -> 1), vertexData = vertexData(2 -> 200)) must throwAn[AssertionError]
+    }
+
+    "edge data should only contain existing edges" >> {
+      HyperGraph(edges = Set(0 -> 1), edgeData = edgeData((1 -> 2) -> 200)) must throwAn[AssertionError]
+    }
+
+    "multi pointed hypergraph must use all tentacles" >> {
+      MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(edges = Set(0 -> 2))) must throwAn[AssertionError]
+    }
+
+    // TODO: disallow overriding data of tentacle nodes
+    // TODO: grammar can only have rhs hyperedges that have a corresponding lhs
+    // For example: 1 -> ...HyperEdge(15, in, out) and there is no rule for hyperedge 15
+    // Or: there is a rule for 15, but it has wrong in/out-signature
   }
 }
