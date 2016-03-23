@@ -16,6 +16,7 @@ scalacOptions ++= Seq(
   "-feature",
   //"-Yinline", "-Yinline-warnings",
   "-language:_",
-  "-Xlint:_"
+  "-Xlint:_",
+  "-Ywarn-unused"
   //,"-Xdisable-assertions", "-optimize"
 )
