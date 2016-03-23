@@ -9,6 +9,9 @@ case class HyperGraph[+E, +V](hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge
   assert(vertexData.keys.toSet.diff(vertices).isEmpty, "Vertex data can only contain vertices in HyperGraph")
   assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only contain edges in HyperGraph")
 
+  // Important for auto ids in grammar expansion. Also important for data indexing in neural network
+  assert((0 until vertices.size).forall(vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${vertices}")
+
   def vertices: Set[Vertex] = {
     val hyperVertices = hyperEdges.flatMap { case HyperEdge(_, in, out) => in ++ out }
     val edgeVertices = edges.flatMap { case Edge(in, out) => Set(in, out) }
