@@ -1,5 +1,6 @@
 package aiolia.neuralnetwork
 
+import aiolia.graph._
 import aiolia.hypergraphgrammar._
 
 import collection.mutable

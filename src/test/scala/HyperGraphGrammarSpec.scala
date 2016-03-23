@@ -1,6 +1,8 @@
 package aiolia.hypergraphgrammar
 
-import Types._
+import aiolia.graph._
+import aiolia.graph.types._
+import aiolia.hypergraph._
 
 object Helpers {
   implicit def VertexTupleToEdge(tuple: (Int, Int)) = Edge(Vertex(tuple._1), Vertex(tuple._2))

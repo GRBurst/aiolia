@@ -1,6 +1,9 @@
 package aiolia.neuralnetwork
 
+import aiolia.graph._
+import aiolia.graph.types._
 import aiolia.hypergraphgrammar._
+
 
 object Helpers {
   implicit def VertexTupleToEdge(tuple: (Int, Int)) = Edge(Vertex(tuple._1), Vertex(tuple._2))
@@ -11,7 +14,7 @@ object Helpers {
 
 import Helpers._
 
-class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
+class NeuralNetworkSpec extends org.specs2.mutable.Specification {
   "neuronal network" >> {
     "simple" >> {
       val n = NeuralNetwork(in = List(0, 1), out = List(2), Graph(Set(0 -> 2, 1 -> 2), vertexData(2 -> -1), edgeData((0 -> 2) -> 0.4f, (1 -> 2) -> 0.6f)))
