@@ -15,6 +15,8 @@ case class Edge(in: Vertex, out: Vertex) {
 }
 
 case class Graph[+E, +V](edges: Set[Edge], vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
+
+  // Important for auto ids in grammar expansion. Also important for data indexing in neural network
   assert((0 until vertices.size).forall(vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${vertices}")
 
   def vertices: Set[Vertex] = edges.flatMap { case Edge(in, out) => Set(in, out) }
