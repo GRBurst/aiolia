@@ -16,6 +16,11 @@ case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vert
 }
 
 case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]]) {
+  assert(productions.values.flatMap(_.hyperEdges).forall { hyperEdge =>
+    val rhs = productions.get(hyperEdge.label)
+    rhs.isDefined && (hyperEdge.in.size == rhs.get.in.size) && (hyperEdge.out.size == rhs.get.out.size)
+  }, "All hyperedges on the rhs need to have an equivalent on the lhs")
+
   //TODO: cycle detection
   def expand = {
     var current = axiom

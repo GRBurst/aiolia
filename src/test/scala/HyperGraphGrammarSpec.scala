@@ -141,21 +141,52 @@ class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
       g.expand mustEqual Graph(Set(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), edgeData = edgeData(((2 -> 1) -> "Worst"), (3 -> 1) -> "Worst"))
     }
 
-    "vertex data should only contain existing vertices" >> {
-      HyperGraph(edges = Set(0 -> 1), vertexData = vertexData(2 -> 200)) must throwAn[AssertionError]
-    }
-
-    "edge data should only contain existing edges" >> {
-      HyperGraph(edges = Set(0 -> 1), edgeData = edgeData((1 -> 2) -> 200)) must throwAn[AssertionError]
-    }
-
     "multi pointed hypergraph must use all tentacles" >> {
       MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(edges = Set(0 -> 2))) must throwAn[AssertionError]
     }
 
-    // TODO: disallow overriding data of tentacle nodes
-    // TODO: grammar can only have rhs hyperedges that have a corresponding lhs
-    // For example: 1 -> ...HyperEdge(15, in, out) and there is no rule for hyperedge 15
-    // Or: there is a rule for 15, but it has wrong in/out-signature
+    "grammar can only have rhs hyperedges that have a corresponding lhs" >> {
+      "unknown hyperedge label" >> {
+        Grammar(1, Map(
+          1 -> MultiPointedHyperGraph(in = Nil, out = Nil, HyperGraph(hyperEdges = List(HyperEdge(15, List(0), List(1)))))
+        )) must throwAn[AssertionError]
+      }
+
+      "different hyperedge signature" >> {
+        Grammar(1, Map(
+          1 -> MultiPointedHyperGraph(in = Nil, out = Nil, HyperGraph(hyperEdges = List(HyperEdge(2, List(0), List(1))))),
+          2 -> MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(edges = Set(0 -> 2, 1 -> 2)))
+        )) must throwAn[AssertionError]
+      }
+
+      "signature does not need to match node ids" >> {
+        Grammar(1, Map(
+          1 -> MultiPointedHyperGraph(in = Nil, out = Nil, HyperGraph(hyperEdges = List(HyperEdge(2, List(0), List(1))))),
+          2 -> MultiPointedHyperGraph(in = List(2), out = List(3), HyperGraph(edges = Set(2 -> 3)))
+        )) must not(throwAn[AssertionError])
+      }
+    }
+
+    // A hypergraph can only set data on its own vertices/edges and a multi
+    // pointed hypergraph may not set data for its input or output vertices.
+    // => A projection can only set data for its own nodes.
+    // XXX: Do hypergraphs need to set the data for all vertices and edges?
+    "projections only operate on local data" >> {
+      "vertex data should only contain existing vertices" >> {
+        HyperGraph(edges = Set(0 -> 1), vertexData = vertexData(2 -> 200)) must throwAn[AssertionError]
+      }
+
+      "edge data should only contain existing edges" >> {
+        HyperGraph(edges = Set(0 -> 1), edgeData = edgeData((1 -> 2) -> 200)) must throwAn[AssertionError]
+      }
+
+      "disallow overriding data of input vertex" >> {
+        MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(vertexData = vertexData(0 -> "bier"))) must throwAn[AssertionError]
+      }
+
+      "disallow overriding data of output vertex" >> {
+        MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(vertexData = vertexData(1 -> "wein"))) must throwAn[AssertionError]
+      }
+    }
   }
 }
