@@ -30,5 +30,15 @@ class NeuralNetworkSpec extends org.specs2.mutable.Specification {
       n.think()
       n.outputData mustEqual List(0.9358292f)
     }
+
+    "fail on too much input data" >> {
+      val n = NeuralNetwork(in = List(0), out = List(1), Graph(Set(0 -> 1)))
+      n.setInputData(List(0, 0)) must throwAn[AssertionError]
+    }
+
+    "fail on missing input data" >> {
+      val n = NeuralNetwork(in = List(0), out = List(1), Graph(Set(0 -> 1)))
+      n.setInputData(List.empty) must throwAn[AssertionError]
+    }
   }
 }

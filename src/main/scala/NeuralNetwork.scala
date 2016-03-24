@@ -20,6 +20,8 @@ case class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float
   def prevState = stateArray(1 - currentState)
 
   def setInputData(data: List[Float]) {
+    assert(in.size == data.size, "Need to set all input data")
+
     for ((neuron, datum) <- (in zip data)) {
       prevState(neuron.label) = datum
       state(neuron.label) = datum
