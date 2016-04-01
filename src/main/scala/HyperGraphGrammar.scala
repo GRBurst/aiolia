@@ -5,7 +5,7 @@ import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.hypergraph._
 
-case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperGraph: HyperGraph[E, V]) {
+case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperGraph: HyperGraph[E, V] = HyperGraph()) {
   assert((in ++ out).forall(vertices contains _), "All tentacles must be used in HyperGraph")
 
   def vertices = hyperGraph.vertices
@@ -15,7 +15,8 @@ case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vert
   def edgeData = hyperGraph.edgeData
 }
 
-case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]]) {
+case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]] = Map.empty[Label, MultiPointedHyperGraph[E, V]]) {
+  assert((0 until axiom.vertices.size).forall(axiom.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${axiom.vertices}")
   assert(productions.values.flatMap(_.hyperEdges).forall { hyperEdge =>
     val rhs = productions.get(hyperEdge.label)
     rhs.isDefined && (hyperEdge.in.size == rhs.get.in.size) && (hyperEdge.out.size == rhs.get.out.size)

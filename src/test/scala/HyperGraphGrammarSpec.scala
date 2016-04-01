@@ -4,16 +4,7 @@ import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.hypergraph._
 
-object Helpers {
-  implicit def VertexTupleToEdge(tuple: (Int, Int)) = Edge(Vertex(tuple._1), Vertex(tuple._2))
-  implicit def IntToVertex(i: Int) = Vertex(i)
-  implicit def IntToVertexSet(i: Int):Set[Vertex] = (0 to i).map(Vertex(_)).toSet
-  implicit def IntToAxiom(i: Int) = HyperGraph(hyperEdges = List(HyperEdge(i)))
-  def vertexData[V](data: (Int, V)*) = data.map { case (label, data) => Vertex(label) -> data }.toMap
-  def edgeData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), data) => Edge(a, b) -> data }.toMap
-}
-
-import Helpers._
+import aiolia.test.Helpers._
 
 class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
   "graph grammar" >> {
@@ -188,6 +179,11 @@ class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
       "disallow overriding data of output vertex" >> {
         MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(vertexData = vertexData(1 -> "wein"))) must throwAn[AssertionError]
       }
+    }
+
+    "axiom has to have ids 0 until |vertices|" >> {
+      val axiom = HyperGraph(Set(0,2))
+      Grammar(axiom) must throwAn[AssertionError]
     }
   }
   //TODO: Grammatik darf keine Kreise enthalten

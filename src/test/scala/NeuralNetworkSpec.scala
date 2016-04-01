@@ -3,17 +3,7 @@ package aiolia.neuralnetwork
 import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.hypergraphgrammar._
-
-
-object Helpers {
-  implicit def VertexTupleToEdge(tuple: (Int, Int)) = Edge(Vertex(tuple._1), Vertex(tuple._2))
-  implicit def IntToVertex(i: Int) = Vertex(i)
-  implicit def IntToVertexSet(i: Int):Set[Vertex] = (0 to i).map(Vertex(_)).toSet
-  def vertexData[V](data: (Int, V)*) = data.map { case (label, data) => Vertex(label) -> data }.toMap
-  def edgeData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), data) => Edge(a, b) -> data }.toMap
-}
-
-import Helpers._
+import aiolia.test.Helpers._
 
 class NeuralNetworkSpec extends org.specs2.mutable.Specification {
   "neuronal network" >> {
