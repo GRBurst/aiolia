@@ -29,18 +29,23 @@ case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiP
       val lhs = current.hyperEdges.head
       val rhs = productions(lhs.label)
 
+      // newly created vertices that will be merged into the graph at fringe vertices
       val newVertices = (rhs.vertices -- (rhs.in ++ rhs.out)).map(_.label -> Vertex(autoId.nextId)).toMap
+      // existing fringe/connectivity vertices for merge process
       val existVertices = rhs.in.map(_.label).zip(lhs.in).toMap ++ rhs.out.map(_.label).zip(lhs.out).toMap
-      val vertices: Map[Label, Vertex] = newVertices ++ existVertices
+      val vertexMap: Map[Label, Vertex] = newVertices ++ existVertices
 
-      val edges = rhs.edges.map { case Edge(Vertex(in), Vertex(out)) => Edge(vertices(in), vertices(out)) }
+      val vertices = rhs.vertices.map(v => vertexMap(v.label))
 
-      val hyperEdges = rhs.hyperEdges.map { case HyperEdge(label, in, out) => HyperEdge(label, in.map(v => vertices(v.label)), out.map(v => vertices(v.label))) }
+      val edges = rhs.edges.map { case Edge(Vertex(in), Vertex(out)) => Edge(vertexMap(in), vertexMap(out)) }
 
-      val vertexData = rhs.vertexData.map { case (Vertex(label), v) => vertices(label) -> v }.toMap
-      val edgeData = rhs.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertices(in), vertices(out)) -> v }.toMap
+      val hyperEdges = rhs.hyperEdges.map { case HyperEdge(label, in, out) => HyperEdge(label, in.map(v => vertexMap(v.label)), out.map(v => vertexMap(v.label))) }
+
+      val vertexData = rhs.vertexData.map { case (Vertex(label), v) => vertexMap(label) -> v }.toMap
+      val edgeData = rhs.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertexMap(in), vertexMap(out)) -> v }.toMap
 
       current = HyperGraph(
+        current.vertices ++ vertices,
         (current.hyperEdges ++ hyperEdges) diff List(lhs),
         current.edges ++ edges,
         current.vertexData ++ vertexData,
