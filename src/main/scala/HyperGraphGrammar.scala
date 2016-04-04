@@ -13,6 +13,21 @@ case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vert
   def hyperEdges = hyperGraph.hyperEdges
   def vertexData = hyperGraph.vertexData
   def edgeData = hyperGraph.edgeData
+
+  def removeVertex(v:Vertex) = {
+    assert(!(in contains v), s"Cannot remove input vertex $v")
+    assert(!(out contains v), s"Cannot remove output vertex $v")
+
+    copy( hyperGraph = hyperGraph removeVertex v )
+  }
+
+  def removeEdge(e:Edge) = {
+    copy( hyperGraph = hyperGraph removeEdge e )
+  }
+
+  def removeHyperEdge(h:HyperEdge) = {
+    copy( hyperGraph = hyperGraph removeHyperEdge h )
+  }
 }
 
 case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]] = Map.empty[Label, MultiPointedHyperGraph[E, V]]) {
