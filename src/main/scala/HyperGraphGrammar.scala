@@ -14,20 +14,26 @@ case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vert
   def vertexData = hyperGraph.vertexData
   def edgeData = hyperGraph.edgeData
 
-  def removeVertex(v:Vertex) = {
+  def -(v:Vertex) = {
     assert(!(in contains v), s"Cannot remove input vertex $v")
     assert(!(out contains v), s"Cannot remove output vertex $v")
 
-    copy( hyperGraph = hyperGraph removeVertex v )
+    copy( hyperGraph = hyperGraph - v )
   }
 
-  def removeEdge(e:Edge) = {
-    copy( hyperGraph = hyperGraph removeEdge e )
+  def -(e:Edge) = {
+    copy( hyperGraph = hyperGraph - e )
   }
 
-  def removeHyperEdge(h:HyperEdge) = {
-    copy( hyperGraph = hyperGraph removeHyperEdge h )
+  def -(h:HyperEdge) = {
+    copy( hyperGraph = hyperGraph - h )
   }
+
+  def +(v:Vertex) = ???
+
+  def +(e:Edge) = ???
+
+  def +(h:HyperEdge) = ???
 }
 
 case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]] = Map.empty[Label, MultiPointedHyperGraph[E, V]]) {
@@ -36,9 +42,13 @@ case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiP
     val rhs = productions.get(hyperEdge.label)
     rhs.isDefined && (hyperEdge.in.size == rhs.get.in.size) && (hyperEdge.out.size == rhs.get.out.size)
   }, "All hyperedges on the rhs need to have an equivalent on the lhs")
+  //TODO: assert: no cycles in grammar allowed
 
-  //TODO: cycle detection
+  def +(production: (Label,MultiPointedHyperGraph[E,V])) = ???
+  def -(hyperEdge: Label) = ???
+
   def expand = {
+    // TODO: make stateless - with a fold?
     var current = axiom
     val autoId = new AutoId(axiom.vertices.size)
     while (current.hyperEdges.nonEmpty) {

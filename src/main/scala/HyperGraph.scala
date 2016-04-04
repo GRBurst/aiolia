@@ -11,7 +11,7 @@ case class HyperGraph[+E, +V](vertices: Set[Vertex] = Set.empty, hyperEdges: Lis
   assert(edges.flatMap(e => Seq(e.in, e.out)).forall(vertices contains _), "All vertices used in edges have to be defined")
   assert(hyperEdges.flatMap(e => e.in ++ e.out).forall(vertices contains _), "All vertices used in hyperedges have to be defined")
 
-  def removeVertex(v:Vertex) = {
+  def -(v:Vertex) = {
     assert(vertices contains v, s"Vertex $v does not exist in ${vertices}")
     copy(
       vertices = vertices - v,
@@ -20,18 +20,24 @@ case class HyperGraph[+E, +V](vertices: Set[Vertex] = Set.empty, hyperEdges: Lis
     )
   }
 
-  def removeEdge(e:Edge) = {
+  def -(e:Edge) = {
     assert(edges contains e, s"Edge $e does not exist in ${edges}")
 
     copy( edges = edges - e )
   }
 
-  def removeHyperEdge(h:HyperEdge) = {
+  def -(h:HyperEdge) = {
     assert(hyperEdges contains h, s"HyperEdge $h does not exist in ${hyperEdges}")
 
     val i = hyperEdges indexOf h
     copy( hyperEdges = hyperEdges.take(i) ++ hyperEdges.drop(i+1) )
   }
+
+  def +(v:Vertex) = ???
+
+  def +(e:Edge) = ???
+
+  def +(h:HyperEdge) = ???
 
   def toGraph = {
     assert(hyperEdges.isEmpty)
