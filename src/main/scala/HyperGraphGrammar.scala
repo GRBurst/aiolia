@@ -21,19 +21,12 @@ case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vert
     copy( hyperGraph = hyperGraph - v )
   }
 
-  def -(e:Edge) = {
-    copy( hyperGraph = hyperGraph - e )
-  }
+  def -(e:Edge) = copy( hyperGraph = hyperGraph - e )
+  def -(h:HyperEdge) = copy( hyperGraph = hyperGraph - h )
 
-  def -(h:HyperEdge) = {
-    copy( hyperGraph = hyperGraph - h )
-  }
-
-  def +(v:Vertex) = ???
-
-  def +(e:Edge) = ???
-
-  def +(h:HyperEdge) = ???
+  def +(v:Vertex) = copy(hyperGraph = hyperGraph + v)
+  def +(e:Edge) = copy(hyperGraph = hyperGraph + e)
+  def +(h:HyperEdge) = copy(hyperGraph = hyperGraph + h)
 }
 
 case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]] = Map.empty[Label, MultiPointedHyperGraph[E, V]]) {
@@ -44,8 +37,17 @@ case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiP
   }, "All hyperedges on the rhs need to have an equivalent on the lhs")
   //TODO: assert: no cycles in grammar allowed
 
-  def +(production: (Label,MultiPointedHyperGraph[E,V])) = ???
-  def -(hyperEdge: Label) = ???
+  def +(production: (Label,MultiPointedHyperGraph[E,V])) = {
+    assert(!(productions.keys.toSet contains production._1), s"productions already contain a rule with label ${production._1}\nproductions:\n${productions.mkString("\n")}")
+    //TODO: assert: should not produce cycle
+
+    copy(productions = productions + production)
+  }
+
+  def -(hyperEdge: Label) = {
+    //TODO: assert: label should not be used in rhs of all productions
+    copy(productions = productions - hyperEdge)
+  }
 
   def expand = {
     // TODO: make stateless - with a fold?

@@ -33,11 +33,24 @@ case class HyperGraph[+E, +V](vertices: Set[Vertex] = Set.empty, hyperEdges: Lis
     copy( hyperEdges = hyperEdges.take(i) ++ hyperEdges.drop(i+1) )
   }
 
-  def +(v:Vertex) = ???
+  def +(v:Vertex) = {
+    assert(!(vertices contains v), s"Vertex $v already exists in ${vertices}")
 
-  def +(e:Edge) = ???
+    copy(vertices = vertices + v)
+  }
 
-  def +(h:HyperEdge) = ???
+  def +(e:Edge) = {
+    assert(vertices contains e.in, s"Edge $e connects to nonexisting vertex ${e.in} which does not exist in ${vertices}")
+    assert(vertices contains e.out, s"Edge $e connects to nonexisting vertex ${e.out} which does not exist in ${vertices}")
+    assert(!(edges contains e), s"Edge $e already exists in ${edges}")
+
+    copy(edges = edges + e)
+  }
+
+  def +(h:HyperEdge) = {
+    assert((h.in ++ h.out).forall(vertices contains _), s"HyperEdge $h connects to nonexisting vertices ${h.in ++ h.out} where one does not exist in ${vertices}")
+    copy(hyperEdges = h :: hyperEdges)
+  }
 
   def toGraph = {
     assert(hyperEdges.isEmpty)
