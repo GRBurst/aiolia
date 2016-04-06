@@ -35,18 +35,26 @@ case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiP
     val rhs = productions.get(hyperEdge.label)
     rhs.isDefined && (hyperEdge.in.size == rhs.get.in.size) && (hyperEdge.out.size == rhs.get.out.size)
   }, "All hyperedges on the rhs need to have an equivalent on the lhs")
-  //TODO: assert: no cycles in grammar allowed
+  assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
 
-  def +(production: (Label,MultiPointedHyperGraph[E,V])) = {
+  def addProduction(production: (Label,MultiPointedHyperGraph[E,V])) = {
     assert(!(productions.keys.toSet contains production._1), s"productions already contain a rule with label ${production._1}\nproductions:\n${productions.mkString("\n")}")
-    //TODO: assert: should not produce cycle
 
     copy(productions = productions + production)
   }
 
-  def -(hyperEdge: Label) = {
+  def removeProduction(hyperEdge: Label) = {
     //TODO: assert: label should not be used in rhs of all productions
     copy(productions = productions - hyperEdge)
+  }
+
+  def dependencyGraph = {
+    val vertices = productions.keys.map(Vertex(_)).toSet
+    val edges = productions.flatMap { case (lhs, rhs) =>
+      rhs.hyperEdges.map(h => Edge(Vertex(lhs), Vertex(h.label)))
+    }.toSet
+
+    Graph(vertices, edges)
   }
 
   def expand = {

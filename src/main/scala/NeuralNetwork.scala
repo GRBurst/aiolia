@@ -6,6 +6,9 @@ import aiolia.hypergraphgrammar._
 import collection.mutable
 
 case class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) {
+  // Important for data indexing in neural network
+  assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
+
   assert(in.forall(graph.incomingEdges(_).isEmpty), "Input neurons should not have incoming edges")
   assert(out.forall(graph.outgoingEdges(_).isEmpty), "Output neurons should not have outgoing edges")
 

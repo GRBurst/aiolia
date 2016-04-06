@@ -185,6 +185,11 @@ class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
       val axiom = HyperGraph(Set(0,2))
       Grammar(axiom) must throwAn[AssertionError]
     }
+
+    "grammar cannot have cycles" >> {
+      val rhs1 = MultiPointedHyperGraph(hyperGraph = HyperGraph(hyperEdges = List(HyperEdge(2))))
+      val rhs2 = MultiPointedHyperGraph(hyperGraph = HyperGraph(hyperEdges = List(HyperEdge(1))))
+      Grammar(1, Map(1 -> rhs1, 2 -> rhs2)) must throwAn[AssertionError]
+    }
   }
-  //TODO: Grammatik darf keine Kreise enthalten
 }

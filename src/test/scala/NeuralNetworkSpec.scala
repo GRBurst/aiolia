@@ -7,6 +7,10 @@ import aiolia.test.Helpers._
 
 class NeuralNetworkSpec extends org.specs2.mutable.Specification {
   "neuronal network" >> {
+    "labels of vertices must be in order" >> {
+      NeuralNetwork(in = List.empty, out = List.empty, Graph(Set(1, 2), Set(1 -> 2))) must throwAn[AssertionError]
+    }
+
     "simple" >> {
       val n = NeuralNetwork(in = List(0, 1), out = List(2), Graph(2, Set(0 -> 2, 1 -> 2), vertexData(2 -> -1), edgeData((0 -> 2) -> 0.4f, (1 -> 2) -> 0.6f)))
       n.setInputData(List(2, 4))
