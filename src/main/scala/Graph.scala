@@ -5,6 +5,7 @@ package object types {
 }
 
 import types._
+import collection.mutable
 
 case class Vertex(label: Label) {
   override def toString = s"($label)"
@@ -23,17 +24,24 @@ case class Graph[+E, +V](vertices: Set[Vertex], edges: Set[Edge], vertexData: Ma
   def predecessors(v: Vertex) = edges.collect { case Edge(i, `v`) => i }
   def successors(v: Vertex) = edges.collect { case Edge(`v`, o) => o }
 
-  def hasCycle = {
-    //TODO: optimize for seen vertices
-    def visit(v: Vertex, visited: Set[Vertex] = Set.empty): Boolean = {
-      if(visited.contains(v))
-        false
-      else
-        successors(v).forall(visit(_ , visited + v))
+  def hasCycle:Boolean = {
+    val next = mutable.HashSet.empty ++ vertices
+
+    while( next.nonEmpty ) {
+      if( cycleAt(next.head) ) return true
     }
 
-    vertices.exists(!visit(_))
+    def cycleAt(v: Vertex, visited: Set[Vertex] = Set.empty):Boolean = {
+      if(visited contains v) return true // found cycle
+      if(!(next contains v)) return false // we already checked from here, there is definitely no cycle
+
+      next -= v
+      successors(v).exists(cycleAt(_, visited + v))
+    }
+
+    return false
   }
+
 
   override def toString = s"Graph(0 to ${vertices.size - 1}, $edges, $vertexData, $edgeData)"
 }
