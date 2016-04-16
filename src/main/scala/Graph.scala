@@ -15,8 +15,9 @@ case class Edge(in: Vertex, out: Vertex) {
   override def toString = s"$in -> $out"
 }
 
-case class Graph[+E, +V](vertices: Set[Vertex], edges: Set[Edge], vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
+case class Graph[+E, +V](vertices: Set[Vertex] = Set.empty, edges: Set[Edge] = Set.empty, vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
 
+  //TODO: allow selfloops?
   assert(edges.flatMap(e => Seq(e.in, e.out)).forall(vertices contains _), "All vertices used in edges have to be defined")
 
   // def successors(v: Vertex) = edges.collect { case Edge(`v`, o) => o }
@@ -27,6 +28,20 @@ case class Graph[+E, +V](vertices: Set[Vertex], edges: Set[Edge], vertexData: Ma
   lazy val incomingEdges:Map[Vertex, Set[Edge]] = edges.foldLeft(Map.empty[Vertex, Set[Edge]].withDefaultValue(Set.empty)){case (incoming, edge@Edge(_,out)) => incoming + (out -> (incoming(out) + edge)) }
   // def outgoingEdges(v: Vertex) = edges.filter(_.in == v)
   lazy val outgoingEdges:Map[Vertex, Set[Edge]] = edges.foldLeft(Map.empty[Vertex, Set[Edge]].withDefaultValue(Set.empty)){case (outgoing, edge@Edge(in,_)) => outgoing + (in -> (outgoing(in) + edge)) }
+
+  def depthFirstSearch(start: Vertex, revSort: Set[Vertex] => Iterable[Vertex] = set => set) = new Iterator[Vertex] {
+    assert(vertices contains start)
+    val stack = mutable.Stack(start)
+    val seen = mutable.Set[Vertex]()
+
+    override def hasNext: Boolean = stack.nonEmpty
+    override def next: Vertex = {
+      val current = stack.pop
+      seen += current
+      stack pushAll revSort(successors(current) filterNot ((seen ++ stack) contains))
+      current
+    }
+  }
 
   def hasCycle:Boolean = {
     val next = mutable.HashSet.empty ++ vertices

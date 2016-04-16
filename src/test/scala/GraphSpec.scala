@@ -60,5 +60,23 @@ class GraphSpec extends org.specs2.mutable.Specification {
         graph.hasCycle must beTrue
       }
     }
+    "depth first search" >> {
+      "nonexistent vertex" >> {
+        Graph().depthFirstSearch(17).toList must throwAn[AssertionError]
+      }
+      "one vertex" >> {
+        val graph = Graph(0)
+        graph.depthFirstSearch(0).toList mustEqual vertexList(0)
+      }
+      "directed cycle" >> {
+        val graph = Graph(3, Set(0 -> 1, 0 -> 2, 1 -> 3, 3 -> 2, 3 -> 0, 2 -> 1))
+        graph.depthFirstSearch(0, revSort = _.toList.sortBy(-_.label)).toList mustEqual vertexList(0, 1, 3, 2)
+      }
+      "undirected cycle" >> {
+        val graph = Graph(3, Set(0 -> 1, 0 -> 2, 1 -> 3, 3 -> 2))
+        graph.depthFirstSearch(0, revSort = _.toList.sortBy(-_.label)).toList mustEqual vertexList(0, 1, 3, 2)
+        graph.depthFirstSearch(0, revSort = _.toList.sortBy(_.label)).toList mustEqual vertexList(0, 2, 1, 3)
+      }
+    }
   }
 }

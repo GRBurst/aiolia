@@ -8,6 +8,7 @@ object Helpers {
   implicit def vertexTupleToEdge(tuple: (Int, Int)) = Edge(Vertex(tuple._1), Vertex(tuple._2))
   implicit def intToVertex(i: Int) = Vertex(i)
   def vertexSet(labels: Int*) = labels.map(Vertex(_)).toSet
+  def vertexList(labels: Int*) = labels.map(Vertex(_)).toList
   def edgeSet(edges: (Int, Int)*) = edges.map{case (in, out) => Edge(Vertex(in), Vertex(out))}.toSet
   implicit def intToVertexSet(i: Int):Set[Vertex] = (0 to i).map(Vertex(_)).toSet
   implicit def intToAxiom(i: Int) = HyperGraph(hyperEdges = List(HyperEdge(i)))
