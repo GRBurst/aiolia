@@ -57,6 +57,12 @@ case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiP
     Graph(vertices, edges)
   }
 
+  def cleanup:Grammar[E,V] = {
+    val starts:List[Label] = axiom.hyperEdges.map(_.label).distinct
+    val keep:Set[Vertex] = starts.flatMap( start => dependencyGraph.depthFirstSearch(Vertex(start)) ).toSet
+    copy(productions = productions.filterKeys(keep contains Vertex(_)))
+  }
+
   def expand = {
     // TODO: make stateless - with a fold?
     var current = axiom

@@ -191,5 +191,39 @@ class HyperGraphGrammarSpec extends org.specs2.mutable.Specification {
       val rhs2 = MultiPointedHyperGraph(hyperGraph = HyperGraph(hyperEdges = List(HyperEdge(1))))
       Grammar(1, Map(1 -> rhs1, 2 -> rhs2)) must throwAn[AssertionError]
     }
+
+    "cleanup unused production rules" >> {
+      val g = Grammar(1, Map(
+        1 -> MultiPointedHyperGraph(),
+        2 -> MultiPointedHyperGraph()
+      ))
+      g.cleanup mustEqual Grammar(1, Map( 1 -> MultiPointedHyperGraph()))
+    }
+    "cleanup many unused production rules" >> {
+      val g = Grammar(1, Map(
+        1 -> MultiPointedHyperGraph(hyperGraph = HyperGraph(hyperEdges = List(HyperEdge(2)))),
+        2 -> MultiPointedHyperGraph(),
+
+        3 -> MultiPointedHyperGraph(hyperGraph = HyperGraph(hyperEdges = List(HyperEdge(4)))),
+        4 -> MultiPointedHyperGraph(),
+
+        5 -> MultiPointedHyperGraph(hyperGraph = HyperGraph(hyperEdges = List(HyperEdge(6)))),
+        6 -> MultiPointedHyperGraph()
+      ))
+      g.cleanup mustEqual Grammar(1, Map(
+        1 -> MultiPointedHyperGraph(hyperGraph = HyperGraph(hyperEdges = List(HyperEdge(2)))),
+        2 -> MultiPointedHyperGraph()
+      ))
+    }
+    "cleanup unused production rules (tree)" >> {
+      val axiom = HyperGraph(hyperEdges = List(HyperEdge(1), HyperEdge(2)))
+      val g = Grammar(axiom, Map(
+        1 -> MultiPointedHyperGraph(),
+        2 -> MultiPointedHyperGraph(),
+
+        3 -> MultiPointedHyperGraph()
+      ))
+      g.cleanup mustEqual Grammar(axiom, Map( 1 -> MultiPointedHyperGraph(), 2 -> MultiPointedHyperGraph()))
+    }
   }
 }
