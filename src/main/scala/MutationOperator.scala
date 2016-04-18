@@ -34,4 +34,12 @@ object Mutation {
     val vertex = random.select(vertexCandidates)
     Some(grammar.copy(productions = grammar.productions.updated(label, replacement - vertex)))
   }
+
+  def removeRandomEdge[V,E](grammar:Grammar[V,E], random:Random):Option[Grammar[V,E]] = {
+    val (label, replacement) = random.select(grammar.productions)
+    if( replacement.hyperGraph.edges.isEmpty ) return None
+
+    val edge = random.select(replacement.hyperGraph.edges)
+    Some(grammar.copy(productions = grammar.productions.updated(label, replacement - edge)))
+  }
 }
