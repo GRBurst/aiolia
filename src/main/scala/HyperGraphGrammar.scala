@@ -5,8 +5,8 @@ import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.hypergraph._
 
-case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vertex] = Nil, hyperGraph: HyperGraph[E, V] = HyperGraph()) {
-  assert((in ++ out).forall(vertices contains _), "All tentacles must be used in HyperGraph")
+case class MultiPointedHyperGraph[+E, +V](connectors: List[Vertex] = Nil, hyperGraph: HyperGraph[E, V] = HyperGraph()) {
+  assert(connectors.forall(vertices contains _), "All tentacles must be used in HyperGraph")
 
   def vertices = hyperGraph.vertices
   def edges = hyperGraph.edges
@@ -15,8 +15,7 @@ case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vert
   def edgeData = hyperGraph.edgeData
 
   def -(v:Vertex) = {
-    assert(!(in contains v), s"Cannot remove input vertex $v")
-    assert(!(out contains v), s"Cannot remove output vertex $v")
+    assert(!(connectors contains v), s"Cannot remove connector vertex $v")
 
     copy( hyperGraph = hyperGraph - v )
   }
@@ -33,7 +32,7 @@ case class Grammar[+E, +V](axiom: HyperGraph[E, V], productions: Map[Label, Mult
   assert((0 until axiom.vertices.size).forall(axiom.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${axiom.vertices}")
   assert(productions.values.flatMap(_.hyperEdges).forall { hyperEdge =>
     val rhs = productions.get(hyperEdge.label)
-    rhs.isDefined && (hyperEdge.in.size == rhs.get.in.size) && (hyperEdge.out.size == rhs.get.out.size)
+    rhs.isDefined && (hyperEdge.connectors.size == rhs.get.connectors.size)
   }, "All hyperedges on the rhs need to have an equivalent on the lhs")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
 
@@ -72,16 +71,16 @@ case class Grammar[+E, +V](axiom: HyperGraph[E, V], productions: Map[Label, Mult
       val rhs = productions(lhs.label)
 
       // newly created vertices that will be merged into the graph at fringe vertices
-      val newVertices = (rhs.vertices -- (rhs.in ++ rhs.out)).map(_.label -> Vertex(autoId.nextId)).toMap
+      val newVertices = (rhs.vertices -- rhs.connectors).map(_.label -> Vertex(autoId.nextId)).toMap
       // existing fringe/connectivity vertices for merge process
-      val existVertices = rhs.in.map(_.label).zip(lhs.in).toMap ++ rhs.out.map(_.label).zip(lhs.out).toMap
+      val existVertices = rhs.connectors.map(_.label).zip(lhs.connectors).toMap
       val vertexMap: Map[Label, Vertex] = newVertices ++ existVertices
 
       val vertices = rhs.vertices.map(v => vertexMap(v.label))
 
       val edges = rhs.edges.map { case Edge(Vertex(in), Vertex(out)) => Edge(vertexMap(in), vertexMap(out)) }
 
-      val hyperEdges = rhs.hyperEdges.map { case HyperEdge(label, in, out) => HyperEdge(label, in.map(v => vertexMap(v.label)), out.map(v => vertexMap(v.label))) }
+      val hyperEdges = rhs.hyperEdges.map { case HyperEdge(label, connectors) => HyperEdge(label, connectors.map(v => vertexMap(v.label))) }
 
       val vertexData = rhs.vertexData.map { case (Vertex(label), v) => vertexMap(label) -> v }.toMap
       val edgeData = rhs.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertexMap(in), vertexMap(out)) -> v }.toMap

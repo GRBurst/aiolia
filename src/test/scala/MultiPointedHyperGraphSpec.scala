@@ -10,7 +10,7 @@ class MultiPointedHyperGraphSpec extends org.specs2.mutable.Specification {
   // TODO: move simple operations to HyperGraphSpec
   "multipointedhypergraph" >> {
     "remove" >> {
-      val mphg = MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0), List(2)), HyperEdge(2, List(3), List(2)))))
+      val mphg = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0, 2)), HyperEdge(2, List(3, 2)))))
 
       "vertex" >> {
         "from empty multipointedhypergraph" >> {
@@ -18,10 +18,10 @@ class MultiPointedHyperGraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing vertex with edges" >> {
-          mphg - 4 mustEqual MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(3, edges = Set(0 -> 3, 1 -> 3), hyperEdges = List(HyperEdge(1, List(0), List(2)), HyperEdge(2, List(3), List(2)))))
+          mphg - 4 mustEqual MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(3, edges = Set(0 -> 3, 1 -> 3), hyperEdges = List(HyperEdge(1, List(0, 2)), HyperEdge(2, List(3, 2)))))
         }
         "existing vertex with hyperedges" >> {
-          mphg - 3 mustEqual MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(Set(0,1,2,4), edges = Set(0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0), List(2)))))
+          mphg - 3 mustEqual MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(Set(0,1,2,4), edges = Set(0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0, 2)))))
         }
         "nonexisting vertex" >> {
           mphg - 17 must throwA[AssertionError]
@@ -40,7 +40,7 @@ class MultiPointedHyperGraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing edge" >> {
-          mphg - (4 -> 2) mustEqual MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4), hyperEdges = List(HyperEdge(1, List(0), List(2)), HyperEdge(2, List(3), List(2)))))
+          mphg - (4 -> 2) mustEqual MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4), hyperEdges = List(HyperEdge(1, List(0, 2)), HyperEdge(2, List(3, 2)))))
         }
 
         "nonexisting edge" >> {
@@ -54,17 +54,17 @@ class MultiPointedHyperGraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing hyperedge" >> {
-          mphg - HyperEdge(1, List(0), List(2)) mustEqual MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(2, List(3), List(2)))))
+          mphg - HyperEdge(1, List(0, 2)) mustEqual MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(2, List(3, 2)))))
         }
 
         "multiple hyperedges with same label" >> {
-          val mphg = MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0), List(2)), HyperEdge(1, List(3), List(2)))))
-          mphg - HyperEdge(1, List(3), List(2)) mustEqual MultiPointedHyperGraph(in = List(0,1), out = List(2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0), List(2)))))
+          val mphg = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0, 2)), HyperEdge(1, List(3, 2)))))
+          mphg - HyperEdge(1, List(3, 2)) mustEqual MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0, 2)))))
         }
 
         "multiple hyperedges with same label connected to same vertices" >> {
-          val mphg = MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(2, hyperEdges = List(HyperEdge(1, List(0,2), List(1)), HyperEdge(1, List(0,2), List(1)))))
-          mphg - HyperEdge(1, List(0,2), List(1)) mustEqual MultiPointedHyperGraph(in = List(0), out = List(1), HyperGraph(2, hyperEdges = List(HyperEdge(1, List(0,2), List(1)))))
+          val mphg = MultiPointedHyperGraph(connectors = List(0, 1), HyperGraph(2, hyperEdges = List(HyperEdge(1, List(0,2, 1)), HyperEdge(1, List(0,2, 1)))))
+          mphg - HyperEdge(1, List(0,2, 1)) mustEqual MultiPointedHyperGraph(connectors = List(0, 1), HyperGraph(2, hyperEdges = List(HyperEdge(1, List(0,2, 1)))))
         }
 
         "nonexisting hyperedge" >> {
