@@ -3,6 +3,8 @@ package aiolia.hypergraphgrammar
 import aiolia.graph._
 import aiolia.hypergraph._
 
+import aiolia.helpers.Random
+
 object Mutation {
 
   def mutate[V,E](grammar:Grammar[V,E]):Grammar[V,E] = {
@@ -24,5 +26,12 @@ object Mutation {
     ???
   }
 
+  def removeRandomVertex[V,E](grammar:Grammar[V,E], random:Random):Option[Grammar[V,E]] = {
+    val (label, replacement) = random.select(grammar.productions)
+    val vertexCandidates = replacement.hyperGraph.vertices -- replacement.in -- replacement.out
+    if( vertexCandidates.isEmpty ) return None
 
+    val vertex = random.select(vertexCandidates)
+    Some(grammar.copy(productions = grammar.productions.updated(label, replacement - vertex)))
+  }
 }

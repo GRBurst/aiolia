@@ -29,7 +29,7 @@ case class MultiPointedHyperGraph[+E, +V](in: List[Vertex] = Nil, out: List[Vert
   def +(h:HyperEdge) = copy(hyperGraph = hyperGraph + h)
 }
 
-case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]] = Map.empty[Label, MultiPointedHyperGraph[E, V]]) {
+case class Grammar[+E, +V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]] = Map.empty[Label, MultiPointedHyperGraph[E, V]]) {
   assert((0 until axiom.vertices.size).forall(axiom.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${axiom.vertices}")
   assert(productions.values.flatMap(_.hyperEdges).forall { hyperEdge =>
     val rhs = productions.get(hyperEdge.label)
@@ -37,7 +37,7 @@ case class Grammar[E, V](axiom: HyperGraph[E, V], productions: Map[Label, MultiP
   }, "All hyperedges on the rhs need to have an equivalent on the lhs")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
 
-  def addProduction(production: (Label,MultiPointedHyperGraph[E,V])) = {
+  def addProduction[E1 >: E, V1 >: V](production: (Label, MultiPointedHyperGraph[E1,V1])):Grammar[E1, V1] = {
     assert(!(productions.keys.toSet contains production._1), s"productions already contain a rule with label ${production._1}\nproductions:\n${productions.mkString("\n")}")
 
     copy(productions = productions + production)
