@@ -93,5 +93,49 @@ class MutationOperatorSpec extends org.specs2.mutable.Specification with org.spe
         Mutation.removeRandomVertex(g, random) mustEqual None
       }
     }
+
+    "inline random hyperedge" >> {
+      "on empty grammar" >> {
+        val random = mock[Random]
+        Mutation.inlineRandomHyperEdge(Grammar(1), random) mustEqual None
+      }
+
+      "on grammar" >> {
+        val random = mock[Random]
+
+        val h1 = HyperEdge(1, List(0, 1, 2))
+        val h2 = HyperEdge(1, List(0, 2, 1))
+        val axiom = HyperGraph(2, List(h1, h2))
+
+        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
+        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 2), hyperGraph = HyperGraph(2, edges = Set(0 -> 1, 1 -> 2)))
+        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+
+        random.select(g.productions) returns (1 -> rhsA1)
+        random.select(List(HyperEdge(2,List((0), (2))))) returns HyperEdge(2,List((0), (2)))
+
+        Mutation.inlineRandomHyperEdge(g, random) mustEqual Some(Grammar(axiom, Map(
+          1 -> rhsA1.copy(hyperGraph = HyperGraph(5, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 5, 5 -> 2))),
+          2 -> rhsA2
+        )))
+      }
+
+      "on grammar rule without hyperEdge" >> {
+        val random = mock[Random]
+
+        val h1 = HyperEdge(1, List(0, 1, 2))
+        val h2 = HyperEdge(1, List(0, 2, 1))
+        val axiom = HyperGraph(2, List(h1, h2))
+
+        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
+        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 2), hyperGraph = HyperGraph(2, edges = Set(0 -> 1, 1 -> 2)))
+        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+
+        random.select(g.productions) returns (2 -> rhsA2)
+
+        Mutation.inlineRandomHyperEdge(g, random) mustEqual None
+      }
+
+    }
   }
 }
