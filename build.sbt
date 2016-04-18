@@ -20,3 +20,10 @@ scalacOptions ++= Seq(
   "-Ywarn-unused"
   //,"-Xdisable-assertions", "-optimize"
 )
+
+
+initialCommands in console := """
+import aiolia.graph._
+import aiolia.hypergraph._
+import aiolia.hypergraphgrammar._
+                              """
