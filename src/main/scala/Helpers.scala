@@ -1,6 +1,10 @@
 package aiolia.helpers
 
-class AutoId(var start: Int = 0) {
+object AutoId {
+  def apply(start: Int = 0) = new AutoId(start)
+}
+
+class AutoId(var start:Int) {
   def nextId = {
     val current = start
     start += 1
