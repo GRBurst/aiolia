@@ -27,6 +27,8 @@ object Mutation {
   }
 
   def removeRandomVertex[V,E](grammar:Grammar[V,E], random:Random):Option[Grammar[V,E]] = {
+    if(grammar.productions.isEmpty) return None
+
     val (label, replacement) = random.select(grammar.productions)
     val vertexCandidates = replacement.hyperGraph.vertices -- replacement.connectors
     if( vertexCandidates.isEmpty ) return None
@@ -36,6 +38,8 @@ object Mutation {
   }
 
   def removeRandomEdge[V,E](grammar:Grammar[V,E], random:Random):Option[Grammar[V,E]] = {
+    if(grammar.productions.isEmpty) return None
+
     val (label, replacement) = random.select(grammar.productions)
     if( replacement.hyperGraph.edges.isEmpty ) return None
 

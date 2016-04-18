@@ -10,6 +10,11 @@ import aiolia.helpers.Random
 class MutationOperatorSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
   "mutation operator" >> {
     "remove random vertex" >> {
+      "from empty grammar" >> {
+        val random = mock[Random]
+        Mutation.removeRandomVertex(Grammar(1), random) mustEqual None
+      }
+
       "from grammar" >> {
         val random = mock[Random]
 
@@ -65,6 +70,11 @@ class MutationOperatorSpec extends org.specs2.mutable.Specification with org.spe
           1 -> rhsA1.copy(hyperGraph = rhsA1.hyperGraph.copy(edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1))),
           2 -> rhsA2
         )))
+      }
+
+      "from empty grammar" >> {
+        val random = mock[Random]
+        Mutation.removeRandomEdge(Grammar(1), random) mustEqual None
       }
 
       "select rule without removable edges" >> {
