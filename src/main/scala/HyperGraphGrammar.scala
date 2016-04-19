@@ -22,6 +22,7 @@ case class MultiPointedHyperGraph[+E, +V](connectors: List[Vertex] = Nil, hyperG
 
   def -(e:Edge) = copy( hyperGraph = hyperGraph - e )
   def -(h:HyperEdge) = copy( hyperGraph = hyperGraph - h )
+  def --[E1,V1](remove:HyperGraph[E1,V1]) = copy(hyperGraph = hyperGraph -- remove)
 
   def +(v:Vertex) = copy(hyperGraph = hyperGraph + v)
   def +(e:Edge) = copy(hyperGraph = hyperGraph + e)
@@ -30,6 +31,7 @@ case class MultiPointedHyperGraph[+E, +V](connectors: List[Vertex] = Nil, hyperG
 
 object Grammar {
   def replace[E,V](g:HyperGraph[E,V], h:HyperEdge, replacement:MultiPointedHyperGraph[E,V], autoId:AutoId):HyperGraph[E,V] = {
+    //TODO: take care of data
     // newly created vertices that will be merged into the graph at fringe vertices
     val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> Vertex(autoId.nextId)).toMap
     // existing fringe/connectivity vertices for merge process
