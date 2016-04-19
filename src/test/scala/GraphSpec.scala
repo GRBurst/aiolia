@@ -3,7 +3,50 @@ package aiolia.graph
 import aiolia.test.Helpers._
 
 class GraphSpec extends org.specs2.mutable.Specification {
-  "graph should" >> {
+  "vertex" >> {
+    "toString" >> {
+      Vertex(2).toString mustEqual "2"
+    }
+  }
+  "edge" >> {
+    "toString" >> {
+      Edge(Vertex(2), Vertex(3)).toString mustEqual "2 -> 3"
+    }
+    "contains vertex" >> {
+      (Edge(Vertex(2), Vertex(3)) contains Vertex(1)) must beFalse
+      (Edge(Vertex(2), Vertex(3)) contains Vertex(2)) must beTrue
+      (Edge(Vertex(2), Vertex(3)) contains Vertex(3)) must beTrue
+      (Edge(Vertex(2), Vertex(3)) contains Vertex(4)) must beFalse
+    }
+  }
+  "graph" >> {
+    "assertions" >> {
+      "vertex data" >> { Graph(vertexData = vertexData(1 -> 5)) must throwAn[AssertionError] }
+      "edge data" >> { Graph(vertices = Set(1,2), edgeData = edgeData((1->2) -> 5)) must throwAn[AssertionError] }
+      "edges" >> {
+        Graph(vertices = Set(1), edges = Set(1 -> 2)) must throwAn[AssertionError]
+        Graph(vertices = Set(2), edges = Set(1 -> 2)) must throwAn[AssertionError]
+      }
+    }
+    "toString" >> {
+      "simple" >> {
+        Graph(5, Set(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3)).toString mustEqual "Graph([0 1 2 3 4 5], [1 -> 0, 1 -> 2, 2 -> 3, 2 -> 4, 3 -> 5, 5 -> 3])"
+      }
+      "with vertexData" >> {
+        Graph(1, Set(1 -> 0), vertexData(0 -> "wurst", 1 -> "katapult")
+          ).toString mustEqual "Graph([0 1], [1 -> 0], {0: wurst, 1: katapult})"
+      }
+      "with edgeData" >> {
+        Graph(1, Set(1 -> 0, 0 -> 1), edgeData = edgeData((1->0) -> "kanone", (0->1) -> "salat")
+          ).toString mustEqual "Graph([0 1], [0 -> 1, 1 -> 0], {0->1: salat, 1->0: kanone})"
+      }
+      "with both data" >> {
+        Graph(1, Set(1 -> 0, 0 -> 1),
+          vertexData(0 -> "wurst", 1 -> "katapult"),
+          edgeData((1->0) -> "kanone", (0->1) -> "salat")
+          ).toString mustEqual "Graph([0 1], [0 -> 1, 1 -> 0], {0: wurst, 1: katapult}, {0->1: salat, 1->0: kanone})"
+      }
+    }
     "traversal accessors" >> {
       val graph = Graph(5, Set(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3))
       "successors" >> {
