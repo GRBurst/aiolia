@@ -10,10 +10,9 @@ case class HyperEdge(label: Label, connectors: List[Vertex] = Nil) {
 }
 
 //TODO: directed traversal needs in/out, but right now, there is no directed traversal
-//TODO: switch E,V to V,E
 //TODO: order on List[HyperEdge] should not matter, especially on comparison. We probably need a "Bag" datastructure: https://github.com/nicolasstucki/multisets
 
-case class HyperGraph[+E, +V](vertices: Set[Vertex] = Set.empty, hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.empty, vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
+case class HyperGraph[+V, +E](vertices: Set[Vertex] = Set.empty, hyperEdges: List[HyperEdge] = Nil, edges: Set[Edge] = Set.empty, vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
   assert(hyperEdges.flatMap(_.connectors).forall(vertices contains _), "All vertices used in hyperedges have to be defined")
   assert(edges.flatMap(e => Seq(e.in, e.out)).forall(vertices contains _), "All vertices used in edges have to be defined")
   assert(vertexData.keys.toSet.diff(vertices).isEmpty, "Vertex data can only contain vertices in HyperGraph")
@@ -104,13 +103,13 @@ case class HyperGraph[+E, +V](vertices: Set[Vertex] = Set.empty, hyperEdges: Lis
     hyperEdges.filter(_.connectors.forall(vsSet contains _))
   }
 
-  def inducedSubGraph(vs:Iterable[Vertex]):HyperGraph[E,V] = {
+  def inducedSubGraph(vs:Iterable[Vertex]):HyperGraph[V,E] = {
     val vsSet = vs.toSet
     HyperGraph(vsSet, inducedHyperEdges(vs), inducedEdges(vs))
   }
 
   def toGraph = {
     assert(hyperEdges.isEmpty)
-    Graph[E, V](vertices, edges, vertexData, edgeData)
+    Graph[V, E](vertices, edges, vertexData, edgeData)
   }
 }

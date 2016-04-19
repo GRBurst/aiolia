@@ -5,7 +5,7 @@ import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.hypergraph._
 
-case class MultiPointedHyperGraph[+E, +V](connectors: List[Vertex] = Nil, hyperGraph: HyperGraph[E, V] = HyperGraph()) {
+case class MultiPointedHyperGraph[+V, +E](connectors: List[Vertex] = Nil, hyperGraph: HyperGraph[V, E] = HyperGraph()) {
   assert(connectors.forall(vertices contains _), "All tentacles must be used in HyperGraph")
 
   def vertices = hyperGraph.vertices
@@ -22,7 +22,7 @@ case class MultiPointedHyperGraph[+E, +V](connectors: List[Vertex] = Nil, hyperG
 
   def -(e:Edge) = copy( hyperGraph = hyperGraph - e )
   def -(h:HyperEdge) = copy( hyperGraph = hyperGraph - h )
-  def --[E1,V1](remove:HyperGraph[E1,V1]) = copy(hyperGraph = hyperGraph -- remove)
+  def --[V1, E1](remove:HyperGraph[V1, E1]) = copy(hyperGraph = hyperGraph -- remove)
 
   def +(v:Vertex) = copy(hyperGraph = hyperGraph + v)
   def +(e:Edge) = copy(hyperGraph = hyperGraph + e)
@@ -30,7 +30,7 @@ case class MultiPointedHyperGraph[+E, +V](connectors: List[Vertex] = Nil, hyperG
 }
 
 object Grammar {
-  def replace[E,V](g:HyperGraph[E,V], h:HyperEdge, replacement:MultiPointedHyperGraph[E,V], autoId:AutoId):HyperGraph[E,V] = {
+  def replace[V,E](g:HyperGraph[V,E], h:HyperEdge, replacement:MultiPointedHyperGraph[V,E], autoId:AutoId):HyperGraph[V,E] = {
     //TODO: take care of data
     // newly created vertices that will be merged into the graph at fringe vertices
     val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> Vertex(autoId.nextId)).toMap
@@ -57,7 +57,7 @@ object Grammar {
   }
 }
 
-case class Grammar[+E, +V](axiom: HyperGraph[E, V], productions: Map[Label, MultiPointedHyperGraph[E, V]] = Map.empty[Label, MultiPointedHyperGraph[E, V]]) {
+case class Grammar[+V, +E](axiom: HyperGraph[V, E], productions: Map[Label, MultiPointedHyperGraph[V, E]] = Map.empty[Label, MultiPointedHyperGraph[V, E]]) {
   assert((0 until axiom.vertices.size).forall(axiom.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${axiom.vertices}") // needed for autoId in expand
   assert(productions.values.flatMap(_.hyperEdges).forall { hyperEdge =>
     val rhs = productions.get(hyperEdge.label)
@@ -65,7 +65,7 @@ case class Grammar[+E, +V](axiom: HyperGraph[E, V], productions: Map[Label, Mult
   }, "All hyperedges on the rhs need to have an equivalent on the lhs")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
 
-  def addProduction[E1 >: E, V1 >: V](production: (Label, MultiPointedHyperGraph[E1,V1])):Grammar[E1, V1] = {
+  def addProduction[V1 >: V, E1 >: E](production: (Label, MultiPointedHyperGraph[V1,E1])):Grammar[V1, E1] = {
     assert(!(productions.keys.toSet contains production._1), s"productions already contain a rule with label ${production._1}\nproductions:\n${productions.mkString("\n")}")
 
     copy(productions = productions + production)
@@ -85,7 +85,7 @@ case class Grammar[+E, +V](axiom: HyperGraph[E, V], productions: Map[Label, Mult
     Graph(vertices, edges)
   }
 
-  def cleanup:Grammar[E,V] = {
+  def cleanup:Grammar[V,E] = {
     val starts:List[Label] = axiom.hyperEdges.map(_.label).distinct
     val keep:Set[Vertex] = starts.flatMap( start => dependencyGraph.depthFirstSearch(Vertex(start)) ).toSet
     copy(productions = productions.filterKeys(keep contains Vertex(_)))

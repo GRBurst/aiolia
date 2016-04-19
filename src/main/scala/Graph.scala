@@ -16,7 +16,7 @@ case class Edge(in: Vertex, out: Vertex) {
   override def toString = s"${in.label} -> ${out.label}"
 }
 
-case class Graph[+E, +V](vertices: Set[Vertex] = Set.empty, edges: Set[Edge] = Set.empty, vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
+case class Graph[+V, +E](vertices: Set[Vertex] = Set.empty, edges: Set[Edge] = Set.empty, vertexData: Map[Vertex, V] = Map.empty[Vertex, V], edgeData: Map[Edge, E] = Map.empty[Edge, E]) {
 
   //TODO: allow selfloops?
   assert(edges.flatMap(e => List(e.in, e.out)).forall(vertices contains _), "All vertices used in edges have to be defined")
