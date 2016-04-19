@@ -7,7 +7,7 @@ import aiolia.hypergraph._
 import aiolia.test.Helpers._
 
 class MultiPointedHyperGraphSpec extends org.specs2.mutable.Specification {
-  // TODO: move simple operations to HyperGraphSpec
+  // TODO: move simple operations to HyperGraphSpec (only test, whats implemented in MultiPointedHyperGraph)
   "multipointedhypergraph" >> {
     "remove" >> {
       val mphg = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 3,1 -> 3, 0 -> 4, 4 -> 2), hyperEdges = List(HyperEdge(1, List(0, 2)), HyperEdge(2, List(3, 2)))))

@@ -27,6 +27,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         Graph(vertices = Set(1), edges = Set(1 -> 2)) must throwAn[AssertionError]
         Graph(vertices = Set(2), edges = Set(1 -> 2)) must throwAn[AssertionError]
       }
+      "self loops" >> todo
     }
     "toString" >> {
       "simple" >> {
