@@ -5,7 +5,13 @@ import aiolia.hypergraphgrammar._
 
 import collection.mutable
 
-case class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) {
+object NeuralNetwork {
+  def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) = {
+    new NeuralNetwork(in, out, graph)
+  }
+}
+
+class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) {
   // Important for data indexing in neural network
   assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
 
