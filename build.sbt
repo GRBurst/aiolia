@@ -9,10 +9,9 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-mock" % "3.7.2" % "test"
 )
 
-
 scalacOptions in Test ++= Seq("-Yrangepos") // for specs2
 
-logBuffered := false // display results as soon as they’ve been executed
+// logBuffered := false // display results as soon as they’ve been executed
 
 scalacOptions ++= Seq(
   "-encoding", "UTF-8",
@@ -24,9 +23,8 @@ scalacOptions ++= Seq(
   "-language:_",
   "-Xlint:_",
   "-Ywarn-unused"
-  //,"-Xdisable-assertions", "-optimize"
+//,"-Xdisable-assertions", "-optimize"
 )
-
 
 initialCommands in console := """
 import aiolia.graph._

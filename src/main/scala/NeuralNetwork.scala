@@ -28,7 +28,7 @@ class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Flo
   def state = stateArray(currentState)
   def prevState = stateArray(1 - currentState)
 
-  def setInputData(data: List[Float]) {
+  def setInputData(data: List[Float]) { //TODO: iterable?
     assert(in.size == data.size, "Need to set all input data")
 
     for ((neuron, datum) <- (in zip data)) {

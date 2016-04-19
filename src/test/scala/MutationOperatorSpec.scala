@@ -1,7 +1,6 @@
 package aiolia.hypergraphgrammar
 
 import aiolia.graph._
-import aiolia.hypergraph._
 import aiolia.graph.types._
 import aiolia.hypergraphgrammar._
 import aiolia.test.Helpers._
@@ -12,39 +11,40 @@ class MutationOperatorSpec extends org.specs2.mutable.Specification with org.spe
     "remove random vertex" >> {
       "from empty grammar" >> {
         val random = mock[Random]
-        Mutation.removeRandomVertex(Grammar(1), random) mustEqual None
+        Mutation.removeRandomVertex(Grammar(A(1)), random) mustEqual None
       }
 
       "from grammar" >> {
         val random = mock[Random]
 
-        val h1 = HyperEdge(1, List(0, 1, 2))
-        val h2 = HyperEdge(1, List(0, 2, 1))
-        val axiom = HyperGraph(2, List(h1, h2))
+        val h1 = NT(1, (0, 1, 2))
+        val h2 = NT(1, (0, 2, 1))
+        val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
-        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 2), hyperGraph = HyperGraph(2, edges = Set(0 -> 1, 1 -> 2)))
-        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
+        val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         random.select(g.productions) returns (2 -> rhsA2)
         random.select(Set(Vertex(1))) returns Vertex(1)
 
-        Mutation.removeRandomVertex(g, random) mustEqual Some(Grammar(axiom, Map(
+        Mutation.removeRandomVertex(g, random) mustEqual Some(grammar(
+          axiom,
           1 -> rhsA1,
-          2 -> rhsA2.copy(hyperGraph = HyperGraph(Set(0,2), edges = Set.empty))
-        )))
+          2 -> cgraph(C(0, 2), V(0, 2))
+        ))
       }
 
       "select rule without removable vertices" >> {
         val random = mock[Random]
 
-        val h1 = HyperEdge(1, List(0, 1, 2))
-        val h2 = HyperEdge(1, List(0, 2, 1))
-        val axiom = HyperGraph(2, List(h1, h2))
+        val h1 = NT(1, (0, 1, 2))
+        val h2 = NT(1, (0, 2, 1))
+        val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
-        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 1), hyperGraph = HyperGraph(1, edges = Set(0 -> 1)))
-        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA2 = cgraph(C(0, 1), V(0 to 1), E(0 -> 1))
+        val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         random.select(g.productions) returns (2 -> rhsA2)
 
@@ -55,38 +55,39 @@ class MutationOperatorSpec extends org.specs2.mutable.Specification with org.spe
       "from grammar" >> {
         val random = mock[Random]
 
-        val h1 = HyperEdge(1, List(0, 1, 2))
-        val h2 = HyperEdge(1, List(0, 2, 1))
-        val axiom = HyperGraph(2, List(h1, h2))
+        val h1 = NT(1, (0, 1, 2))
+        val h2 = NT(1, (0, 2, 1))
+        val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
-        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 2), hyperGraph = HyperGraph(2, edges = Set(0 -> 1, 1 -> 2)))
-        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
+        val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         random.select(g.productions) returns (1 -> rhsA1)
-        random.select(edgeSet((2) -> (4), (2) -> (3), (4) -> (1), (0) -> (2), (3) -> (4))) returns Edge(2, 4)
+        random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
 
-        Mutation.removeRandomEdge(g, random) mustEqual Some(Grammar(axiom, Map(
-          1 -> rhsA1.copy(hyperGraph = rhsA1.hyperGraph.copy(edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1))),
+        Mutation.removeRandomEdge(g, random) mustEqual Some(grammar(
+          axiom,
+          1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1), nts = List(NT(2, (0, 2)))),
           2 -> rhsA2
-        )))
+        ))
       }
 
       "from empty grammar" >> {
         val random = mock[Random]
-        Mutation.removeRandomEdge(Grammar(1), random) mustEqual None
+        Mutation.removeRandomEdge(Grammar(A(1)), random) mustEqual None
       }
 
       "select rule without removable edges" >> {
         val random = mock[Random]
 
-        val h1 = HyperEdge(1, List(0, 1, 2))
-        val h2 = HyperEdge(1, List(0, 2, 1))
-        val axiom = HyperGraph(2, List(h1, h2))
+        val h1 = NT(1, (0, 1, 2))
+        val h2 = NT(1, (0, 2, 1))
+        val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
-        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 1), hyperGraph = HyperGraph(1))
-        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA2 = cgraph(C(0, 1), V(0 to 1))
+        val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         random.select(g.productions) returns (2 -> rhsA2)
 
@@ -97,43 +98,52 @@ class MutationOperatorSpec extends org.specs2.mutable.Specification with org.spe
     "inline random hyperedge" >> {
       "on empty grammar" >> {
         val random = mock[Random]
-        Mutation.inlineRandomHyperEdge(Grammar(1), random) mustEqual None
+        Mutation.inlineRandomNonTerminal(Grammar(A(1)), random) mustEqual None
       }
 
       "on grammar" >> {
         val random = mock[Random]
 
-        val h1 = HyperEdge(1, List(0, 1, 2))
-        val h2 = HyperEdge(1, List(0, 2, 1))
-        val axiom = HyperGraph(2, List(h1, h2))
+        val axiom = graph(
+          V(0 to 2),
+          nts = List(
+            NT(1, (0, 1, 2)),
+            NT(1, (0, 2, 1))
+          )
+        )
 
-        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
-        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 2), hyperGraph = HyperGraph(2, edges = Set(0 -> 1, 1 -> 2)))
-        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+        val rhs1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2)))) // the nonTerminal in this graph will be inlined with rhs2
+        val rhs2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
+        val g = grammar(
+          axiom,
+          1 -> rhs1,
+          2 -> rhs2
+        )
 
-        random.select(g.productions) returns (1 -> rhsA1)
-        random.select(List(HyperEdge(2,List((0), (2))))) returns HyperEdge(2,List((0), (2)))
+        random.select(g.productions) returns (1 -> rhs1)
+        random.select(List(NT(2, (0, 2)))) returns NT(2, (0, 2)) // inline this nonTerminal
 
-        Mutation.inlineRandomHyperEdge(g, random) mustEqual Some(Grammar(axiom, Map(
-          1 -> rhsA1.copy(hyperGraph = HyperGraph(5, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 5, 5 -> 2))),
-          2 -> rhsA2
-        )))
+        Mutation.inlineRandomNonTerminal(g, random) mustEqual Some(grammar(
+          axiom,
+          1 -> cgraph(C(0, 1, 2), V(0 to 5), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 5, 5 -> 2)),
+          2 -> rhs2
+        ))
       }
 
-      "on grammar rule without hyperEdge" >> {
+      "on grammar rule without nonTerminal" >> {
         val random = mock[Random]
 
-        val h1 = HyperEdge(1, List(0, 1, 2))
-        val h2 = HyperEdge(1, List(0, 2, 1))
-        val axiom = HyperGraph(2, List(h1, h2))
+        val h1 = NT(1, (0, 1, 2))
+        val h2 = NT(1, (0, 2, 1))
+        val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = MultiPointedHyperGraph(connectors = List(0, 1, 2), HyperGraph(4, edges = Set(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), hyperEdges = List(HyperEdge(2, connectors = List(0, 2)))))
-        val rhsA2 = MultiPointedHyperGraph(connectors = List(0, 2), hyperGraph = HyperGraph(2, edges = Set(0 -> 1, 1 -> 2)))
-        val g = Grammar(axiom, Map( 1 -> rhsA1, 2 -> rhsA2))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
+        val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         random.select(g.productions) returns (2 -> rhsA2)
 
-        Mutation.inlineRandomHyperEdge(g, random) mustEqual None
+        Mutation.inlineRandomNonTerminal(g, random) mustEqual None
       }
 
     }
