@@ -1,5 +1,7 @@
 package aiolia.graph
 
+import aiolia.helpers.AutoId
+
 package object types {
   type Label = Int
 }
@@ -177,6 +179,35 @@ case class Graph[+V, +E](
     }
 
     return false
+  }
+
+  def replaceOne[V1 >: V, E1 >: E](nonTerminal: NonTerminal, replacement: Graph[V1, E1], autoId: AutoId): Graph[V1, E1] = {
+    assert(this.nonTerminals contains nonTerminal)
+    assert(nonTerminal.connectors.size == replacement.connectors.size)
+
+    // newly created vertices that will be merged into the graph at fringe vertices
+    val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> Vertex(autoId.nextId)).toMap
+    // existing fringe/connectivity vertices for merge process
+    val existVertices = replacement.connectors.map(_.label).zip(nonTerminal.connectors).toMap
+    val vertexMap: Map[Label, Vertex] = newVertices ++ existVertices
+
+    val vertices = replacement.vertices.map(v => vertexMap(v.label))
+
+    val edges = replacement.edges.map { case Edge(Vertex(in), Vertex(out)) => Edge(vertexMap(in), vertexMap(out)) }
+
+    val nonTerminals = replacement.nonTerminals.map { case NonTerminal(label, connectors) => NonTerminal(label, connectors.map(v => vertexMap(v.label))) }
+
+    val vertexData = replacement.vertexData.map { case (Vertex(label), v) => vertexMap(label) -> v }.toMap
+    val edgeData = replacement.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertexMap(in), vertexMap(out)) -> v }.toMap
+
+    Graph(
+      this.vertices ++ vertices,
+      this.edges ++ edges,
+      this.vertexData ++ vertexData,
+      this.edgeData ++ edgeData,
+      (this.nonTerminals diff List(nonTerminal)) ++ nonTerminals, // diff does not remove all instances
+      this.connectors
+    )
   }
 
   override def toString = s"Graph(V(${vertices.toList.sortBy(_.label).mkString(" ")}), " +

@@ -4,37 +4,6 @@ import aiolia.helpers._
 import aiolia.graph._
 import aiolia.graph.types._
 
-object Grammar {
-  def replace[V, E](g: Graph[V, E], nt: NonTerminal, replacement: Graph[V, E], autoId: AutoId): Graph[V, E] = {
-    //TODO: assert: nonterminal is in graph
-    //TODO: assert: nonterminal connectors == Graph.connectors
-    //TODO: take care of data
-    // newly created vertices that will be merged into the graph at fringe vertices
-    val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> Vertex(autoId.nextId)).toMap
-    // existing fringe/connectivity vertices for merge process
-    val existVertices = replacement.connectors.map(_.label).zip(nt.connectors).toMap
-    val vertexMap: Map[Label, Vertex] = newVertices ++ existVertices
-
-    val vertices = replacement.vertices.map(v => vertexMap(v.label))
-
-    val edges = replacement.edges.map { case Edge(Vertex(in), Vertex(out)) => Edge(vertexMap(in), vertexMap(out)) }
-
-    val nonTerminals = replacement.nonTerminals.map { case NonTerminal(label, connectors) => NonTerminal(label, connectors.map(v => vertexMap(v.label))) }
-
-    val vertexData = replacement.vertexData.map { case (Vertex(label), v) => vertexMap(label) -> v }.toMap
-    val edgeData = replacement.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertexMap(in), vertexMap(out)) -> v }.toMap
-
-    Graph(
-      g.vertices ++ vertices,
-      g.edges ++ edges,
-      g.vertexData ++ vertexData,
-      g.edgeData ++ edgeData,
-      (g.nonTerminals ++ nonTerminals) diff List(nt), // diff does not remove all instances
-      g.connectors
-    )
-  }
-}
-
 case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, E]] = Map.empty[Label, Graph[V, E]]) {
   assert((0 until axiom.vertices.size).forall(axiom.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${axiom.vertices}") // needed for autoId in expand
   assert(productions.values.flatMap(_.nonTerminals).forall { nonTerminal =>
@@ -78,7 +47,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     while (current.nonTerminals.nonEmpty) {
       val nonTerminal = current.nonTerminals.head
       val replacement = productions(nonTerminal.label)
-      current = Grammar.replace(current, nonTerminal, replacement, autoId)
+      current = current.replaceOne(nonTerminal, replacement, autoId)
     }
 
     current

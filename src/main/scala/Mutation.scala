@@ -112,7 +112,7 @@ object Mutation {
 
     // TODO: avoid maxBy in default AutoId?
     val autoId = new AutoId(start = target.vertices.maxBy(_.label).label + 1)
-    val inlined = Grammar.replace(target, nonTerminal, grammar.productions(nonTerminal.label), autoId)
+    val inlined = target.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
     Some(grammar.copy(productions = grammar.productions.updated(label, inlined)))
   }
 }
