@@ -57,10 +57,10 @@ case class Graph[+V, +E](
   // def incomingEdges(v: Vertex) = edges.filter(_.out == v)
   private def MapVVempty = Map.empty[Vertex, Set[Vertex]].withDefaultValue(Set.empty)
   private def MapVEempty = Map.empty[Vertex, Set[Edge]].withDefaultValue(Set.empty)
-  lazy val successors: Map[Vertex, Set[Vertex]] = edges.foldLeft(MapVVempty){ case (suc, Edge(in, out)) => suc + (in → (suc(in) + out)) }
-  lazy val predecessors: Map[Vertex, Set[Vertex]] = edges.foldLeft(MapVVempty){ case (pre, Edge(in, out)) => pre + (out → (pre(out) + in)) }
-  lazy val incomingEdges: Map[Vertex, Set[Edge]] = edges.foldLeft(MapVEempty){ case (incoming, edge @ Edge(_, out)) => incoming + (out → (incoming(out) + edge)) }
-  lazy val outgoingEdges: Map[Vertex, Set[Edge]] = edges.foldLeft(MapVEempty){ case (outgoing, edge @ Edge(in, _)) => outgoing + (in → (outgoing(in) + edge)) }
+  lazy val successors: Map[Vertex, Set[Vertex]] = edges.foldLeft(MapVVempty){ case (suc, Edge(in, out)) => suc + (in -> (suc(in) + out)) }
+  lazy val predecessors: Map[Vertex, Set[Vertex]] = edges.foldLeft(MapVVempty){ case (pre, Edge(in, out)) => pre + (out -> (pre(out) + in)) }
+  lazy val incomingEdges: Map[Vertex, Set[Edge]] = edges.foldLeft(MapVEempty){ case (incoming, edge @ Edge(_, out)) => incoming + (out -> (incoming(out) + edge)) }
+  lazy val outgoingEdges: Map[Vertex, Set[Edge]] = edges.foldLeft(MapVEempty){ case (outgoing, edge @ Edge(in, _)) => outgoing + (in -> (outgoing(in) + edge)) }
 
   def +(v: Vertex) = {
     assert(!(vertices contains v), s"Vertex $v already exists in ${vertices}")

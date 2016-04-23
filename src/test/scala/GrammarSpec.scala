@@ -1,11 +1,12 @@
-package aiolia.hypergraphgrammar
+package aiolia.test
 
+import aiolia.Grammar
 import aiolia.graph._
 import aiolia.graph.types._
 
-import aiolia.test.Helpers._
+import Helpers._
 
-class GraphGrammarSpec extends org.specs2.mutable.Specification {
+class GrammarSpec extends org.specs2.mutable.Specification {
   "graph grammar" >> {
     "expand deterministic" >> {
       val h1 = NT(1, (0, 1, 2))
@@ -35,7 +36,7 @@ class GraphGrammarSpec extends org.specs2.mutable.Specification {
       g.expand mustEqual graph(V(0 to 6), E(2 -> 4, 2 -> 3, 1 -> 5, 4 -> 3, 1 -> 6, 6 -> 5, 0 -> 1, 5 -> 2, 0 -> 2, 3 -> 1))
     }
 
-    "expand hyperedges" >> {
+    "expand nonterminals" >> {
       val h1 = NT(1, (0, 1, 2, 3))
       val axiom = graph(V(0 to 3), nts = List(h1))
 
@@ -48,7 +49,7 @@ class GraphGrammarSpec extends org.specs2.mutable.Specification {
       g.expand mustEqual graph(V(0 to 3), E(0 -> 1, 0 -> 2, 1 -> 2, 2 -> 3))
     }
 
-    "empty hyperedge axiom" >> {
+    "empty nonterminal axiom" >> {
       val g = grammar(
         A(1),
         1 -> cgraph(Nil, V(0 to 2), E(0 -> 1, 1 -> 2, 2 -> 1))
@@ -82,7 +83,7 @@ class GraphGrammarSpec extends org.specs2.mutable.Specification {
       g.expand mustEqual graph(V(0 to 7), E(4 -> 2, 5 -> 1, 6 -> 3, 1 -> 6, 3 -> 7, 7 -> 0, 0 -> 4, 2 -> 5))
     }
 
-    "redundant hyperedge" >> {
+    "redundant nonterminal" >> {
       val g = grammar(
         A(1),
         1 -> cgraph(Nil, V(0 to 1), nts = List(NT(2, (0, 1)))),
@@ -143,15 +144,15 @@ class GraphGrammarSpec extends org.specs2.mutable.Specification {
       g.expand mustEqual graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), ed = edgeData(((2 -> 1) -> "Worst"), (3 -> 1) -> "Worst"))
     }
 
-    "grammar can only have rhs hyperedges that have a corresponding lhs" >> {
-      "unknown hyperedge label" >> {
+    "grammar can only have rhs nonterminals that have a corresponding lhs" >> {
+      "unknown nonterminal label" >> {
         grammar(
           A(1),
           1 -> cgraph(NT(15, (0, 1)))
         ) must throwAn[AssertionError]
       }
 
-      "different hyperedge signature" >> {
+      "different nonterminal signature" >> {
         grammar(
           A(1),
           1 -> cgraph(Nil, V(0 to 2), nts = List(NT(2, (0, 1)))),
@@ -168,10 +169,10 @@ class GraphGrammarSpec extends org.specs2.mutable.Specification {
       }
     }
 
-    // A hypergraph can only set data on its own vertices/edges and a multi
-    // pointed hypergraph may not set data for its input or output vertices.
+    // A graph can only set data on its own vertices/edges and a multi
+    // pointed graph may not set data for its input or output vertices.
     // => A projection can only set data for its own nodes.
-    // XXX: Do hypergraphs need to set the data for all vertices and edges?
+    // XXX: Do graphs need to set the data for all vertices and edges?
     "projections only operate on local data" >> {
       "vertex data should only contain existing vertices" >> {
         graph(V(), E(0 -> 1), vd = vertexData(2 -> 200)) must throwAn[AssertionError]

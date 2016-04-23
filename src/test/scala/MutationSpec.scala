@@ -1,12 +1,13 @@
-package aiolia.hypergraphgrammar
+package aiolia.test
 
+import aiolia.{Grammar, Mutation}
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.hypergraphgrammar._
-import aiolia.test.Helpers._
 import aiolia.helpers.Random
 
-class MutationOperatorSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
+import Helpers._
+
+class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
   "mutation operator" >> {
     "remove random vertex" >> {
       "from empty grammar" >> {
@@ -26,7 +27,7 @@ class MutationOperatorSpec extends org.specs2.mutable.Specification with org.spe
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         random.select(g.productions) returns (2 -> rhsA2)
-        random.select(Set(Vertex(1))) returns Vertex(1)
+        random.select(V(1)) returns v(1)
 
         Mutation.removeRandomVertex(g, random) mustEqual Some(grammar(
           axiom,
@@ -95,7 +96,7 @@ class MutationOperatorSpec extends org.specs2.mutable.Specification with org.spe
       }
     }
 
-    "inline random hyperedge" >> {
+    "inline random nonterminal" >> {
       "on empty grammar" >> {
         val random = mock[Random]
         Mutation.inlineRandomNonTerminal(Grammar(A(1)), random) mustEqual None

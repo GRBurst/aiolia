@@ -1,8 +1,8 @@
 package aiolia.test
 
+import aiolia._
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.hypergraphgrammar._
 
 // TODO: test helpers
 // TODO: move dsl to package graph.dsl

@@ -1,9 +1,10 @@
-package aiolia.neuralnetwork
+package aiolia.test
 
+import aiolia.NeuralNetwork
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.hypergraphgrammar._
-import aiolia.test.Helpers._
+
+import Helpers._
 
 class NeuralNetworkSpec extends org.specs2.mutable.Specification {
   "neuronal network" >> {

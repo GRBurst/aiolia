@@ -1,7 +1,6 @@
-package aiolia.hypergraphgrammar
+package aiolia
 
 import aiolia.graph._
-
 import aiolia.helpers.{Random, AutoId}
 
 object Mutation {
@@ -11,17 +10,17 @@ object Mutation {
     // - choose production rule
     //    ? add vertex
     //    ? add edge
-    //    ? reuse hyperedge
-    //    ? extract hyperedge
+    //    ? reuse nonterminal
+    //    ? extract nonterminal
     //    ? remove vertex
     //    ? remove edge
-    //    ? inline hyperedge
+    //    ? inline nonterminal
     //
     //      ? reuse
-    //        - choose existing hyperedge from left side of grammar, which does not produce a cycle
+    //        - choose existing nonterminal from left side of grammar, which does not produce a cycle
     //
     //      ? new
-    //        - choose subgraph, replace by new hyperdge
+    //        - choose subgraph, replace by new nonterminal
     //        - create new production rule
     // prune
     ???

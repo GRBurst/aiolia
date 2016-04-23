@@ -1,10 +1,12 @@
-package aiolia.helpers
+package aiolia.test
+
+import aiolia.helpers.Random
 
 class RandomSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
   def randMock = {
-      val rand = spy(new Random(seed = 0))
-      rand.r returns mock[util.Random]
-      rand
+    val rand = spy(new Random(seed = 0))
+    rand.r returns mock[util.Random]
+    rand
   }
 
   "random" >> {

@@ -1,4 +1,4 @@
-package aiolia.hypergraphgrammar
+package aiolia
 
 import aiolia.helpers._
 import aiolia.graph._
@@ -10,7 +10,7 @@ object Grammar {
     //TODO: assert: nonterminal connectors == Graph.connectors
     //TODO: take care of data
     // newly created vertices that will be merged into the graph at fringe vertices
-    val newVertices = (replacement.vertices -- replacement.connectors).map(_.label → Vertex(autoId.nextId)).toMap
+    val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> Vertex(autoId.nextId)).toMap
     // existing fringe/connectivity vertices for merge process
     val existVertices = replacement.connectors.map(_.label).zip(nt.connectors).toMap
     val vertexMap: Map[Label, Vertex] = newVertices ++ existVertices
@@ -40,7 +40,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   assert(productions.values.flatMap(_.nonTerminals).forall { nonTerminal =>
     val rhs = productions.get(nonTerminal.label)
     rhs.isDefined && (nonTerminal.connectors.size == rhs.get.connectors.size)
-  }, "All hyperedges on the rhs need to have an equivalent on the lhs")
+  }, "All nonterminals on the rhs need to have an equivalent on the lhs")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
   //TODO: assert axiom must not have connectors
 

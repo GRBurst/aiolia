@@ -1,6 +1,8 @@
-package aiolia.graph
+package aiolia.test
 
-import aiolia.test.Helpers._
+import aiolia.graph._
+
+import Helpers._
 
 class GraphSpec extends org.specs2.mutable.Specification {
   //TODO: test dsl
@@ -136,10 +138,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
       //TODO: what about empty nonterminals in modification operations?
       "add vertex" >> {
         "existing" >> {
-          graph(V(0 to 2)) + Vertex(1) must throwAn[AssertionError]
+          graph(V(0 to 2)) + v(1) must throwAn[AssertionError]
         }
         "nonexisting" >> {
-          graph(V(0 to 2)) + Vertex(3) mustEqual graph(V(0 to 3))
+          graph(V(0 to 2)) + v(3) mustEqual graph(V(0 to 3))
         }
       }
 
@@ -199,7 +201,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
             E(0 -> 2),
             nts = List(NT(2, (2, 0)))
           )
-          (g - Vertex(1)) mustEqual wanted
+          (g - v(1)) mustEqual wanted
         }
         "with data" >> {
           val g = graph(
@@ -214,7 +216,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
             vd = vertexData(2 -> "y"),
             ed = edgeData((0 -> 2) -> "c")
           )
-          (g - Vertex(1)) mustEqual wanted
+          (g - v(1)) mustEqual wanted
         }
       }
 
