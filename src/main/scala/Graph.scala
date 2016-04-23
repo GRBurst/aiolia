@@ -9,14 +9,18 @@ package object types {
 import types._
 import collection.mutable
 
-//TODO: make Vertex a value class?
+//TODO: make Vertex a value class? (problems with mockito)
+// case class Vertex(label: Label) extends AnyVal {
 case class Vertex(label: Label) {
   override def toString = s"$label"
 }
 
 case class Edge(in: Vertex, out: Vertex) {
+  //TODO: allow selfloops?
+  // assert(in != out, "Self loops are not allowed")
   def contains(v: Vertex) = in == v || out == v
   override def toString = s"${in.label} -> ${out.label}"
+  def toSet = Set(in, out)
 }
 
 case class NonTerminal(label: Label, connectors: List[Vertex] = Nil) {
@@ -40,12 +44,16 @@ case class Graph[+V, +E](
 ) {
 
   //TODO: Graph: should connectors be distinct?
-  //TODO: allow selfloops?
-  assert(edges.flatMap(e => List(e.in, e.out)) subsetOf vertices, "All vertices used in edges have to be defined")
-  assert(vertexData.keys.toSet.diff(vertices).isEmpty, "Vertex data can only contain vertices in Graph")
-  assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only contain edges in Graph")
-  assert(nonTerminals.flatMap(_.connectors).toSet subsetOf vertices, "All vertices used in nonTerminals have to be defined")
-  assert(connectors.toSet subsetOf vertices, "All connectors must be used in Graph")
+  assert(edges.flatMap(e => List(e.in, e.out)) subsetOf vertices, "Edges can only connect existing vertices")
+  assert(vertexData.keys.toSet.diff(vertices).isEmpty, "Vertex data can only be attached to existing vertices")
+  assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only be attached to existing edges")
+  assert(nonTerminals.flatMap(_.connectors).toSet subsetOf vertices, "NonTerminals can only connect existing vertices")
+  assert(connectors.toSet subsetOf vertices, "Only existing vertices can be used as connectors")
+  assert((vertexData.keySet intersect connectors.toSet).isEmpty, "Connectors cannot store data")
+  // assert((edgeData.keySet.flatMap(_.toSet) intersect connectors.toSet).isEmpty, "Edges incident to connectors cannot store data")
+  // assert((nonTerminals.flatMap(_.connectors.toSet).toSet intersect connectors.toSet).isEmpty, "NonTerminals cannot connect connectors")
+
+  lazy val nonConnectors = vertices -- connectors
 
   def subGraphOf[V1 >: V, E1 >: E](that: Graph[V1, E1]) = {
     (this.vertices subsetOf that.vertices) &&

@@ -71,6 +71,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
       "nonTerminals" >> {
         graph(V(1), nts = List(NT(1, (1, 2, 3)))) must throwAn[AssertionError]
       }
+      "connectors" >> {
+        graph(V(1), c = VL(2)) must throwAn[AssertionError]
+        graph(V(1), c = VL(2, 1)) must throwAn[AssertionError]
+      }
     }
 
     "traversal accessors" >> {
@@ -164,19 +168,38 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
 
       // TODO: clean up redundant tests
-      val mphg = graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2))
+      val mphg = graph(
+        V(0 to 4),
+        E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
+        vertexData(3 -> "a", 4 -> "b"),
+        edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
+        List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+      )
       "remove vertex" >> {
         "from empty graph" >> {
           graph() - v(1) must throwA[AssertionError]
         }
 
         "existing vertex with edges" >> {
-          mphg - v(4) mustEqual graph(V(0 to 3), E(0 -> 3, 1 -> 3), nts = List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2))
+          mphg - v(4) mustEqual graph(
+            V(0 to 3),
+            E(0 -> 3, 1 -> 3),
+            vertexData(3 -> "a"),
+            edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L),
+            List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+          )
         }
-        "existing vertex with nonterminals" >> {
-          mphg - v(3) mustEqual graph(V(0, 1, 2, 4), E(0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2))), c = C(0, 1, 2))
+        "existing vertex with edgedata and nonterminals" >> {
+          mphg - v(3) mustEqual graph(
+            V(0, 1, 2, 4),
+            E(0 -> 4, 4 -> 2),
+            vertexData(4 -> "b"),
+            edgeData(0 -> 4 -> 18L),
+            nts = List(NT(1, (0, 2))), c = C(0, 1, 2)
+          )
         }
         "nonexisting vertex" >> {
+          (graph(V(0 to 2)) - v(18)) must throwAn[AssertionError]
           mphg - v(17) must throwA[AssertionError]
         }
         "input vertex" >> {
@@ -187,22 +210,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
       }
       "remove vertex" >> {
-        "nonexisting vertex" >> {
-          (graph(V(0 to 2)) - v(18)) must throwAn[AssertionError]
-        }
-        "existing vertex" >> {
-          val g = graph(
-            V(0 to 2),
-            E(0 -> 1, 1 -> 2, 0 -> 2),
-            nts = List(NT(1, (0, 2, 1)), NT(2, (2, 0)))
-          )
-          val wanted = graph(
-            V(0, 2),
-            E(0 -> 2),
-            nts = List(NT(2, (2, 0)))
-          )
-          (g - v(1)) mustEqual wanted
-        }
         "with data" >> {
           val g = graph(
             V(0 to 2),
@@ -226,7 +233,23 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing edge" >> {
-          mphg - e(4 -> 2) mustEqual graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4), nts = List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2))
+          mphg - e(4 -> 2) mustEqual graph(
+            V(0 to 4),
+            E(0 -> 3, 1 -> 3, 0 -> 4),
+            vertexData(3 -> "a", 4 -> "b"),
+            edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
+            nts = List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+          )
+        }
+
+        "existing edge with data" >> {
+          mphg - e(0 -> 3) mustEqual graph(
+            V(0 to 4),
+            E(1 -> 3, 0 -> 4, 4 -> 2),
+            vertexData(3 -> "a", 4 -> "b"),
+            edgeData((1 -> 3) -> 17L, 0 -> 4 -> 18L),
+            List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+          )
         }
 
         "nonexisting edge" >> {
@@ -252,7 +275,14 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing nonterminal" >> {
-          mphg - NT(1, (0, 2)) mustEqual graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(2, (3, 2))), c = C(0, 1, 2))
+          mphg - NT(1, (0, 2)) mustEqual graph(
+            V(0 to 4),
+            E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
+            vertexData(3 -> "a", 4 -> "b"),
+            edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
+            List(NT(2, (3, 2))), c = C(0, 1, 2)
+          )
+
         }
 
         "multiple nonterminals with same label" >> {
