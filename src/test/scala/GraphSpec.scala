@@ -173,14 +173,22 @@ class GraphSpec extends org.specs2.mutable.Specification {
         E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
         vertexData(3 -> "a", 4 -> "b"),
         edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
-        List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+        List(NT(1, (0, 2)), NT(2, (3, 2))),
+        c = C(0, 1, 2)
       )
+
       "remove vertex" >> {
         "from empty graph" >> {
           graph() - v(1) must throwA[AssertionError]
         }
+        "nonexisting vertex" >> {
+          mphg - v(17) must throwA[AssertionError]
+        }
+        "connector vertex" >> {
+          mphg - v(2) must throwA[AssertionError]
+        }
 
-        "existing vertex with edges" >> {
+        "existing vertex with edges and vertexData" >> {
           mphg - v(4) mustEqual graph(
             V(0 to 3),
             E(0 -> 3, 1 -> 3),
@@ -189,6 +197,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
             List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
           )
         }
+
         "existing vertex with edgedata and nonterminals" >> {
           mphg - v(3) mustEqual graph(
             V(0, 1, 2, 4),
@@ -198,38 +207,14 @@ class GraphSpec extends org.specs2.mutable.Specification {
             nts = List(NT(1, (0, 2))), c = C(0, 1, 2)
           )
         }
-        "nonexisting vertex" >> {
-          (graph(V(0 to 2)) - v(18)) must throwAn[AssertionError]
-          mphg - v(17) must throwA[AssertionError]
-        }
-        "input vertex" >> {
-          mphg - v(0) must throwA[AssertionError]
-        }
-        "ouput vertex" >> {
-          mphg - v(2) must throwA[AssertionError]
-        }
-      }
-      "remove vertex" >> {
-        "with data" >> {
-          val g = graph(
-            V(0 to 2),
-            E(0 -> 1, 1 -> 2, 0 -> 2),
-            vd = vertexData(1 -> "x", 2 -> "y"),
-            ed = edgeData((0 -> 1) -> "a", (1 -> 2) -> "b", (0 -> 2) -> "c")
-          )
-          val wanted = graph(
-            V(0, 2),
-            E(0 -> 2),
-            vd = vertexData(2 -> "y"),
-            ed = edgeData((0 -> 2) -> "c")
-          )
-          (g - v(1)) mustEqual wanted
-        }
       }
 
       "remove edge" >> {
         "from empty graph" >> {
           graph() - e(1 -> 2) must throwA[AssertionError]
+        }
+        "nonexisting edge" >> {
+          mphg - e(2 -> 4) must throwA[AssertionError]
         }
 
         "existing edge" >> {
@@ -251,22 +236,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
             List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
           )
         }
-
-        "nonexisting edge" >> {
-          mphg - e(2 -> 4) must throwA[AssertionError]
-        }
-      }
-      "remove edge" >> {
-        "nonexisting" >> {
-          (graph(V(0 to 2)) - e(18 -> 19)) must throwAn[AssertionError]
-        }
-        "existing edge" >> {
-          (graph(V(0 to 2), E(0 -> 2, 0 -> 1)) - e(0 -> 1)) mustEqual graph(V(0 to 2), E(0 -> 2))
-        }
-        "with data" >> {
-          val g = graph(V(0 to 2), E(0 -> 2, 0 -> 1), ed = edgeData((0 -> 2) -> "a", (0 -> 1) -> "b"))
-          (g - e(0 -> 1)) mustEqual graph(V(0 to 2), E(0 -> 2), ed = edgeData((0 -> 2) -> "a"))
-        }
       }
 
       "remove nonterminal" >> {
@@ -282,7 +251,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
             edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
             List(NT(2, (3, 2))), c = C(0, 1, 2)
           )
-
         }
 
         "multiple nonterminals with same label" >> {
@@ -299,6 +267,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
           mphg - NT(3) must throwA[AssertionError]
         }
       }
+
       "remove nonterminal" >> {
         "nonexisting" >> {
           (graph(V(0 to 2)) - NT(18, (19, 20))) must throwAn[AssertionError]
