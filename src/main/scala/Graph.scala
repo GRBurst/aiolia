@@ -48,6 +48,7 @@ case class Graph[+V, +E](
   assert(vertexData.keys.toSet.diff(vertices).isEmpty, "Vertex data can only be attached to existing vertices")
   assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only be attached to existing edges")
   assert(nonTerminals.flatMap(_.connectors).toSet subsetOf vertices, "NonTerminals can only connect existing vertices")
+  //TODO: nonterminals with same label must have the same connectors (?)
   assert(connectors.toSet subsetOf vertices, "Only existing vertices can be used as connectors")
   assert((vertexData.keySet intersect connectors.toSet).isEmpty, "Connectors cannot store data")
   // assert((edgeData.keySet.flatMap(_.toSet) intersect connectors.toSet).isEmpty, "Edges incident to connectors cannot store data")

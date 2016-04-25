@@ -78,7 +78,11 @@ class GraphSpec extends org.specs2.mutable.Specification {
     }
 
     "traversal accessors" >> {
-      val g = graph(V(0 to 6), E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3))
+      val g = graph(
+        V(0 to 6),
+        E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3),
+        nts = List(NT(1), NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5)))
+      )
       "successors" >> {
         g.successors(v(0)) mustEqual V()
         g.successors(v(1)) mustEqual V(0, 2)
@@ -148,7 +152,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.neighbours(V(1, 2)) mustEqual V(0, 4, 3)
           g.neighbours(V(5, 3)) mustEqual V(2)
           g.neighbours(V(6, 2, 3, 4)) mustEqual V(5, 1)
-          g.neighbours(V(0 to 6)) mustEqual V()
+          g.neighbours(g.vertices) mustEqual V()
         }
       }
 
@@ -182,8 +186,31 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
 
       "incident nonterminals" >> {
-        "singe vertex" >> todo
-        "multiple vertices" >> todo
+        "singe vertex" >> {
+          g.incidentNonTerminals(v(0)) mustEqual List()
+          g.incidentNonTerminals(v(1)) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)))
+          g.incidentNonTerminals(v(2)) mustEqual List(NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(v(3)) mustEqual List(NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(v(4)) mustEqual List()
+          g.incidentNonTerminals(v(5)) mustEqual List(NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(v(6)) mustEqual List()
+          g.incidentNonTerminals(v(7)) must throwAn[AssertionError]
+        }
+        "multiple vertices" >> {
+          g.incidentNonTerminals(V(0)) mustEqual List()
+          g.incidentNonTerminals(V(1)) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)))
+          g.incidentNonTerminals(V(2)) mustEqual List(NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(3)) mustEqual List(NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(4)) mustEqual List()
+          g.incidentNonTerminals(V(5)) mustEqual List(NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(6)) mustEqual List()
+          g.incidentNonTerminals(V(7)) must throwAn[AssertionError]
+
+          g.incidentNonTerminals(V()) mustEqual E()
+          g.incidentNonTerminals(V(2, 3)) mustEqual List(NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(0, 1)) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)))
+          g.incidentNonTerminals(g.vertices) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5))) // without NT(1)
+        }
       }
 
       "induced" >> {
