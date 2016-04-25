@@ -16,6 +16,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
     "toString" >> {
       e(2 -> 3).toString mustEqual "2 -> 3"
     }
+    "disallow self loops" >> {
+      e(1 -> 1) must throwAn[AssertionError]
+    }
     "contains vertex" >> {
       (e(2 -> 3) contains v(1)) must beFalse
       (e(2 -> 3) contains v(2)) must beTrue

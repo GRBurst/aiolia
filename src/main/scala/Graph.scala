@@ -16,8 +16,7 @@ case class Vertex(label: Label) {
 }
 
 case class Edge(in: Vertex, out: Vertex) {
-  //TODO: allow selfloops?
-  // assert(in != out, "Self loops are not allowed")
+  assert(in != out, "Self loops are not allowed")
   def contains(v: Vertex) = in == v || out == v
   override def toString = s"${in.label} -> ${out.label}"
   def toSet = Set(in, out)
