@@ -78,7 +78,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
     }
 
     "traversal accessors" >> {
-      val g = graph(V(0 to 5), E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3))
+      val g = graph(V(0 to 6), E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3))
       "successors" >> {
         g.successors(v(0)) mustEqual V()
         g.successors(v(1)) mustEqual V(0, 2)
@@ -86,6 +86,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
         g.successors(v(3)) mustEqual V(5)
         g.successors(v(4)) mustEqual V()
         g.successors(v(5)) mustEqual V(3)
+        g.successors(v(6)) mustEqual V()
+        g.successors(v(7)) must throwAn[AssertionError]
       }
 
       "predecessors" >> {
@@ -95,6 +97,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
         g.predecessors(v(3)) mustEqual V(2, 5)
         g.predecessors(v(4)) mustEqual V(2)
         g.predecessors(v(5)) mustEqual V(3)
+        g.predecessors(v(6)) mustEqual V()
+        g.predecessors(v(7)) must throwAn[AssertionError]
       }
 
       "incoming edges" >> {
@@ -104,6 +108,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
         g.incomingEdges(v(3)) mustEqual E(2 -> 3, 5 -> 3)
         g.incomingEdges(v(4)) mustEqual E(2 -> 4)
         g.incomingEdges(v(5)) mustEqual E(3 -> 5)
+        g.incomingEdges(v(6)) mustEqual E()
+        g.incomingEdges(v(7)) must throwAn[AssertionError]
       }
 
       "outgoing edges" >> {
@@ -113,16 +119,66 @@ class GraphSpec extends org.specs2.mutable.Specification {
         g.outgoingEdges(v(3)) mustEqual E(3 -> 5)
         g.outgoingEdges(v(4)) mustEqual E()
         g.outgoingEdges(v(5)) mustEqual E(5 -> 3)
+        g.outgoingEdges(v(6)) mustEqual E()
+        g.outgoingEdges(v(7)) must throwAn[AssertionError]
       }
 
       "neighbours" >> {
-        "over edges" >> todo
-        "form multiple vertices" >> todo
+        "over edges" >> {
+          g.neighbours(v(0)) mustEqual V(1)
+          g.neighbours(v(1)) mustEqual V(0, 2)
+          g.neighbours(v(2)) mustEqual V(1, 4, 3)
+          g.neighbours(v(3)) mustEqual V(5, 2)
+          g.neighbours(v(4)) mustEqual V(2)
+          g.neighbours(v(5)) mustEqual V(3)
+          g.neighbours(v(6)) mustEqual V()
+          g.neighbours(v(7)) must throwAn[AssertionError]
+        }
+        "form multiple vertices" >> {
+          g.neighbours(V(0)) mustEqual V(1)
+          g.neighbours(V(1)) mustEqual V(0, 2)
+          g.neighbours(V(2)) mustEqual V(1, 4, 3)
+          g.neighbours(V(3)) mustEqual V(5, 2)
+          g.neighbours(V(4)) mustEqual V(2)
+          g.neighbours(V(5)) mustEqual V(3)
+          g.neighbours(V(6)) mustEqual V()
+          g.neighbours(V(7)) must throwAn[AssertionError]
+
+          g.neighbours(V()) mustEqual V()
+          g.neighbours(V(1, 2)) mustEqual V(0, 4, 3)
+          g.neighbours(V(5, 3)) mustEqual V(2)
+          g.neighbours(V(6, 2, 3, 4)) mustEqual V(5, 1)
+          g.neighbours(V(0 to 6)) mustEqual V()
+        }
       }
 
       "incident edges" >> {
-        "singe vertex" >> todo
-        "multiple vertices" >> todo
+        "singe vertex" >> {
+          g.incidentEdges(v(0)) mustEqual E(1 -> 0)
+          g.incidentEdges(v(1)) mustEqual E(1 -> 0, 1 -> 2)
+          g.incidentEdges(v(2)) mustEqual E(1 -> 2, 2 -> 4, 2 -> 3)
+          g.incidentEdges(v(3)) mustEqual E(2 -> 3, 5 -> 3, 3 -> 5)
+          g.incidentEdges(v(4)) mustEqual E(2 -> 4)
+          g.incidentEdges(v(5)) mustEqual E(3 -> 5, 5 -> 3)
+          g.incidentEdges(v(6)) mustEqual E()
+          g.incidentEdges(v(7)) must throwAn[AssertionError]
+
+        }
+        "multiple vertices" >> {
+          g.incidentEdges(V(0)) mustEqual E(1 -> 0)
+          g.incidentEdges(V(1)) mustEqual E(1 -> 0, 1 -> 2)
+          g.incidentEdges(V(2)) mustEqual E(1 -> 2, 2 -> 4, 2 -> 3)
+          g.incidentEdges(V(3)) mustEqual E(2 -> 3, 5 -> 3, 3 -> 5)
+          g.incidentEdges(V(4)) mustEqual E(2 -> 4)
+          g.incidentEdges(V(5)) mustEqual E(3 -> 5, 5 -> 3)
+          g.incidentEdges(V(6)) mustEqual E()
+          g.incidentEdges(V(7)) must throwAn[AssertionError]
+
+          g.incidentEdges(V()) mustEqual E()
+          g.incidentEdges(V(2, 3)) mustEqual E(1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3)
+          g.incidentEdges(V(0, 1)) mustEqual E(1 -> 0, 1 -> 2)
+          g.incidentEdges(g.vertices) mustEqual g.edges
+        }
       }
 
       "incident nonterminals" >> {

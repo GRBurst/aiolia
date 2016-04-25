@@ -65,8 +65,10 @@ case class Graph[+V, +E](
   // def predecessors(v: Vertex) = edges.collect { case Edge(in, `v`) => in }
   // def outgoingEdges(v: Vertex) = edges.filter(_.in == v)
   // def incomingEdges(v: Vertex) = edges.filter(_.out == v)
-  private def MapVVempty = Map.empty[Vertex, Set[Vertex]].withDefaultValue(Set.empty)
-  private def MapVEempty = Map.empty[Vertex, Set[Edge]].withDefaultValue(Set.empty)
+
+  private def MapVVempty = Map.empty[Vertex, Set[Vertex]].withDefault((v: Vertex) => { assert(vertices contains v); Set.empty[Vertex] })
+  private def MapVEempty = Map.empty[Vertex, Set[Edge]].withDefault((v: Vertex) => { assert(vertices contains v); Set.empty[Edge] })
+
   lazy val successors: Map[Vertex, Set[Vertex]] = edges.foldLeft(MapVVempty){ case (suc, Edge(in, out)) => suc + (in -> (suc(in) + out)) }
   lazy val predecessors: Map[Vertex, Set[Vertex]] = edges.foldLeft(MapVVempty){ case (pre, Edge(in, out)) => pre + (out -> (pre(out) + in)) }
   lazy val incomingEdges: Map[Vertex, Set[Edge]] = edges.foldLeft(MapVEempty){ case (incoming, edge @ Edge(_, out)) => incoming + (out -> (incoming(out) + edge)) }
@@ -110,32 +112,50 @@ case class Graph[+V, +E](
     copy(nonTerminals = nonTerminals.take(i) ++ nonTerminals.drop(i + 1))
   }
 
-  def neighbours(v: Vertex): Set[Vertex] = edges.collect {
-    case Edge(`v`, out) => out
-    case Edge(in, `v`)  => in
+  def neighbours(v: Vertex): Set[Vertex] = {
+    assert(vertices contains v)
+    edges.collect {
+      case Edge(`v`, out) => out
+      case Edge(in, `v`)  => in
+    }
   }
   // open neighbourhood
-  def neighbours(vs: Iterable[Vertex]): Set[Vertex] = vs.flatMap(neighbours).toSet -- vs
-
-  def incidentEdges(v: Vertex): Set[Edge] = edges.filter(_ contains v)
-  def incidentEdges(vs: Iterable[Vertex]): Set[Edge] = vs.flatMap(incidentEdges).toSet
+  def neighbours(vs: Iterable[Vertex]): Set[Vertex] = {
+    assert(vs.toSet subsetOf vertices)
+    vs.flatMap(neighbours).toSet -- vs
+  }
+  def incidentEdges(v: Vertex): Set[Edge] = {
+    assert(vertices contains v)
+    edges.filter(_ contains v)
+  }
+  def incidentEdges(vs: Iterable[Vertex]): Set[Edge] = {
+    assert(vs.toSet subsetOf vertices)
+    vs.flatMap(incidentEdges).toSet
+  }
 
   def inducedEdges(vs: Iterable[Vertex]): Set[Edge] = {
+    assert(vs.toSet subsetOf vertices)
     val vsSet = vs.toSet
     edges.filter(e => (vsSet contains e.in) && (vsSet contains e.out))
   }
 
-  def incidentNonTerminals(v: Vertex): List[NonTerminal] = nonTerminals.filter(_ contains v)
+  def incidentNonTerminals(v: Vertex): List[NonTerminal] = {
+    assert(vertices contains v)
+    nonTerminals.filter(_ contains v)
+  }
   def incidentNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
+    assert(vs.toSet subsetOf vertices)
     val vsSet = vs.toSet
     nonTerminals.filter(_.connectors.exists(vsSet contains _))
   }
   def inducedNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
+    assert(vs.toSet subsetOf vertices)
     val vsSet = vs.toSet
     nonTerminals.filter(_.connectors.toSet subsetOf vsSet)
   }
 
   def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
+    assert(vs.toSet subsetOf vertices)
     val vsSet = vs.toSet
     Graph(vsSet, inducedEdges(vsSet), nonTerminals = inducedNonTerminals(vsSet))
   }
