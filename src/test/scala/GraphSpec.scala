@@ -140,6 +140,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
 
     "modifications" >> {
       //TODO: what about empty nonterminals in modification operations?
+
       "add vertex" >> {
         "existing" >> {
           graph(V(0 to 2)) + v(1) must throwAn[AssertionError]
@@ -167,8 +168,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
       }
 
-      // TODO: clean up redundant tests
-      val mphg = graph(
+      val g = graph(
         V(0 to 4),
         E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
         vertexData(3 -> "a", 4 -> "b"),
@@ -182,14 +182,14 @@ class GraphSpec extends org.specs2.mutable.Specification {
           graph() - v(1) must throwA[AssertionError]
         }
         "nonexisting vertex" >> {
-          mphg - v(17) must throwA[AssertionError]
+          g - v(17) must throwA[AssertionError]
         }
         "connector vertex" >> {
-          mphg - v(2) must throwA[AssertionError]
+          g - v(2) must throwA[AssertionError]
         }
 
         "existing vertex with edges and vertexData" >> {
-          mphg - v(4) mustEqual graph(
+          g - v(4) mustEqual graph(
             V(0 to 3),
             E(0 -> 3, 1 -> 3),
             vertexData(3 -> "a"),
@@ -199,7 +199,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing vertex with edgedata and nonterminals" >> {
-          mphg - v(3) mustEqual graph(
+          g - v(3) mustEqual graph(
             V(0, 1, 2, 4),
             E(0 -> 4, 4 -> 2),
             vertexData(4 -> "b"),
@@ -214,11 +214,11 @@ class GraphSpec extends org.specs2.mutable.Specification {
           graph() - e(1 -> 2) must throwA[AssertionError]
         }
         "nonexisting edge" >> {
-          mphg - e(2 -> 4) must throwA[AssertionError]
+          g - e(2 -> 4) must throwA[AssertionError]
         }
 
         "existing edge" >> {
-          mphg - e(4 -> 2) mustEqual graph(
+          g - e(4 -> 2) mustEqual graph(
             V(0 to 4),
             E(0 -> 3, 1 -> 3, 0 -> 4),
             vertexData(3 -> "a", 4 -> "b"),
@@ -228,7 +228,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing edge with data" >> {
-          mphg - e(0 -> 3) mustEqual graph(
+          g - e(0 -> 3) mustEqual graph(
             V(0 to 4),
             E(1 -> 3, 0 -> 4, 4 -> 2),
             vertexData(3 -> "a", 4 -> "b"),
@@ -244,7 +244,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
 
         "existing nonterminal" >> {
-          mphg - NT(1, (0, 2)) mustEqual graph(
+          g - NT(1, (0, 2)) mustEqual graph(
             V(0 to 4),
             E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
             vertexData(3 -> "a", 4 -> "b"),
@@ -254,26 +254,17 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
 
         "multiple nonterminals with same label" >> {
-          val mphg = graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2)), NT(1, (3, 2))), c = C(0, 1, 2))
-          mphg - NT(1, (3, 2)) mustEqual graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2))), c = C(0, 1, 2))
+          val g = graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2)), NT(1, (3, 2))), c = C(0, 1, 2))
+          g - NT(1, (3, 2)) mustEqual graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2))), c = C(0, 1, 2))
         }
 
         "multiple nonterminals with same label connected to same vertices" >> {
-          val mphg = graph(V(0 to 2), nts = List(NT(1, (0, 2, 1)), NT(1, (0, 2, 1))), c = C(0, 1))
-          mphg - NT(1, (0, 2, 1)) mustEqual graph(V(0 to 2), nts = List(NT(1, (0, 2, 1))), c = C(0, 1))
+          val g = graph(V(0 to 2), nts = List(NT(1, (0, 2, 1)), NT(1, (0, 2, 1))), c = C(0, 1))
+          g - NT(1, (0, 2, 1)) mustEqual graph(V(0 to 2), nts = List(NT(1, (0, 2, 1))), c = C(0, 1))
         }
 
         "nonexisting nonterminal" >> {
-          mphg - NT(3) must throwA[AssertionError]
-        }
-      }
-
-      "remove nonterminal" >> {
-        "nonexisting" >> {
-          (graph(V(0 to 2)) - NT(18, (19, 20))) must throwAn[AssertionError]
-        }
-        "existing nonterminal" >> {
-          (graph(V(0 to 2), nts = List(NT(1, (0, 2)))) - NT(1, (0, 2))) mustEqual graph(V(0 to 2))
+          g - NT(3) must throwA[AssertionError]
         }
       }
 
