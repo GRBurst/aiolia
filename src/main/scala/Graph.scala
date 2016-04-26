@@ -156,6 +156,8 @@ case class Graph[+V, +E](
   }
 
   def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
+    //TODO: data
+    //TODO: assert on connectors?
     assert(vs.toSet subsetOf vertices)
     val vsSet = vs.toSet
     Graph(vsSet, inducedEdges(vsSet), nonTerminals = inducedNonTerminals(vsSet))

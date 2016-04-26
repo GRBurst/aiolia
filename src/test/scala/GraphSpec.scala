@@ -65,7 +65,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
         graph(V(1), E(1 -> 2)) must throwAn[AssertionError]
         graph(V(2), E(1 -> 2)) must throwAn[AssertionError]
       }
-      "self loops" >> todo
       "vertex data" >> { graph(V(), vd = vertexData(1 -> 5)) must throwAn[AssertionError] }
       "edge data" >> {
         graph(V(1, 2), ed = edgeData((1 -> 2) -> 5)) must throwAn[AssertionError]
@@ -217,8 +216,40 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
 
       "induced" >> {
-        "edges" >> todo
-        "nonterminals" >> todo
+        "edges" >> {
+          g.inducedEdges(V(0)) mustEqual E()
+          g.inducedEdges(V(1)) mustEqual E()
+          g.inducedEdges(V(2)) mustEqual E()
+          g.inducedEdges(V(3)) mustEqual E()
+          g.inducedEdges(V(4)) mustEqual E()
+          g.inducedEdges(V(5)) mustEqual E()
+          g.inducedEdges(V(6)) mustEqual E()
+          g.inducedEdges(V(7)) must throwAn[AssertionError]
+
+          g.inducedEdges(V()) mustEqual E()
+          g.inducedEdges(V(2, 3)) mustEqual E(2 -> 3)
+          g.inducedEdges(V(0, 1)) mustEqual E(1 -> 0)
+          g.inducedEdges(V(0, 1, 2, 6)) mustEqual E(1 -> 0, 1 -> 2)
+          g.inducedEdges(V(5, 3)) mustEqual E(5 -> 3, 3 -> 5)
+          g.inducedEdges(g.vertices) mustEqual g.edges
+        }
+        "nonterminals" >> {
+          g.inducedNonTerminals(V(0)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(1)) must containTheSameElementsAs(List(NT(1), NT(2, (1))))
+          g.inducedNonTerminals(V(2)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(3)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(4)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(5)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(6)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(7)) must throwAn[AssertionError]
+
+          g.inducedNonTerminals(V()) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(2, 3)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(0, 1)) must containTheSameElementsAs(List(NT(1), NT(2, (1))))
+          g.inducedNonTerminals(V(1, 5)) must containTheSameElementsAs(List(NT(1), NT(2, (1)), NT (3, (1, 5)), NT(3, (1, 5))))
+          g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(NT(1), NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5))))
+          g.inducedNonTerminals(g.vertices) must containTheSameElementsAs(g.nonTerminals)
+        }
         "subgraph" >> todo
         "subgraph with data" >> todo
       }
