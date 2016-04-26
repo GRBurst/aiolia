@@ -30,5 +30,6 @@ initialCommands in console := """
 import aiolia._
 import aiolia.graph._
 import aiolia.graph.types._
+import aiolia.graph.dsl._
 import aiolia.helpers._
                               """
