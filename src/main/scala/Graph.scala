@@ -74,7 +74,7 @@ case class Graph[+V, +E](
   assert(connectors.toSet subsetOf vertices, s"Only existing vertices can be used as connectors. ($connectors not subset of $vertices)")
   assert((vertexData.keySet intersect connectors.toSet).isEmpty, "Connectors cannot store data")
 
-  lazy val nonConnectors = vertices -- connectors
+  def nonConnectors = vertices -- connectors
 
   def subGraphOf[V1 >: V, E1 >: E](that: Graph[V1, E1]) = {
     (this.vertices subsetOf that.vertices) &&

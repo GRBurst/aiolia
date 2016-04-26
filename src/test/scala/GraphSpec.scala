@@ -133,6 +133,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
     }
 
+    "nonConnectors" >> {
+      cgraph(C(1, 2), V(1, 2, 3, 4)).nonConnectors mustEqual V(3, 4)
+    }
+
     "traversal accessors" >> {
       val g = graph(
         V(0 to 6),
