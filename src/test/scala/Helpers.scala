@@ -2,13 +2,10 @@ package aiolia.test
 
 import aiolia._
 import aiolia.graph._
+import aiolia.graph.types._
 import aiolia.graph.dsl._
 
 object Helpers {
-  //TODO: vertexData, edgeData shorter?
-  def vertexData[V](data: (Int, V)*) = data.map { case (label, data) => Vertex(label) -> data }.toMap
-  def edgeData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), data) => e(a -> b) -> data }.toMap
-
   // default parameter order
   def graph[V, E](
     v:   Set[Vertex],
