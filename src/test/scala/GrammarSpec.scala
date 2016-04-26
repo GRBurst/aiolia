@@ -236,5 +236,36 @@ class GrammarSpec extends org.specs2.mutable.Specification {
       )
       g.cleanup mustEqual grammar(axiom, 1 -> cgraph(), 2 -> cgraph())
     }
+    "remove production" >> {
+      "assert remove of used NonTerminal" >> {
+        val axiom = graph(nt(1))
+        val g = grammar(
+          axiom,
+          1 -> cgraph(nt(2)),
+          2 -> cgraph()
+        )
+
+        g.removeProduction(2) must throwAn[AssertionError]
+      }
+      "assert remove of axiom NonTerminal" >> {
+        val axiom = graph(nt(1))
+        val g = grammar(
+          axiom,
+          1 -> cgraph()
+        )
+
+        g.removeProduction(1) must throwAn[AssertionError]
+      }
+      "remove of unused production" >> {
+        val axiom = graph(nt(1))
+        val g = grammar(
+          axiom,
+          1 -> cgraph(),
+          2 -> cgraph()
+        )
+
+        g.removeProduction(2) mustEqual Grammar(axiom, Map(1 -> cgraph()))
+      }
+    }
   }
 }

@@ -20,7 +20,9 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   }
 
   def removeProduction(nonTerminal: Label) = {
-    //TODO: assert: label should not be used in rhs of all productions
+    // Recursive productions are not allowed, so check for all productions.
+    assert(!productions.values.exists(_.nonTerminals.map(_.label) contains nonTerminal), "to-be-removed production is used in another production")
+    assert(!(axiom.nonTerminals.map(_.label) contains nonTerminal), "to-be-removed production is used in axiom")
     copy(productions = productions - nonTerminal)
   }
 
