@@ -2,7 +2,7 @@ package aiolia.test
 
 import aiolia.NeuralNetwork
 import aiolia.graph._
-import aiolia.graph.types._
+import aiolia.graph.dsl._
 
 import Helpers._
 

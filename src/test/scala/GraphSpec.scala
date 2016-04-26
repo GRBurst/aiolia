@@ -1,11 +1,35 @@
 package aiolia.test
 
 import aiolia.graph._
+import aiolia.graph.dsl._
 
 import Helpers._
 
 class GraphSpec extends org.specs2.mutable.Specification {
-  //TODO: test dsl
+  "dsl" >> {
+    "vertex" >> {
+      v(1) mustEqual Vertex(1)
+    }
+    "vertex range" >> {
+      V(4 to 6) mustEqual Set(Vertex(4), Vertex(5), Vertex(6))
+    }
+    "vertex set" >> {
+      V(1, 2) mustEqual Set(Vertex(1), Vertex(2))
+    }
+    "vertex list" >> {
+      VL(1, 2, 3) mustEqual List(Vertex(1), Vertex(2), Vertex(3))
+    }
+    "edge" >> {
+      e(3 -> 2) mustEqual Edge(Vertex(3), Vertex(2))
+    }
+    "edge set" >> {
+      E(1 -> 2, 2 -> 3) mustEqual Set(Edge(Vertex(1), Vertex(2)), Edge(Vertex(2), Vertex(3)))
+    }
+    "connectors" >> {
+      C(1, 2, 3) mustEqual List(Vertex(1), Vertex(2), Vertex(3))
+    }
+  }
+
   "vertex" >> {
     "toString" >> {
       v(2).toString mustEqual "2"
