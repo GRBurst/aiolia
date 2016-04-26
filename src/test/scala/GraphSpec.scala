@@ -37,6 +37,12 @@ class GraphSpec extends org.specs2.mutable.Specification {
       nt(1) mustEqual NonTerminal(1)
       nt(1, List(1)) must throwAn[AssertionError]
     }
+    "vertex-data" >> {
+      vData(1 -> "hans", 2 -> "peter") mustEqual Map(Vertex(1) -> "hans", Vertex(2) -> "peter")
+    }
+    "edge-data" >> {
+      eData((1 -> 2) -> "wurst", (2 -> 1) -> "fach") mustEqual Map(Edge(Vertex(1), Vertex(2)) -> "wurst", Edge(Vertex(2), Vertex(1)) -> "fach")
+    }
   }
 
   "vertex" >> {
