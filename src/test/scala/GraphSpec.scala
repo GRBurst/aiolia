@@ -493,6 +493,30 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
       }
 
+      "merge graphs" >> {
+        "assert" >> {
+          g ++ graph(V(0), c = C(0)) must throwAn[AssertionError]
+        }
+        "example" >> {
+          val g = graph(
+            V(0 to 2),
+            E(0 -> 1, 1 -> 2),
+            vData(0 -> 0, 2 -> 0),
+            eData((0 -> 1) -> "A", (1 -> 2) -> "A"),
+            List(nt(1, (0, 1))),
+            c = C(1)
+          )
+          val g2 = graph(
+            V(1 to 3),
+            E(2 -> 1, 3 -> 2),
+            vData(2 -> 1, 3 -> 1),
+            eData((1 -> 2) -> "B"),
+            List(nt(1, (0, 1)), nt(2, (0, 4)))
+          )
+          g ++ g2 mustEqual graph(V(0 to 3), E(0 -> 1, 1 -> 2, 2 -> 1, 3 -> 1), vData(0 -> 0, 2 -> 1, 3 -> 1), eData((0 -> 1) -> "A", (1 -> 2) -> "B"), List(nt(1, (0, 1)), nt(2)))
+        }
+      }
+
       "remove subgraph" >> {
         "assertions" >> {
           g -- graph(V(0 to 17)) must throwAn[AssertionError]
