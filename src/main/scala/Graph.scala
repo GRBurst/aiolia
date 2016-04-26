@@ -99,19 +99,19 @@ case class Graph[+V, +E](
   // lazy val outgoingEdges: Map[Vertex, Set[Edge]] = edges.foldLeft(MapVEempty){ case (outgoing, edge @ Edge(in, _)) => outgoing + (in -> (outgoing(in) + edge)) }
 
   def +(v: Vertex) = {
-    assert(!(vertices contains v), s"Vertex $v already exists in ${vertices}")
+    assert(!(vertices contains v), s"Vertex $v already exists in $vertices")
     copy(vertices = vertices + v)
   }
 
   def +(e: Edge) = {
-    assert(!(edges contains e), s"Edge $e already exists in ${edges}")
+    assert(!(edges contains e), s"Edge $e already exists in $edges")
     copy(edges = edges + e)
   }
 
   def +(h: NonTerminal) = copy(nonTerminals = h :: nonTerminals)
 
   def -(v: Vertex) = {
-    assert(vertices contains v, s"Vertex $v does not exist in ${vertices}")
+    assert(vertices contains v, s"Vertex $v does not exist in $vertices")
     assert(!(connectors contains v), s"Cannot remove connector vertex $v")
 
     val (removedEdges, retainedEdges) = edges.partition(_ contains v)
@@ -126,12 +126,12 @@ case class Graph[+V, +E](
   }
 
   def -(e: Edge) = {
-    assert(edges contains e, s"Edge $e does not exist in ${edges}")
+    assert(edges contains e, s"Edge $e does not exist in $edges")
     copy(edges = edges - e, edgeData = edgeData - e)
   }
 
   def -(h: NonTerminal) = {
-    assert(nonTerminals contains h, s"NonTerminal $h does not exist in ${nonTerminals}")
+    assert(nonTerminals contains h, s"NonTerminal $h does not exist in $nonTerminals")
     val i = nonTerminals indexOf h
     copy(nonTerminals = nonTerminals.take(i) ++ nonTerminals.drop(i + 1))
   }
@@ -221,7 +221,7 @@ case class Graph[+V, +E](
     override def next: Vertex = {
       val current = stack.pop
       seen += current
-      stack pushAll revSort(successors(current) filterNot ((seen ++ stack) contains))
+      stack pushAll revSort(successors(current) diff seen ++ stack)
       current
     }
   }
@@ -260,8 +260,8 @@ case class Graph[+V, +E](
 
     val nonTerminals = replacement.nonTerminals.map { case NonTerminal(label, connectors) => NonTerminal(label, connectors.map(v => vertexMap(v.label))) }
 
-    val vertexData = replacement.vertexData.map { case (Vertex(label), v) => vertexMap(label) -> v }.toMap
-    val edgeData = replacement.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertexMap(in), vertexMap(out)) -> v }.toMap
+    val vertexData = replacement.vertexData.map { case (Vertex(label), v) => vertexMap(label) -> v }
+    val edgeData = replacement.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertexMap(in), vertexMap(out)) -> v }
 
     Graph(
       this.vertices ++ vertices,
