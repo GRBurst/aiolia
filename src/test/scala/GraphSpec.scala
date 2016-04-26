@@ -83,7 +83,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
       val g = graph(
         V(0 to 6),
         E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3),
-        nts = List(NT(1), NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5)))
+        vertexData(2 -> "a", 1 -> "b", 3 -> "c"),
+        edgeData((2 -> 3) -> "x", (1 -> 2) -> "y", (1 -> 0) -> "z"),
+        List(NT(1), NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5))),
+        C(5)
       )
       "successors" >> {
         g.successors(v(0)) mustEqual V()
@@ -250,8 +253,16 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(NT(1), NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5))))
           g.inducedNonTerminals(g.vertices) must containTheSameElementsAs(g.nonTerminals)
         }
-        "subgraph" >> todo
-        "subgraph with data" >> todo
+        "subgraph" >> {
+          g.inducedSubGraph(V()) mustEqual graph(NT(1))
+
+          val sub = g.inducedSubGraph(V(5, 3, 2))
+          sub.vertices mustEqual V(5, 3, 2)
+          sub.edges mustEqual E(2 -> 3, 3 -> 5, 5 -> 3)
+          sub.nonTerminals must containTheSameElementsAs(List(NT(1), NT(4, (2, 3, 5))))
+
+          g.inducedSubGraph(g.vertices) mustEqual g
+        }
       }
     }
 

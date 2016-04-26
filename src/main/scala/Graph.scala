@@ -48,7 +48,7 @@ case class Graph[+V, +E](
   assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only be attached to existing edges")
   assert(nonTerminals.flatMap(_.connectors).toSet subsetOf vertices, "NonTerminals can only connect existing vertices")
   //TODO: nonterminals with same label must have the same connectors (?)
-  assert(connectors.toSet subsetOf vertices, "Only existing vertices can be used as connectors")
+  assert(connectors.toSet subsetOf vertices, s"Only existing vertices can be used as connectors. ($connectors not subset of $vertices)")
   assert((vertexData.keySet intersect connectors.toSet).isEmpty, "Connectors cannot store data")
   // assert((edgeData.keySet.flatMap(_.toSet) intersect connectors.toSet).isEmpty, "Edges incident to connectors cannot store data")
   // assert((nonTerminals.flatMap(_.connectors.toSet).toSet intersect connectors.toSet).isEmpty, "NonTerminals cannot connect connectors")
@@ -58,7 +58,8 @@ case class Graph[+V, +E](
   def subGraphOf[V1 >: V, E1 >: E](that: Graph[V1, E1]) = {
     (this.vertices subsetOf that.vertices) &&
       (this.edges subsetOf that.edges) &&
-      (this.nonTerminals.toSet subsetOf that.nonTerminals.toSet)
+      (this.nonTerminals.toSet subsetOf that.nonTerminals.toSet) &&
+      (this.connectors.toSet subsetOf that.connectors.toSet)
   }
 
   def successors(v: Vertex) = { assert(vertices contains v); edges.collect { case Edge(`v`, out) => out } }
@@ -156,11 +157,20 @@ case class Graph[+V, +E](
   }
 
   def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
-    //TODO: data
-    //TODO: assert on connectors?
-    assert(vs.toSet subsetOf vertices)
+    assert(vs.toSet subsetOf vertices, "Can only induce on existing vertices")
+
     val vsSet = vs.toSet
-    Graph(vsSet, inducedEdges(vsSet), nonTerminals = inducedNonTerminals(vsSet))
+    val selectedEdges = inducedEdges(vsSet)
+    val subGraph = Graph(
+      vsSet,
+      selectedEdges,
+      vertexData.filterKeys(vsSet contains _),
+      edgeData.filterKeys(selectedEdges contains _),
+      inducedNonTerminals(vsSet),
+      connectors.filter(vsSet contains _)
+    )
+    assert(subGraph subGraphOf this)
+    subGraph
   }
 
   def --[E1, V1](subGraph: Graph[E1, V1]) = {
