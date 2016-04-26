@@ -49,6 +49,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
     "toString" >> {
       v(2).toString mustEqual "2"
     }
+    "map" >> {
+      v(1).map(_ + 1) mustEqual v(2)
+    }
   }
 
   "edge" >> {
@@ -67,6 +70,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
     "toSet" >> {
       e(1 -> 2).toSet mustEqual V(1, 2)
     }
+    "map" >> {
+      e(1 -> 2).map(_ + 1) mustEqual e(2 -> 3)
+    }
   }
 
   "nonterminal" >> {
@@ -79,6 +85,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
     }
     "toString" >> {
       nt(2, (1, 7, 3, 4)).toString mustEqual "[2:1-7-3-4]"
+    }
+    "map" >> {
+      nt(1, (1, 2, 3)).map(_ * 2) mustEqual nt(1, (2, 4, 6))
     }
   }
 
@@ -104,6 +113,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
       "with connectors" >> {
         graph(V(0 to 3), E(1 -> 0, 1 -> 2, 2 -> 3), c = C(0, 3)).toString mustEqual "Graph(V(0 1 2 3), E(1 -> 0, 1 -> 2, 2 -> 3), C(0-3))"
       }
+    }
+    "map" >> {
+      val g = graph(V(0 to 3), E(0 -> 1, 1 -> 2, 2 -> 3), vData(0 -> "friedrich", 3 -> "friedhelm"), eData((0 -> 1) -> 0, (2 -> 3) -> 1), List(nt(1, (0,1))), C(2))
+      g.map(_ + 1) mustEqual graph(V(1 to 4), E(1 -> 2, 2 -> 3, 3 -> 4), vData(1 -> "friedrich", 4 -> "friedhelm"), eData((1 -> 2) -> 0, (3 -> 4) -> 1), List(nt(1, (1,2))), C(3))
     }
 
     "assertions" >> {
