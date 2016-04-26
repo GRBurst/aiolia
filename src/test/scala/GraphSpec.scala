@@ -103,22 +103,33 @@ class GraphSpec extends org.specs2.mutable.Specification {
     }
 
     "assertions" >> {
-      "edges" >> {
+      "edges can only connect existing vertices" >> {
         graph(V(1), E(1 -> 2)) must throwAn[AssertionError]
         graph(V(2), E(1 -> 2)) must throwAn[AssertionError]
       }
-      "vertex data" >> { graph(V(), vd = vData(1 -> 5)) must throwAn[AssertionError] }
-      "edge data" >> {
+      "vertex data can only be attached to existing vertices" >> {
+        graph(V(), vd = vData(1 -> 5)) must throwAn[AssertionError]
+      }
+      "edge data can only be attached to existing edges" >> {
         graph(V(1, 2), ed = eData((1 -> 2) -> 5)) must throwAn[AssertionError]
         graph(V(), ed = eData((1 -> 2) -> 5)) must throwAn[AssertionError]
       }
-      "nonTerminals" >> {
+      "nonTerminals can only connect existing vertices" >> {
         graph(V(1), nts = List(nt(1, (1, 2, 3)))) must throwAn[AssertionError]
       }
-      "connectors" >> {
+      "nonTerminals with same label must have the same number of connectors" >> {
+        graph(V(1, 2), nts = List(nt(1, (1, 2)), nt(1, (1)))) must throwAn[AssertionError]
+      }
+      "connectors in graph need to be distinct" >> {
+        graph(V(1), c = VL(1, 1)) must throwAn[AssertionError]
+        graph(V(1, 2), c = VL(1, 2, 1)) must throwAn[AssertionError]
+      }
+      "only existing vertices can be used as connectors" >> {
         graph(V(1), c = VL(2)) must throwAn[AssertionError]
         graph(V(1), c = VL(2, 1)) must throwAn[AssertionError]
-        graph(V(1), c = VL(1, 1)) must throwAn[AssertionError]
+      }
+      "connectors cannot store data" >> {
+        cgraph(C(1), V(1, 2), vd = vData(1 -> "a")) must throwAn[AssertionError]
       }
     }
 
