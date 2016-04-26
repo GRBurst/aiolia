@@ -4,6 +4,7 @@ import aiolia.graph._
 import aiolia.graph.dsl._
 
 import Helpers._
+import aiolia.helpers.AutoId
 
 class GraphSpec extends org.specs2.mutable.Specification {
   "dsl" >> {
@@ -76,6 +77,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
   }
 
   "nonterminal" >> {
+    "connectors must be distinct" >> {
+      NonTerminal(1, VL(2, 2)) must throwAn[AssertionError]
+    }
     "contains" >> {
       nt(1, (1, 2, 3)).contains(v(0)) must beFalse
       nt(1, (1, 2, 3)).contains(v(1)) must beTrue
@@ -108,15 +112,15 @@ class GraphSpec extends org.specs2.mutable.Specification {
           eData((1 -> 0) -> "kanone", (0 -> 1) -> "salat")).toString mustEqual "Graph(V(0 1), E(0 -> 1, 1 -> 0), {0: wurst, 1: katapult}, {0->1: salat, 1->0: kanone})"
       }
       "with nonTerminals" >> {
-        graph(V(0 to 3), E(1 -> 0, 1 -> 2, 2 -> 3), nts = List(nt(1, (0,1,2)), nt(2, (2,3)), nt(3))).toString mustEqual "Graph(V(0 1 2 3), E(1 -> 0, 1 -> 2, 2 -> 3), NTS([1:0-1-2], [2:2-3], [3:]))"
+        graph(V(0 to 3), E(1 -> 0, 1 -> 2, 2 -> 3), nts = List(nt(1, (0, 1, 2)), nt(2, (2, 3)), nt(3))).toString mustEqual "Graph(V(0 1 2 3), E(1 -> 0, 1 -> 2, 2 -> 3), NTS([1:0-1-2], [2:2-3], [3:]))"
       }
       "with connectors" >> {
         graph(V(0 to 3), E(1 -> 0, 1 -> 2, 2 -> 3), c = C(0, 3)).toString mustEqual "Graph(V(0 1 2 3), E(1 -> 0, 1 -> 2, 2 -> 3), C(0-3))"
       }
     }
     "map" >> {
-      val g = graph(V(0 to 3), E(0 -> 1, 1 -> 2, 2 -> 3), vData(0 -> "friedrich", 3 -> "friedhelm"), eData((0 -> 1) -> 0, (2 -> 3) -> 1), List(nt(1, (0,1))), C(2))
-      g.map(_ + 1) mustEqual graph(V(1 to 4), E(1 -> 2, 2 -> 3, 3 -> 4), vData(1 -> "friedrich", 4 -> "friedhelm"), eData((1 -> 2) -> 0, (3 -> 4) -> 1), List(nt(1, (1,2))), C(3))
+      val g = graph(V(0 to 3), E(0 -> 1, 1 -> 2, 2 -> 3), vData(0 -> "friedrich", 3 -> "friedhelm"), eData((0 -> 1) -> 0, (2 -> 3) -> 1), List(nt(1, (0, 1))), C(2))
+      g.map(_ + 1) mustEqual graph(V(1 to 4), E(1 -> 2, 2 -> 3, 3 -> 4), vData(1 -> "friedrich", 4 -> "friedhelm"), eData((1 -> 2) -> 0, (3 -> 4) -> 1), List(nt(1, (1, 2))), C(3))
     }
 
     "assertions" >> {
@@ -508,12 +512,12 @@ class GraphSpec extends org.specs2.mutable.Specification {
           )
           val g2 = graph(
             V(1 to 3),
-            E(2 -> 1, 3 -> 2),
+            E(2 -> 1, 3 -> 2, 1 -> 2),
             vData(2 -> 1, 3 -> 1),
             eData((1 -> 2) -> "B"),
-            List(nt(1, (0, 1)), nt(2, (0, 4)))
+            List(nt(2))
           )
-          g ++ g2 mustEqual graph(V(0 to 3), E(0 -> 1, 1 -> 2, 2 -> 1, 3 -> 1), vData(0 -> 0, 2 -> 1, 3 -> 1), eData((0 -> 1) -> "A", (1 -> 2) -> "B"), List(nt(1, (0, 1)), nt(2)))
+          g ++ g2 mustEqual graph(V(0 to 3), E(0 -> 1, 1 -> 2, 2 -> 1, 3 -> 2), vData(0 -> 0, 2 -> 1, 3 -> 1), eData((0 -> 1) -> "A", (1 -> 2) -> "B"), List(nt(1, (0, 1)), nt(2)), c = C(1))
         }
       }
 
@@ -585,10 +589,16 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
     }
 
-    "nonterminal" >> {
-      "assertion" >> {
-        NonTerminal(1, VL(2, 2)) must throwAn[AssertionError]
+    "replace nonTerminal by graph with connectors" >> {
+      "assert: must replace existing nonTerminal" >> {
+        graph(V(), nts = List(nt(1))).replaceOne(nt(2), graph(), AutoId(0)) must throwAn[AssertionError]
       }
+
+      "assert: must replace existing nonTerminal" >> {
+        graph(V(1), nts = List(nt(1, (1)))).replaceOne(nt(1, (1)), graph(V(1), c = C()), AutoId(0)) must throwAn[AssertionError]
+      }
+
+      "example" >> todo
     }
   }
 }

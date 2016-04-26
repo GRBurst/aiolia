@@ -35,6 +35,7 @@ import collection.mutable
 // case class Vertex(label: Label) extends AnyVal {
 case class Vertex(label: Label) {
   override def toString = s"$label"
+  def map(vm: Label => Label) = Vertex(vm(label))
 }
 
 case class Edge(in: Vertex, out: Vertex) {
@@ -42,6 +43,7 @@ case class Edge(in: Vertex, out: Vertex) {
   def contains(v: Vertex) = in == v || out == v
   override def toString = s"${in.label} -> ${out.label}"
   def toSet = Set(in, out)
+  def map(vm: Label => Label) = Edge(in map vm, out map vm)
 }
 
 case class NonTerminal(label: Label, connectors: List[Vertex] = Nil) {
@@ -49,6 +51,7 @@ case class NonTerminal(label: Label, connectors: List[Vertex] = Nil) {
 
   def contains(v: Vertex) = connectors contains v
   override def toString = s"[$label:${connectors.mkString("-")}]"
+  def map(vm: Label => Label) = NonTerminal(label, connectors map (_ map vm))
 }
 
 object Graph {
@@ -213,6 +216,18 @@ case class Graph[+V, +E](
     )
   }
 
+  def ++[V1 >: V, E1 >: E](that: Graph[V1, E1]): Graph[V1, E1] = {
+    assert(that.connectors.isEmpty, "Now think about it. What should happen with the connectors?")
+    Graph(
+      this.vertices ++ that.vertices,
+      this.edges ++ that.edges,
+      this.vertexData ++ that.vertexData,
+      this.edgeData ++ that.edgeData,
+      this.nonTerminals ::: that.nonTerminals,
+      this.connectors //TODO: think
+    )
+  }
+
   def depthFirstSearch(start: Vertex, revSort: Set[Vertex] => Iterable[Vertex] = set => set) = new Iterator[Vertex] {
     assert(vertices contains start)
     val stack = mutable.Stack(start)
@@ -245,33 +260,30 @@ case class Graph[+V, +E](
     return false
   }
 
+  def map(m: Label => Label): Graph[V, E] = {
+    Graph(
+      vertices map (_ map m),
+      edges map (_ map m),
+      vertexData map { case (v, d) => (v map m) -> d },
+      edgeData map { case (e, d) => (e map m) -> d },
+      nonTerminals map (_ map m),
+      connectors map (_ map m)
+    )
+  }
+
   def replaceOne[V1 >: V, E1 >: E](nonTerminal: NonTerminal, replacement: Graph[V1, E1], autoId: AutoId): Graph[V1, E1] = {
     assert(this.nonTerminals contains nonTerminal)
     assert(nonTerminal.connectors.size == replacement.connectors.size)
 
     // newly created vertices that will be merged into the graph at fringe vertices
-    val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> Vertex(autoId.nextId)).toMap
+    val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> autoId.nextId).toMap
     // existing fringe/connectivity vertices for merge process
-    val existVertices = replacement.connectors.map(_.label).zip(nonTerminal.connectors).toMap
-    val vertexMap: Map[Label, Vertex] = newVertices ++ existVertices
+    val existVertices = replacement.connectors.map(_.label).zip(nonTerminal.connectors.map(_.label)).toMap
+    val vertexMap: Map[Label, Label] = newVertices ++ existVertices
 
-    val vertices = replacement.vertices.map(v => vertexMap(v.label))
+    val mappedReplacement = replacement.copy(connectors = Nil) map vertexMap
 
-    val edges = replacement.edges.map { case Edge(Vertex(in), Vertex(out)) => Edge(vertexMap(in), vertexMap(out)) }
-
-    val nonTerminals = replacement.nonTerminals.map { case NonTerminal(label, connectors) => NonTerminal(label, connectors.map(v => vertexMap(v.label))) }
-
-    val vertexData = replacement.vertexData.map { case (Vertex(label), v) => vertexMap(label) -> v }
-    val edgeData = replacement.edgeData.map { case (Edge(Vertex(in), Vertex(out)), v) => Edge(vertexMap(in), vertexMap(out)) -> v }
-
-    Graph(
-      this.vertices ++ vertices,
-      this.edges ++ edges,
-      this.vertexData ++ vertexData,
-      this.edgeData ++ edgeData,
-      (this.nonTerminals diff List(nonTerminal)) ++ nonTerminals, // diff does not remove all instances
-      this.connectors
-    )
+    this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
   }
 
   override def toString = s"Graph(V(${vertices.toList.sortBy(_.label).mkString(" ")}), " +
