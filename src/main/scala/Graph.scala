@@ -8,6 +8,7 @@ object types {
 
 object dsl {
   import types._
+  //TODO: LinkedHashSet for predictable vertex/edge traversal in tests
 
   // Graph construction
   def v(label: Label) = Vertex(label)
@@ -275,15 +276,15 @@ case class Graph[+V, +E](
     assert(this.nonTerminals contains nonTerminal)
     assert(nonTerminal.connectors.size == replacement.connectors.size)
 
-    // newly created vertices that will be merged into the graph at fringe vertices
-    val newVertices = (replacement.vertices -- replacement.connectors).map(_.label -> autoId.nextId).toMap
-    // existing fringe/connectivity vertices for merge process
-    val existVertices = replacement.connectors.map(_.label).zip(nonTerminal.connectors.map(_.label)).toMap
-    val vertexMap: Map[Label, Label] = newVertices ++ existVertices
+    // match connectors from nonTerminal with the ones from replacment graph
+    val existingVertices = (replacement.connectors.map(_.label) zip nonTerminal.connectors.map(_.label)).toMap
+    // newly created vertices that will be merged into the graph
+    val newVertices = replacement.nonConnectors.map(_.label -> autoId.nextId).toMap
+    val vertexMap: Map[Label, Label] = newVertices ++ existingVertices
 
     val mappedReplacement = replacement.copy(connectors = Nil) map vertexMap
 
-    this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
+    this.copy(nonTerminals = this.nonTerminals.filterNot(_ == nonTerminal)) ++ mappedReplacement
   }
 
   override def toString = s"Graph(V(${vertices.toList.sortBy(_.label).mkString(" ")}), " +
