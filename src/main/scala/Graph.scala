@@ -2,11 +2,11 @@ package aiolia.graph
 
 import aiolia.helpers.AutoId
 
-package object types {
+object types {
   type Label = Int
 }
 
-package object dsl {
+object dsl {
   import types._
 
   // Graph construction
