@@ -334,6 +334,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(nt(1), nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))))
           g.inducedNonTerminals(g.vertices) must containTheSameElementsAs(g.nonTerminals)
         }
+        "subgraph assert" >> {
+          g.inducedSubGraph(V(10 to 12)) must throwAn[AssertionError]
+        }
         "subgraph" >> {
           g.inducedSubGraph(V()) mustEqual graph(nt(1))
 
