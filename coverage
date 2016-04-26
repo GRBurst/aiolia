@@ -1,3 +1,7 @@
 #!/bin/bash -e
-sbt clean coverage test coverageReport
+if [[ -n $1 ]]; then
+    sbt clean coverage "testOnly *$1" coverageReport
+else
+    sbt clean coverage test coverageReport
+fi
 xdg-open target/scala-2.11/scoverage-report/index.html
