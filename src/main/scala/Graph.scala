@@ -76,11 +76,12 @@ case class Graph[+V, +E](
 
   def nonConnectors = vertices -- connectors
 
-  def subGraphOf[V1 >: V, E1 >: E](that: Graph[V1, E1]) = {
-    (this.vertices subsetOf that.vertices) &&
-      (this.edges subsetOf that.edges) &&
-      (this.nonTerminals.toSet subsetOf that.nonTerminals.toSet) &&
-      (this.connectors.toSet subsetOf that.connectors.toSet)
+  def subGraphOf[V1 >: V, E1 >: E](superGraph: Graph[V1, E1]) = {
+    (this.vertices subsetOf superGraph.vertices) &&
+      (this.edges subsetOf superGraph.edges) &&
+      (this.nonTerminals.toSet subsetOf superGraph.nonTerminals.toSet) &&
+      // (this.connectors.size <= superGraph.connectors.size) && //TODO: performance!
+      ((superGraph.connectors intersect this.connectors) == this.connectors)
   }
 
   def successors(v: Vertex) = { assert(vertices contains v); edges.collect { case Edge(`v`, out) => out } }

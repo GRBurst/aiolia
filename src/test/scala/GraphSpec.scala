@@ -141,6 +141,25 @@ class GraphSpec extends org.specs2.mutable.Specification {
       cgraph(C(1, 2), V(1, 2, 3, 4)).nonConnectors mustEqual V(3, 4)
     }
 
+    "subGraphOf" >> {
+      (graph() subGraphOf graph()) must beTrue
+      (graph() subGraphOf graph(V(1, 2), E(1 -> 2))) must beTrue
+      (graph(V(1)) subGraphOf graph(V(1, 2), E(1 -> 2))) must beTrue
+      (graph(V(1, 2), E(1 -> 2)) subGraphOf graph(V(1, 2), E(1 -> 2))) must beTrue
+      (graph(V(1, 2), E(1 -> 2), nts = List(nt(1, (1, 2)))) subGraphOf graph(V(1, 2), E(1 -> 2), nts = List(nt(1, (1, 2))))) must beTrue
+      (cgraph(C(1), V(1)) subGraphOf cgraph(C(1), V(1, 2))) must beTrue
+      (cgraph(C(1, 2), V(1, 2, 3)) subGraphOf cgraph(C(1, 2, 3), V(1, 2, 3))) must beTrue
+      (cgraph(C(2, 4), V(1 to 4)) subGraphOf cgraph(C(1, 2, 3, 4), V(1 to 4))) must beTrue
+
+      (graph(V(3)) subGraphOf graph(V(1, 2), E(1 -> 2))) must beFalse
+      (graph(V(1, 2), E(2 -> 1)) subGraphOf graph(V(1, 2), E(1 -> 2))) must beFalse
+      (graph(V(1, 2), E(1 -> 2), nts = List(nt(1, (1, 2)))) subGraphOf graph(V(1, 2), E(1 -> 2))) must beFalse
+      (cgraph(C(1), V(1)) subGraphOf graph(V(1, 2))) must beFalse
+      (cgraph(C(1, 2), V(1, 2)) subGraphOf cgraph(C(1), V(1, 2))) must beFalse
+      (cgraph(C(1, 2), V(1, 2)) subGraphOf cgraph(C(2, 1), V(1, 2))) must beFalse
+      (cgraph(C(4, 2), V(1 to 4)) subGraphOf cgraph(C(1, 2, 3, 4), V(1 to 4))) must beFalse
+    }
+
     "traversal accessors" >> {
       val g = graph(
         V(0 to 6),
