@@ -64,6 +64,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
       (e(2 -> 3) contains v(3)) must beTrue
       (e(2 -> 3) contains v(4)) must beFalse
     }
+    "toSet" >> {
+      e(1 -> 2).toSet mustEqual V(1, 2)
+    }
   }
 
   "nonterminal" >> {
