@@ -15,18 +15,22 @@ class GraphSpec extends org.specs2.mutable.Specification {
     }
     "vertex set" >> {
       V(1, 2) mustEqual Set(Vertex(1), Vertex(2))
+      V() mustEqual Set.empty
     }
     "vertex list" >> {
       VL(1, 2, 3) mustEqual List(Vertex(1), Vertex(2), Vertex(3))
+      VL() mustEqual List.empty
     }
     "edge" >> {
       e(3 -> 2) mustEqual Edge(Vertex(3), Vertex(2))
     }
     "edge set" >> {
       E(1 -> 2, 2 -> 3) mustEqual Set(Edge(Vertex(1), Vertex(2)), Edge(Vertex(2), Vertex(3)))
+      E() mustEqual Set.empty
     }
     "connectors" >> {
       C(1, 2, 3) mustEqual List(Vertex(1), Vertex(2), Vertex(3))
+      C() mustEqual List.empty
     }
     "nonterminal" >> {
       nt(1, (1, 2, 3)) mustEqual NonTerminal(1, VL(1, 2, 3))
