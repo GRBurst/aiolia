@@ -6,6 +6,7 @@ import aiolia.graph.types._
 import aiolia.graph.dsl._
 
 object Helpers {
+  //TODO: move graph helper functions to dsl?
   // default parameter order
   def graph[V, E](
     v:   Set[Vertex],
