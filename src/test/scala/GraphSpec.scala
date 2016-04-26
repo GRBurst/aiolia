@@ -100,6 +100,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
       "connectors" >> {
         graph(V(1), c = VL(2)) must throwAn[AssertionError]
         graph(V(1), c = VL(2, 1)) must throwAn[AssertionError]
+        graph(V(1), c = VL(1, 1)) must throwAn[AssertionError]
       }
     }
 
@@ -462,6 +463,12 @@ class GraphSpec extends org.specs2.mutable.Specification {
         val g = graph(V(0 to 3), E(0 -> 1, 0 -> 2, 1 -> 3, 3 -> 2))
         g.depthFirstSearch(v(0), revSort = _.toList.sortBy(-_.label)).toList mustEqual VL(0, 1, 3, 2)
         g.depthFirstSearch(v(0), revSort = _.toList.sortBy(_.label)).toList mustEqual VL(0, 2, 1, 3)
+      }
+    }
+
+    "nonterminal" >> {
+      "assertion" >> {
+        NonTerminal(1, VL(2, 2)) must throwAn[AssertionError]
       }
     }
   }

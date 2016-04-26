@@ -45,7 +45,8 @@ case class Edge(in: Vertex, out: Vertex) {
 }
 
 case class NonTerminal(label: Label, connectors: List[Vertex] = Nil) {
-  //TODO: NonTerminal: should connectors be distinct?
+  assert(connectors == connectors.distinct, "connectors in graph need to be distinct")
+
   def contains(v: Vertex) = connectors contains v
   override def toString = s"[$label:${connectors.mkString("-")}]"
 }
@@ -64,7 +65,7 @@ case class Graph[+V, +E](
 //TODO: order on List[NonTerminal] should not matter, especially on comparison. We probably need a "Bag" datastructure: https://github.com/nicolasstucki/multisets
 ) {
 
-  //TODO: Graph: should connectors be distinct?
+  assert(connectors == connectors.distinct, "connectors in graph need to be distinct")
   assert(edges.flatMap(e => List(e.in, e.out)) subsetOf vertices, "Edges can only connect existing vertices")
   assert(vertexData.keys.toSet.diff(vertices).isEmpty, "Vertex data can only be attached to existing vertices")
   assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only be attached to existing edges")
