@@ -96,26 +96,26 @@ class GrammarSpec extends org.specs2.mutable.Specification {
 
     "merge vertex data" >> {
       val h1 = nt(1, (0, 1))
-      val axiom = graph(V(0 to 1), vd = vertexData(0 -> 5, 1 -> 6), nts = List(h1))
+      val axiom = graph(V(0 to 1), vd = vData(0 -> 5, 1 -> 6), nts = List(h1))
 
       val g = grammar(
         axiom,
-        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), vd = vertexData(2 -> 7))
+        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), vd = vData(2 -> 7))
       )
 
-      g.expand mustEqual graph(V(0 to 2), E(0 -> 2, 2 -> 1), vd = vertexData(0 -> 5, 1 -> 6, 2 -> 7))
+      g.expand mustEqual graph(V(0 to 2), E(0 -> 2, 2 -> 1), vd = vData(0 -> 5, 1 -> 6, 2 -> 7))
     }
 
     "merge edge data" >> {
       val h1 = nt(1, (0, 1))
-      val axiom = graph(V(0 to 2), E(1 -> 2), ed = edgeData((1 -> 2) -> "Wurst"), nts = List(h1))
+      val axiom = graph(V(0 to 2), E(1 -> 2), ed = eData((1 -> 2) -> "Wurst"), nts = List(h1))
 
       val g = grammar(
         axiom,
-        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), ed = edgeData((2 -> 1) -> "Worst"))
+        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), ed = eData((2 -> 1) -> "Worst"))
       )
 
-      g.expand mustEqual graph(V(0 to 3), E(1 -> 2, 0 -> 3, 3 -> 1), ed = edgeData(((1 -> 2) -> "Wurst"), (3 -> 1) -> "Worst"))
+      g.expand mustEqual graph(V(0 to 3), E(1 -> 2, 0 -> 3, 3 -> 1), ed = eData(((1 -> 2) -> "Wurst"), (3 -> 1) -> "Worst"))
     }
 
     "redundant vertex data" >> {
@@ -125,10 +125,10 @@ class GrammarSpec extends org.specs2.mutable.Specification {
 
       val g = grammar(
         axiom,
-        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), vd = vertexData(2 -> 1))
+        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), vd = vData(2 -> 1))
       )
 
-      g.expand mustEqual graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), vd = vertexData(3 -> 1, 2 -> 1))
+      g.expand mustEqual graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), vd = vData(3 -> 1, 2 -> 1))
     }
 
     "redundant edge data" >> {
@@ -138,10 +138,10 @@ class GrammarSpec extends org.specs2.mutable.Specification {
 
       val g = grammar(
         axiom,
-        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), ed = edgeData((2 -> 1) -> "Worst"))
+        1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), ed = eData((2 -> 1) -> "Worst"))
       )
 
-      g.expand mustEqual graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), ed = edgeData(((2 -> 1) -> "Worst"), (3 -> 1) -> "Worst"))
+      g.expand mustEqual graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), ed = eData(((2 -> 1) -> "Worst"), (3 -> 1) -> "Worst"))
     }
 
     "grammar can only have rhs nonterminals that have a corresponding lhs" >> {
@@ -175,19 +175,19 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     // XXX: Do graphs need to set the data for all vertices and edges?
     "projections only operate on local data" >> {
       "vertex data should only contain existing vertices" >> {
-        graph(V(), E(0 -> 1), vd = vertexData(2 -> 200)) must throwAn[AssertionError]
+        graph(V(), E(0 -> 1), vd = vData(2 -> 200)) must throwAn[AssertionError]
       }
 
       "edge data should only contain existing edges" >> {
-        graph(V(), E(0 -> 1), ed = edgeData((1 -> 2) -> 200)) must throwAn[AssertionError]
+        graph(V(), E(0 -> 1), ed = eData((1 -> 2) -> 200)) must throwAn[AssertionError]
       }
 
       "disallow overriding data of input vertex" >> {
-        graph(V(), E(), vd = vertexData(0 -> "bier"), c = C(0, 1)) must throwAn[AssertionError]
+        graph(V(), E(), vd = vData(0 -> "bier"), c = C(0, 1)) must throwAn[AssertionError]
       }
 
       "disallow overriding data of output vertex" >> {
-        graph(V(), E(), vd = vertexData(1 -> "wein"), c = C(0, 1)) must throwAn[AssertionError]
+        graph(V(), E(), vd = vData(1 -> "wein"), c = C(0, 1)) must throwAn[AssertionError]
       }
     }
 

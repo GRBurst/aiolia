@@ -18,12 +18,11 @@ package object dsl {
   def E(es: (Label, Label)*) = es.map{ case (in, out) => Edge(Vertex(in), Vertex(out)) }.toSet
   def C(labels: Label*) = labels.map(Vertex(_)).toList // connectors
 
-  //TODO: vertexData, edgeData shorter?
-  def vertexData[V](data: (Int, V)*) = data.map { case (label, data) => Vertex(label) -> data }.toMap
-  def edgeData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), data) => e(a -> b) -> data }.toMap
+  def vData[V](data: (Int, V)*) = data.map { case (label, datum) => Vertex(label) -> datum }.toMap
+  def eData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), datum) => e(a -> b) -> datum }.toMap
 
   // NonTerminal
-  def nt(l: Label, c: Product = None) = { // TODO: lowercase, because single element
+  def nt(l: Label, c: Product = None) = {
     assert(!c.isInstanceOf[List[_]], s"don't put Lists in NT($l, $c). Use a Tuple instead: NT($l, ${c.asInstanceOf[List[_]].mkString("(", ",", ")")})")
     NonTerminal(l, c.productIterator.toList.asInstanceOf[List[Int]].map(Vertex(_)))
   }

@@ -70,15 +70,15 @@ class GraphSpec extends org.specs2.mutable.Specification {
         graph(V(0 to 5), E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3)).toString mustEqual "Graph(V(0 1 2 3 4 5), E(1 -> 0, 1 -> 2, 2 -> 3, 2 -> 4, 3 -> 5, 5 -> 3))"
       }
       "with vertexData" >> {
-        graph(V(0 to 1), E(1 -> 0), vertexData(0 -> "wurst", 1 -> "katapult")).toString mustEqual "Graph(V(0 1), E(1 -> 0), {0: wurst, 1: katapult})"
+        graph(V(0 to 1), E(1 -> 0), vData(0 -> "wurst", 1 -> "katapult")).toString mustEqual "Graph(V(0 1), E(1 -> 0), {0: wurst, 1: katapult})"
       }
       "with edgeData" >> {
-        graph(V(0 to 1), E(1 -> 0, 0 -> 1), ed = edgeData((1 -> 0) -> "kanone", (0 -> 1) -> "salat")).toString mustEqual "Graph(V(0 1), E(0 -> 1, 1 -> 0), {0->1: salat, 1->0: kanone})"
+        graph(V(0 to 1), E(1 -> 0, 0 -> 1), ed = eData((1 -> 0) -> "kanone", (0 -> 1) -> "salat")).toString mustEqual "Graph(V(0 1), E(0 -> 1, 1 -> 0), {0->1: salat, 1->0: kanone})"
       }
       "with both data" >> {
         graph(V(0 to 1), E(1 -> 0, 0 -> 1),
-          vertexData(0 -> "wurst", 1 -> "katapult"),
-          edgeData((1 -> 0) -> "kanone", (0 -> 1) -> "salat")).toString mustEqual "Graph(V(0 1), E(0 -> 1, 1 -> 0), {0: wurst, 1: katapult}, {0->1: salat, 1->0: kanone})"
+          vData(0 -> "wurst", 1 -> "katapult"),
+          eData((1 -> 0) -> "kanone", (0 -> 1) -> "salat")).toString mustEqual "Graph(V(0 1), E(0 -> 1, 1 -> 0), {0: wurst, 1: katapult}, {0->1: salat, 1->0: kanone})"
       }
       "with nonTerminals" >> todo
       "with connectors" >> todo
@@ -89,10 +89,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
         graph(V(1), E(1 -> 2)) must throwAn[AssertionError]
         graph(V(2), E(1 -> 2)) must throwAn[AssertionError]
       }
-      "vertex data" >> { graph(V(), vd = vertexData(1 -> 5)) must throwAn[AssertionError] }
+      "vertex data" >> { graph(V(), vd = vData(1 -> 5)) must throwAn[AssertionError] }
       "edge data" >> {
-        graph(V(1, 2), ed = edgeData((1 -> 2) -> 5)) must throwAn[AssertionError]
-        graph(V(), ed = edgeData((1 -> 2) -> 5)) must throwAn[AssertionError]
+        graph(V(1, 2), ed = eData((1 -> 2) -> 5)) must throwAn[AssertionError]
+        graph(V(), ed = eData((1 -> 2) -> 5)) must throwAn[AssertionError]
       }
       "nonTerminals" >> {
         graph(V(1), nts = List(nt(1, (1, 2, 3)))) must throwAn[AssertionError]
@@ -107,8 +107,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
       val g = graph(
         V(0 to 6),
         E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3),
-        vertexData(2 -> "a", 1 -> "b", 3 -> "c"),
-        edgeData((2 -> 3) -> "x", (1 -> 2) -> "y", (1 -> 0) -> "z"),
+        vData(2 -> "a", 1 -> "b", 3 -> "c"),
+        eData((2 -> 3) -> "x", (1 -> 2) -> "y", (1 -> 0) -> "z"),
         List(nt(1), nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))),
         C(5)
       )
@@ -323,8 +323,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
       val g = graph(
         V(0 to 4),
         E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
-        vertexData(3 -> "a", 4 -> "b"),
-        edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
+        vData(3 -> "a", 4 -> "b"),
+        eData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
         List(nt(1, (0, 2)), nt(2, (3, 2))),
         c = C(0, 1, 2)
       )
@@ -344,8 +344,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g - v(4) mustEqual graph(
             V(0 to 3),
             E(0 -> 3, 1 -> 3),
-            vertexData(3 -> "a"),
-            edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L),
+            vData(3 -> "a"),
+            eData((1 -> 3) -> 17L, (0 -> 3) -> -15L),
             List(nt(1, (0, 2)), nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
@@ -354,8 +354,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g - v(3) mustEqual graph(
             V(0, 1, 2, 4),
             E(0 -> 4, 4 -> 2),
-            vertexData(4 -> "b"),
-            edgeData(0 -> 4 -> 18L),
+            vData(4 -> "b"),
+            eData(0 -> 4 -> 18L),
             nts = List(nt(1, (0, 2))), c = C(0, 1, 2)
           )
         }
@@ -373,8 +373,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g - e(4 -> 2) mustEqual graph(
             V(0 to 4),
             E(0 -> 3, 1 -> 3, 0 -> 4),
-            vertexData(3 -> "a", 4 -> "b"),
-            edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
+            vData(3 -> "a", 4 -> "b"),
+            eData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
             nts = List(nt(1, (0, 2)), nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
@@ -383,8 +383,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g - e(0 -> 3) mustEqual graph(
             V(0 to 4),
             E(1 -> 3, 0 -> 4, 4 -> 2),
-            vertexData(3 -> "a", 4 -> "b"),
-            edgeData((1 -> 3) -> 17L, 0 -> 4 -> 18L),
+            vData(3 -> "a", 4 -> "b"),
+            eData((1 -> 3) -> 17L, 0 -> 4 -> 18L),
             List(nt(1, (0, 2)), nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
@@ -399,8 +399,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g - nt(1, (0, 2)) mustEqual graph(
             V(0 to 4),
             E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
-            vertexData(3 -> "a", 4 -> "b"),
-            edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
+            vData(3 -> "a", 4 -> "b"),
+            eData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
             List(nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
