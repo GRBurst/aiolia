@@ -455,9 +455,32 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
 
       "remove subgraph" >> {
-        "assertions" >> todo
-        "full example" >> todo
-        "with data" >> todo
+        "assertions" >> {
+          g -- graph(V(0 to 17)) must throwAn[AssertionError]
+          g -- cgraph(C(2), V(0 to 1)) must throwAn[AssertionError]
+        }
+        "full example" >> {
+          val g = graph(
+            V(0 to 4),
+            E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
+            Map.empty,
+            Map.empty,
+            List(nt(1, (0, 4)), nt(2, (3, 2)), nt(3)),
+            c = C(0, 1, 2)
+          )
+          g -- graph(V(1 to 3), nts = List(nt(3))) mustEqual graph(V(0, 4), E(0 -> 4), nts = List(nt(1, (0, 4))), c = C(0))
+        }
+        "with data" >> {
+          val g = graph(
+            V(0 to 4),
+            E(0 -> 1, 1 -> 2, 2 -> 3, 3 -> 4),
+            vData(0 -> 1, 4 -> 2),
+            eData((0 -> 1) -> "A", (3 -> 4) -> "B"),
+            List(nt(1, (0, 1)), nt(2, (0, 4))),
+            c = C(1)
+          )
+          g -- graph(V(2 to 4)) mustEqual graph(V(0 to 1), E(0 -> 1), vData(0 -> 1), eData((0 -> 1) -> "A"), List(nt(1, (0, 1))), C(1))
+        }
       }
     }
 

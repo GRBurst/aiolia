@@ -207,7 +207,8 @@ case class Graph[+V, +E](
       edges -- removedEdges,
       vertexData -- removedVertices,
       edgeData -- removedEdges,
-      nonTerminals diff removedNonTerminals
+      nonTerminals diff removedNonTerminals,
+      connectors filterNot removedVertices
     )
   }
 
