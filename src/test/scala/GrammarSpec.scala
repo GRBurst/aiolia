@@ -9,8 +9,8 @@ import Helpers._
 class GrammarSpec extends org.specs2.mutable.Specification {
   "graph grammar" >> {
     "expand deterministic" >> {
-      val h1 = NT(1, (0, 1, 2))
-      val h2 = NT(1, (0, 2, 1))
+      val h1 = nt(1, (0, 1, 2))
+      val h2 = nt(1, (0, 2, 1))
       val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
       val g = grammar(
@@ -24,8 +24,8 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "expand edges" >> {
-      val h1 = NT(1, (0, 1, 2))
-      val h2 = NT(1, (0, 2, 1))
+      val h1 = nt(1, (0, 1, 2))
+      val h2 = nt(1, (0, 2, 1))
       val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
       val g = grammar(
@@ -37,12 +37,12 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "expand nonterminals" >> {
-      val h1 = NT(1, (0, 1, 2, 3))
+      val h1 = nt(1, (0, 1, 2, 3))
       val axiom = graph(V(0 to 3), nts = List(h1))
 
       val g = grammar(
         axiom,
-        1 -> cgraph(C(0, 1, 2, 3), V(0 to 3), E(0 -> 1, 2 -> 3), nts = List(NT(2, (0, 1, 2)))),
+        1 -> cgraph(C(0, 1, 2, 3), V(0 to 3), E(0 -> 1, 2 -> 3), nts = List(nt(2, (0, 1, 2)))),
         2 -> cgraph(C(0, 1, 2), V(0 to 2), E(0 -> 2, 1 -> 2))
       )
 
@@ -59,8 +59,8 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "redundant replacements" >> {
-      val h1 = NT(1, (0, 1))
-      val h2 = NT(1, (0, 1))
+      val h1 = nt(1, (0, 1))
+      val h2 = nt(1, (0, 1))
       val axiom = graph(V(0 to 1), nts = List(h1, h2))
 
       val g = grammar(
@@ -74,9 +74,9 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     "run in circles" >> {
       val g = grammar(
         A(1),
-        1 -> cgraph(Nil, V(0 to 1), nts = List(NT(2, (0, 1)))),
-        2 -> cgraph(C(0, 1), V(0 to 1), nts = List(NT(3, (0, 1)), NT(3, (1, 0)))),
-        3 -> cgraph(C(0, 1), V(0 to 2), nts = List(NT(4, (0, 2)), NT(4, (2, 1)))),
+        1 -> cgraph(Nil, V(0 to 1), nts = List(nt(2, (0, 1)))),
+        2 -> cgraph(C(0, 1), V(0 to 1), nts = List(nt(3, (0, 1)), nt(3, (1, 0)))),
+        3 -> cgraph(C(0, 1), V(0 to 2), nts = List(nt(4, (0, 2)), nt(4, (2, 1)))),
         4 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1))
       )
 
@@ -86,8 +86,8 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     "redundant nonterminal" >> {
       val g = grammar(
         A(1),
-        1 -> cgraph(Nil, V(0 to 1), nts = List(NT(2, (0, 1)))),
-        2 -> cgraph(C(0, 1), V(0 to 1), nts = List(NT(3, (0, 1)), NT(3, (0, 1)))),
+        1 -> cgraph(Nil, V(0 to 1), nts = List(nt(2, (0, 1)))),
+        2 -> cgraph(C(0, 1), V(0 to 1), nts = List(nt(3, (0, 1)), nt(3, (0, 1)))),
         3 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1))
       )
 
@@ -95,7 +95,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "merge vertex data" >> {
-      val h1 = NT(1, (0, 1))
+      val h1 = nt(1, (0, 1))
       val axiom = graph(V(0 to 1), vd = vertexData(0 -> 5, 1 -> 6), nts = List(h1))
 
       val g = grammar(
@@ -107,7 +107,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "merge edge data" >> {
-      val h1 = NT(1, (0, 1))
+      val h1 = nt(1, (0, 1))
       val axiom = graph(V(0 to 2), E(1 -> 2), ed = edgeData((1 -> 2) -> "Wurst"), nts = List(h1))
 
       val g = grammar(
@@ -119,8 +119,8 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "redundant vertex data" >> {
-      val h1 = NT(1, (0, 1))
-      val h2 = NT(1, (0, 1))
+      val h1 = nt(1, (0, 1))
+      val h2 = nt(1, (0, 1))
       val axiom = graph(V(0 to 1), nts = List(h1, h2))
 
       val g = grammar(
@@ -132,8 +132,8 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "redundant edge data" >> {
-      val h1 = NT(1, (0, 1))
-      val h2 = NT(1, (0, 1))
+      val h1 = nt(1, (0, 1))
+      val h2 = nt(1, (0, 1))
       val axiom = graph(V(0 to 1), nts = List(h1, h2))
 
       val g = grammar(
@@ -148,14 +148,14 @@ class GrammarSpec extends org.specs2.mutable.Specification {
       "unknown nonterminal label" >> {
         grammar(
           A(1),
-          1 -> cgraph(NT(15, (0, 1)))
+          1 -> cgraph(nt(15, (0, 1)))
         ) must throwAn[AssertionError]
       }
 
       "different nonterminal signature" >> {
         grammar(
           A(1),
-          1 -> cgraph(Nil, V(0 to 2), nts = List(NT(2, (0, 1)))),
+          1 -> cgraph(Nil, V(0 to 2), nts = List(nt(2, (0, 1)))),
           2 -> cgraph(C(0, 1, 2), V(0 to 2), E(0 -> 2, 1 -> 2))
         ) must throwAn[AssertionError]
       }
@@ -163,7 +163,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
       "signature does not need to match node ids" >> {
         grammar(
           A(1),
-          1 -> cgraph(Nil, V(0 to 2), nts = List(NT(2, (0, 1)))),
+          1 -> cgraph(Nil, V(0 to 2), nts = List(nt(2, (0, 1)))),
           2 -> cgraph(C(2, 3), V(2, 3), E(2 -> 3))
         ) must not(throwAn[AssertionError])
       }
@@ -197,7 +197,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "grammar cannot have cycles" >> {
-      grammar(A(1), 1 -> cgraph(NT(2)), 2 -> cgraph(NT(1))) must throwAn[AssertionError]
+      grammar(A(1), 1 -> cgraph(nt(2)), 2 -> cgraph(nt(1))) must throwAn[AssertionError]
     }
 
     "cleanup unused production rules" >> {
@@ -211,23 +211,23 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     "cleanup many unused production rules" >> {
       val g = grammar(
         A(1),
-        1 -> cgraph(NT(2)),
+        1 -> cgraph(nt(2)),
         2 -> cgraph(),
 
-        3 -> cgraph(NT(4)),
+        3 -> cgraph(nt(4)),
         4 -> cgraph(),
 
-        5 -> cgraph(NT(6)),
+        5 -> cgraph(nt(6)),
         6 -> cgraph()
       )
       g.cleanup mustEqual grammar(
         A(1),
-        1 -> cgraph(NT(2)),
+        1 -> cgraph(nt(2)),
         2 -> cgraph()
       )
     }
     "cleanup unused production rules (tree)" >> {
-      val axiom = graph(NT(1), NT(2))
+      val axiom = graph(nt(1), nt(2))
       val g = grammar(
         axiom,
         1 -> cgraph(),

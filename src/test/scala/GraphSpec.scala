@@ -53,14 +53,14 @@ class GraphSpec extends org.specs2.mutable.Specification {
 
   "nonterminal" >> {
     "contains" >> {
-      NT(1, (1, 2, 3)).contains(v(0)) must beFalse
-      NT(1, (1, 2, 3)).contains(v(1)) must beTrue
-      NT(1, (1, 2, 3)).contains(v(2)) must beTrue
-      NT(1, (1, 2, 3)).contains(v(3)) must beTrue
-      NT(1, (1, 2, 3)).contains(v(4)) must beFalse
+      nt(1, (1, 2, 3)).contains(v(0)) must beFalse
+      nt(1, (1, 2, 3)).contains(v(1)) must beTrue
+      nt(1, (1, 2, 3)).contains(v(2)) must beTrue
+      nt(1, (1, 2, 3)).contains(v(3)) must beTrue
+      nt(1, (1, 2, 3)).contains(v(4)) must beFalse
     }
     "toString" >> {
-      NT(2, (1, 7, 3, 4)).toString mustEqual "[2:1-7-3-4]"
+      nt(2, (1, 7, 3, 4)).toString mustEqual "[2:1-7-3-4]"
     }
   }
 
@@ -95,7 +95,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         graph(V(), ed = edgeData((1 -> 2) -> 5)) must throwAn[AssertionError]
       }
       "nonTerminals" >> {
-        graph(V(1), nts = List(NT(1, (1, 2, 3)))) must throwAn[AssertionError]
+        graph(V(1), nts = List(nt(1, (1, 2, 3)))) must throwAn[AssertionError]
       }
       "connectors" >> {
         graph(V(1), c = VL(2)) must throwAn[AssertionError]
@@ -109,7 +109,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3),
         vertexData(2 -> "a", 1 -> "b", 3 -> "c"),
         edgeData((2 -> 3) -> "x", (1 -> 2) -> "y", (1 -> 0) -> "z"),
-        List(NT(1), NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5))),
+        List(nt(1), nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))),
         C(5)
       )
       "successors" >> {
@@ -217,28 +217,28 @@ class GraphSpec extends org.specs2.mutable.Specification {
       "incident nonterminals" >> {
         "singe vertex" >> {
           g.incidentNonTerminals(v(0)) mustEqual List()
-          g.incidentNonTerminals(v(1)) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)))
-          g.incidentNonTerminals(v(2)) mustEqual List(NT(4, (2, 3, 5)))
-          g.incidentNonTerminals(v(3)) mustEqual List(NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(v(1)) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)))
+          g.incidentNonTerminals(v(2)) mustEqual List(nt(4, (2, 3, 5)))
+          g.incidentNonTerminals(v(3)) mustEqual List(nt(4, (2, 3, 5)))
           g.incidentNonTerminals(v(4)) mustEqual List()
-          g.incidentNonTerminals(v(5)) mustEqual List(NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(v(5)) mustEqual List(nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5)))
           g.incidentNonTerminals(v(6)) mustEqual List()
           g.incidentNonTerminals(v(7)) must throwAn[AssertionError]
         }
         "multiple vertices" >> {
           g.incidentNonTerminals(V(0)) mustEqual List()
-          g.incidentNonTerminals(V(1)) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)))
-          g.incidentNonTerminals(V(2)) mustEqual List(NT(4, (2, 3, 5)))
-          g.incidentNonTerminals(V(3)) mustEqual List(NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(1)) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)))
+          g.incidentNonTerminals(V(2)) mustEqual List(nt(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(3)) mustEqual List(nt(4, (2, 3, 5)))
           g.incidentNonTerminals(V(4)) mustEqual List()
-          g.incidentNonTerminals(V(5)) mustEqual List(NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(5)) mustEqual List(nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5)))
           g.incidentNonTerminals(V(6)) mustEqual List()
           g.incidentNonTerminals(V(7)) must throwAn[AssertionError]
 
           g.incidentNonTerminals(V()) mustEqual E()
-          g.incidentNonTerminals(V(2, 3)) mustEqual List(NT(4, (2, 3, 5)))
-          g.incidentNonTerminals(V(0, 1)) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)))
-          g.incidentNonTerminals(g.vertices) mustEqual List(NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5))) // without NT(1)
+          g.incidentNonTerminals(V(2, 3)) mustEqual List(nt(4, (2, 3, 5)))
+          g.incidentNonTerminals(V(0, 1)) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)))
+          g.incidentNonTerminals(g.vertices) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))) // without NT(1)
         }
       }
 
@@ -261,29 +261,29 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.inducedEdges(g.vertices) mustEqual g.edges
         }
         "nonterminals" >> {
-          g.inducedNonTerminals(V(0)) must containTheSameElementsAs(List(NT(1)))
-          g.inducedNonTerminals(V(1)) must containTheSameElementsAs(List(NT(1), NT(2, (1))))
-          g.inducedNonTerminals(V(2)) must containTheSameElementsAs(List(NT(1)))
-          g.inducedNonTerminals(V(3)) must containTheSameElementsAs(List(NT(1)))
-          g.inducedNonTerminals(V(4)) must containTheSameElementsAs(List(NT(1)))
-          g.inducedNonTerminals(V(5)) must containTheSameElementsAs(List(NT(1)))
-          g.inducedNonTerminals(V(6)) must containTheSameElementsAs(List(NT(1)))
+          g.inducedNonTerminals(V(0)) must containTheSameElementsAs(List(nt(1)))
+          g.inducedNonTerminals(V(1)) must containTheSameElementsAs(List(nt(1), nt(2, (1))))
+          g.inducedNonTerminals(V(2)) must containTheSameElementsAs(List(nt(1)))
+          g.inducedNonTerminals(V(3)) must containTheSameElementsAs(List(nt(1)))
+          g.inducedNonTerminals(V(4)) must containTheSameElementsAs(List(nt(1)))
+          g.inducedNonTerminals(V(5)) must containTheSameElementsAs(List(nt(1)))
+          g.inducedNonTerminals(V(6)) must containTheSameElementsAs(List(nt(1)))
           g.inducedNonTerminals(V(7)) must throwAn[AssertionError]
 
-          g.inducedNonTerminals(V()) must containTheSameElementsAs(List(NT(1)))
-          g.inducedNonTerminals(V(2, 3)) must containTheSameElementsAs(List(NT(1)))
-          g.inducedNonTerminals(V(0, 1)) must containTheSameElementsAs(List(NT(1), NT(2, (1))))
-          g.inducedNonTerminals(V(1, 5)) must containTheSameElementsAs(List(NT(1), NT(2, (1)), NT (3, (1, 5)), NT(3, (1, 5))))
-          g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(NT(1), NT(2, (1)), NT(3, (1, 5)), NT(3, (1, 5)), NT(4, (2, 3, 5))))
+          g.inducedNonTerminals(V()) must containTheSameElementsAs(List(nt(1)))
+          g.inducedNonTerminals(V(2, 3)) must containTheSameElementsAs(List(nt(1)))
+          g.inducedNonTerminals(V(0, 1)) must containTheSameElementsAs(List(nt(1), nt(2, (1))))
+          g.inducedNonTerminals(V(1, 5)) must containTheSameElementsAs(List(nt(1), nt(2, (1)), nt (3, (1, 5)), nt(3, (1, 5))))
+          g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(nt(1), nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))))
           g.inducedNonTerminals(g.vertices) must containTheSameElementsAs(g.nonTerminals)
         }
         "subgraph" >> {
-          g.inducedSubGraph(V()) mustEqual graph(NT(1))
+          g.inducedSubGraph(V()) mustEqual graph(nt(1))
 
           val sub = g.inducedSubGraph(V(5, 3, 2))
           sub.vertices mustEqual V(5, 3, 2)
           sub.edges mustEqual E(2 -> 3, 3 -> 5, 5 -> 3)
-          sub.nonTerminals must containTheSameElementsAs(List(NT(1), NT(4, (2, 3, 5))))
+          sub.nonTerminals must containTheSameElementsAs(List(nt(1), nt(4, (2, 3, 5))))
 
           g.inducedSubGraph(g.vertices) mustEqual g
         }
@@ -313,10 +313,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
 
       "add nonterminal" >> {
         "existing" >> {
-          graph(V(0 to 2), nts = List(NT(1, (1, 2)))) + NT(1, (1, 2)) mustEqual graph(V(0 to 2), nts = List(NT(1, (1, 2)), NT(1, (1, 2))))
+          graph(V(0 to 2), nts = List(nt(1, (1, 2)))) + nt(1, (1, 2)) mustEqual graph(V(0 to 2), nts = List(nt(1, (1, 2)), nt(1, (1, 2))))
         }
         "nonexisting" >> {
-          graph(V(0 to 2), nts = List(NT(1, (1, 2)))) + NT(2, (0, 2)) mustEqual graph(V(0 to 2), nts = List(NT(2, (0, 2)), NT(1, (1, 2))))
+          graph(V(0 to 2), nts = List(nt(1, (1, 2)))) + nt(2, (0, 2)) mustEqual graph(V(0 to 2), nts = List(nt(2, (0, 2)), nt(1, (1, 2))))
         }
       }
 
@@ -325,7 +325,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
         vertexData(3 -> "a", 4 -> "b"),
         edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
-        List(NT(1, (0, 2)), NT(2, (3, 2))),
+        List(nt(1, (0, 2)), nt(2, (3, 2))),
         c = C(0, 1, 2)
       )
 
@@ -346,7 +346,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
             E(0 -> 3, 1 -> 3),
             vertexData(3 -> "a"),
             edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L),
-            List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+            List(nt(1, (0, 2)), nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
 
@@ -356,7 +356,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
             E(0 -> 4, 4 -> 2),
             vertexData(4 -> "b"),
             edgeData(0 -> 4 -> 18L),
-            nts = List(NT(1, (0, 2))), c = C(0, 1, 2)
+            nts = List(nt(1, (0, 2))), c = C(0, 1, 2)
           )
         }
       }
@@ -375,7 +375,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
             E(0 -> 3, 1 -> 3, 0 -> 4),
             vertexData(3 -> "a", 4 -> "b"),
             edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
-            nts = List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+            nts = List(nt(1, (0, 2)), nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
 
@@ -385,38 +385,38 @@ class GraphSpec extends org.specs2.mutable.Specification {
             E(1 -> 3, 0 -> 4, 4 -> 2),
             vertexData(3 -> "a", 4 -> "b"),
             edgeData((1 -> 3) -> 17L, 0 -> 4 -> 18L),
-            List(NT(1, (0, 2)), NT(2, (3, 2))), c = C(0, 1, 2)
+            List(nt(1, (0, 2)), nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
       }
 
       "remove nonterminal" >> {
         "from empty graph" >> {
-          graph() - NT(1) must throwA[AssertionError]
+          graph() - nt(1) must throwA[AssertionError]
         }
 
         "existing nonterminal" >> {
-          g - NT(1, (0, 2)) mustEqual graph(
+          g - nt(1, (0, 2)) mustEqual graph(
             V(0 to 4),
             E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2),
             vertexData(3 -> "a", 4 -> "b"),
             edgeData((1 -> 3) -> 17L, (0 -> 3) -> -15L, 0 -> 4 -> 18L),
-            List(NT(2, (3, 2))), c = C(0, 1, 2)
+            List(nt(2, (3, 2))), c = C(0, 1, 2)
           )
         }
 
         "multiple nonterminals with same label" >> {
-          val g = graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2)), NT(1, (3, 2))), c = C(0, 1, 2))
-          g - NT(1, (3, 2)) mustEqual graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(NT(1, (0, 2))), c = C(0, 1, 2))
+          val g = graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(nt(1, (0, 2)), nt(1, (3, 2))), c = C(0, 1, 2))
+          g - nt(1, (3, 2)) mustEqual graph(V(0 to 4), E(0 -> 3, 1 -> 3, 0 -> 4, 4 -> 2), nts = List(nt(1, (0, 2))), c = C(0, 1, 2))
         }
 
         "multiple nonterminals with same label connected to same vertices" >> {
-          val g = graph(V(0 to 2), nts = List(NT(1, (0, 2, 1)), NT(1, (0, 2, 1))), c = C(0, 1))
-          g - NT(1, (0, 2, 1)) mustEqual graph(V(0 to 2), nts = List(NT(1, (0, 2, 1))), c = C(0, 1))
+          val g = graph(V(0 to 2), nts = List(nt(1, (0, 2, 1)), nt(1, (0, 2, 1))), c = C(0, 1))
+          g - nt(1, (0, 2, 1)) mustEqual graph(V(0 to 2), nts = List(nt(1, (0, 2, 1))), c = C(0, 1))
         }
 
         "nonexisting nonterminal" >> {
-          g - NT(3) must throwA[AssertionError]
+          g - nt(3) must throwA[AssertionError]
         }
       }
 

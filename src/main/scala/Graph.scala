@@ -23,7 +23,7 @@ package object dsl {
   def edgeData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), data) => e(a -> b) -> data }.toMap
 
   // NonTerminal
-  def NT(l: Label, c: Product = None) = { // TODO: lowercase, because single element
+  def nt(l: Label, c: Product = None) = { // TODO: lowercase, because single element
     assert(!c.isInstanceOf[List[_]], s"don't put Lists in NT($l, $c). Use a Tuple instead: NT($l, ${c.asInstanceOf[List[_]].mkString("(", ",", ")")})")
     NonTerminal(l, c.productIterator.toList.asInstanceOf[List[Int]].map(Vertex(_)))
   }

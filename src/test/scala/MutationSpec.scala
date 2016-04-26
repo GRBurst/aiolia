@@ -18,11 +18,11 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
       "from grammar" >> {
         val random = mock[Random]
 
-        val h1 = NT(1, (0, 1, 2))
-        val h2 = NT(1, (0, 2, 1))
+        val h1 = nt(1, (0, 1, 2))
+        val h2 = nt(1, (0, 2, 1))
         val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(nt(2, (0, 2))))
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
@@ -39,11 +39,11 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
       "select rule without removable vertices" >> {
         val random = mock[Random]
 
-        val h1 = NT(1, (0, 1, 2))
-        val h2 = NT(1, (0, 2, 1))
+        val h1 = nt(1, (0, 1, 2))
+        val h2 = nt(1, (0, 2, 1))
         val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(nt(2, (0, 2))))
         val rhsA2 = cgraph(C(0, 1), V(0 to 1), E(0 -> 1))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
@@ -56,11 +56,11 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
       "from grammar" >> {
         val random = mock[Random]
 
-        val h1 = NT(1, (0, 1, 2))
-        val h2 = NT(1, (0, 2, 1))
+        val h1 = nt(1, (0, 1, 2))
+        val h2 = nt(1, (0, 2, 1))
         val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(nt(2, (0, 2))))
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
@@ -69,7 +69,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
 
         Mutation.removeRandomEdge(g, random) mustEqual Some(grammar(
           axiom,
-          1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1), nts = List(NT(2, (0, 2)))),
+          1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1), nts = List(nt(2, (0, 2)))),
           2 -> rhsA2
         ))
       }
@@ -82,11 +82,11 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
       "select rule without removable edges" >> {
         val random = mock[Random]
 
-        val h1 = NT(1, (0, 1, 2))
-        val h2 = NT(1, (0, 2, 1))
+        val h1 = nt(1, (0, 1, 2))
+        val h2 = nt(1, (0, 2, 1))
         val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(nt(2, (0, 2))))
         val rhsA2 = cgraph(C(0, 1), V(0 to 1))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
@@ -108,12 +108,12 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         val axiom = graph(
           V(0 to 2),
           nts = List(
-            NT(1, (0, 1, 2)),
-            NT(1, (0, 2, 1))
+            nt(1, (0, 1, 2)),
+            nt(1, (0, 2, 1))
           )
         )
 
-        val rhs1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2)))) // the nonTerminal in this graph will be inlined with rhs2
+        val rhs1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(nt(2, (0, 2)))) // the nonTerminal in this graph will be inlined with rhs2
         val rhs2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(
           axiom,
@@ -122,7 +122,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         )
 
         random.select(g.productions) returns (1 -> rhs1)
-        random.select(List(NT(2, (0, 2)))) returns NT(2, (0, 2)) // inline this nonTerminal
+        random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
 
         Mutation.inlineRandomNonTerminal(g, random) mustEqual Some(grammar(
           axiom,
@@ -134,11 +134,11 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
       "on grammar rule without nonTerminal" >> {
         val random = mock[Random]
 
-        val h1 = NT(1, (0, 1, 2))
-        val h2 = NT(1, (0, 2, 1))
+        val h1 = nt(1, (0, 1, 2))
+        val h2 = nt(1, (0, 2, 1))
         val axiom = graph(V(0 to 2), nts = List(h1, h2))
 
-        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(NT(2, (0, 2))))
+        val rhsA1 = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(nt(2, (0, 2))))
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
