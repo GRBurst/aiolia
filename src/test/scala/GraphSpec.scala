@@ -28,6 +28,11 @@ class GraphSpec extends org.specs2.mutable.Specification {
     "connectors" >> {
       C(1, 2, 3) mustEqual List(Vertex(1), Vertex(2), Vertex(3))
     }
+    "nonterminal" >> {
+      nt(1, (1, 2, 3)) mustEqual NonTerminal(1, VL(1, 2, 3))
+      nt(1) mustEqual NonTerminal(1)
+      nt(1, List(1)) must throwAn[AssertionError]
+    }
   }
 
   "vertex" >> {
