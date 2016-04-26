@@ -98,8 +98,12 @@ class GraphSpec extends org.specs2.mutable.Specification {
           vData(0 -> "wurst", 1 -> "katapult"),
           eData((1 -> 0) -> "kanone", (0 -> 1) -> "salat")).toString mustEqual "Graph(V(0 1), E(0 -> 1, 1 -> 0), {0: wurst, 1: katapult}, {0->1: salat, 1->0: kanone})"
       }
-      "with nonTerminals" >> todo
-      "with connectors" >> todo
+      "with nonTerminals" >> {
+        graph(V(0 to 3), E(1 -> 0, 1 -> 2, 2 -> 3), nts = List(nt(1, (0,1,2)), nt(2, (2,3)), nt(3))).toString mustEqual "Graph(V(0 1 2 3), E(1 -> 0, 1 -> 2, 2 -> 3), NTS([1:0-1-2], [2:2-3], [3:]))"
+      }
+      "with connectors" >> {
+        graph(V(0 to 3), E(1 -> 0, 1 -> 2, 2 -> 3), c = C(0, 3)).toString mustEqual "Graph(V(0 1 2 3), E(1 -> 0, 1 -> 2, 2 -> 3), C(0-3))"
+      }
     }
 
     "assertions" >> {
