@@ -14,6 +14,8 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   assert(axiom.connectors.isEmpty, "Axiom must not have connectors")
   //TODO: either axiom has vertices or nonterminals
 
+  //TODO: keine leeren hyperkanten auf der rhs in produktionen (nur in axiom erlaubt)
+
   def addProduction[V1 >: V, E1 >: E](production: (Label, Graph[V1, E1])): Grammar[V1, E1] = {
     assert(!(productions.keys.toSet contains production._1), s"productions already contain a rule with label ${production._1}\nproductions:\n${productions.mkString("\n")}")
 

@@ -1,7 +1,15 @@
 package aiolia
 
 import aiolia.graph._
+import aiolia.graph.types._
 import aiolia.helpers.{Random, AutoId}
+
+trait GrammarGraph[V,E] {
+  val graph: Graph[V,E]
+}
+
+case class AxiomGraph[V,E](graph: Graph[V,E]) extends GrammarGraph[V,E]
+case class ProductionGraph[V,E](label: Label, graph: Graph[V,E]) extends GrammarGraph[V,E]
 
 object Mutation {
   type MutOp[V, E] = (Grammar[V, E], Random) => Option[Grammar[V, E]]
@@ -27,6 +35,11 @@ object Mutation {
     }
 
     current.cleanup
+
+  def randomGraphFromGrammar[V, E](grammar: Grammar[V, E], random: Random): GrammarGraph[V,E] = {
+    val productions = grammar.productions.map { case (l,g) => ProductionGraph(l, g) }
+    val possibilities = productions ++ Seq(AxiomGraph(grammar.axiom))
+    random.select(possibilities)
   }
 
   def addVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
