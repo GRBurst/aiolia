@@ -145,14 +145,28 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "grammar can only have rhs nonterminals that have a corresponding lhs" >> {
-      "unknown nonterminal label" >> {
+      "unknown nonterminal label in axiom" >> {
+        grammar(
+          A(1),
+          2 -> cgraph()
+        ) must throwAn[AssertionError]
+      }
+
+      "unknown nonterminal label in rule" >> {
         grammar(
           A(1),
           1 -> cgraph(nt(15, (0, 1)))
         ) must throwAn[AssertionError]
       }
 
-      "different nonterminal signature" >> {
+      "different nonterminal signature in axiom" >> {
+        grammar(
+          A(1),
+          1 -> cgraph(C(0), V(0 to 2))
+        ) must throwAn[AssertionError]
+      }
+
+      "different nonterminal signature in rule" >> {
         grammar(
           A(1),
           1 -> cgraph(Nil, V(0 to 2), nts = List(nt(2, (0, 1)))),

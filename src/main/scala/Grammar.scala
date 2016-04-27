@@ -6,10 +6,10 @@ import aiolia.graph.types._
 
 case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, E]] = Map.empty[Label, Graph[V, E]]) {
   assert((0 until axiom.vertices.size).forall(axiom.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${axiom.vertices}") // needed for autoId in expand
-  assert(productions.values.flatMap(_.nonTerminals).forall { nonTerminal =>
+  assert((productions.values.flatMap(_.nonTerminals) ++ axiom.nonTerminals).forall { nonTerminal =>
     val rhs = productions.get(nonTerminal.label)
     rhs.isDefined && (nonTerminal.connectors.size == rhs.get.connectors.size)
-  }, "All nonterminals on the rhs need to have an equivalent on the lhs")
+  }, "All existing nonterminals need to have an equivalent on the lhs")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
   assert(axiom.connectors.isEmpty, "Axiom must not have connectors")
 
