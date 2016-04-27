@@ -196,8 +196,36 @@ class GrammarSpec extends org.specs2.mutable.Specification {
       Grammar(axiom) must throwAn[AssertionError]
     }
 
+    "axiom must not have connectors" >> {
+      val axiom = cgraph(C(0), V(0, 1))
+      Grammar(axiom) must throwAn[AssertionError]
+    }
+
     "grammar cannot have cycles" >> {
       grammar(A(1), 1 -> cgraph(nt(2)), 2 -> cgraph(nt(1))) must throwAn[AssertionError]
+    }
+
+    "add already existing production rule" >> {
+      val g = grammar(
+        A(1),
+        1 -> cgraph(),
+        2 -> cgraph()
+      )
+      g.addProduction(1 -> cgraph()) must throwAn[AssertionError]
+    }
+
+    "add production rule" >> {
+      val g = grammar(
+        A(1),
+        1 -> cgraph(),
+        2 -> cgraph()
+      )
+      g.addProduction(3 -> cgraph()) mustEqual grammar(
+        A(1),
+        1 -> cgraph(),
+        2 -> cgraph(),
+        3 -> cgraph()
+      )
     }
 
     "cleanup unused production rules" >> {
