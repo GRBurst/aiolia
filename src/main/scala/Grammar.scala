@@ -5,7 +5,7 @@ import aiolia.graph._
 import aiolia.graph.types._
 
 object Grammar {
-  def minimal = Grammar(Graph(nonTerminals = List(NonTerminal(1))), Map(1->Graph()))
+  def minimal = Grammar(Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))
 }
 
 case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, E]] = Map.empty[Label, Graph[V, E]]) {
@@ -35,8 +35,8 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   }
 
   def updateProduction[V1 >: V, E1 >: E](production: (Label, Graph[V1, E1])): Grammar[V1, E1] = {
-    val(label, graph) = production
-    assert(productions contains label )
+    val (label, graph) = production
+    assert(productions contains label)
     copy(productions = productions.updated(label, graph))
   }
 
@@ -69,5 +69,13 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     current
   }
 
-  override def toString = s"Grammar(\n$axiom\n${productions.mkString("\n")})"
+  override def toString = s"Grammar(\n  Axiom: $axiom\n${
+    productions.map{
+      case (l, g) => s"  [$l:${g.connectors.mkString("-")}] -> G(V(${g.vertices}), E(${g.edges})" +
+        (if (g.vertexData.nonEmpty) s", {${g.vertexData.toList.sortBy(_._1.label).map{ case (v, d) => s"$v: $d" }.mkString(", ")}}" else "") +
+        (if (g.edgeData.nonEmpty) s", {${g.edgeData.toList.sortBy(_._1.out.label).sortBy(_._1.in.label).map{ case (Edge(in, out), d) => s"$in->$out: $d" }.mkString(", ")}}" else "") +
+        (if (g.nonTerminals.nonEmpty) s", NTS(${g.nonTerminals.mkString(", ")})" else "") +
+        ")"
+    }.mkString("\n")
+  }\n)"
 }
