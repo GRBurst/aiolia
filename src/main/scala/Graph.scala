@@ -75,7 +75,7 @@ case class Graph[+V, +E](
   assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only be attached to existing edges")
   assert(nonTerminals.flatMap(_.connectors).toSet subsetOf vertices, "NonTerminals can only connect existing vertices")
   assert(nonTerminals.groupBy(_.label).values.forall(_.map(_.connectors.size).distinct.size == 1), "NonTerminals with same label must have the same number of connectors")
-  assert(connectors.toSet subsetOf vertices, s"Only existing vertices can be used as connectors. ($connectors not subset of $vertices)")
+  assert(connectors.toSet subsetOf vertices, s"Only existing vertices can be used as connectors. (Connectors = $connectors not subset of Vertices = $vertices)")
   assert((vertexData.keySet intersect connectors.toSet).isEmpty, "Connectors cannot store data")
 
   def nonConnectors = vertices -- connectors
@@ -178,34 +178,35 @@ case class Graph[+V, +E](
   def incidentNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
     assert(vs.toSet subsetOf vertices)
     val vsSet = vs.toSet
-    nonTerminals.filter(_.connectors.exists(vsSet contains _))
-  }
-  def inducedNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
-    assert(vs.toSet subsetOf vertices)
-    val vsSet = vs.toSet
-    nonTerminals.filter(_.connectors.toSet subsetOf vsSet)
-  }
+      nonTerminals.filter(_.connectors.exists(vsSet))
+    }
+    def inducedNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
+      assert(vs.toSet subsetOf vertices)
+      val vsSet = vs.toSet
+      nonTerminals.filter(_.connectors.toSet subsetOf vsSet)
+    }
 
-  def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
-    assert(vs.toSet subsetOf vertices, "Can only induce on existing vertices")
+    def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
+      assert(vs.toSet subsetOf vertices, "Can only induce on existing vertices")
 
-    val vsSet = vs.toSet
-    val selectedEdges = inducedEdges(vsSet)
-    val subGraph = Graph(
-      vsSet,
-      selectedEdges,
-      vertexData.filterKeys(vsSet contains _),
-      edgeData.filterKeys(selectedEdges contains _),
-      inducedNonTerminals(vsSet),
-      connectors.filter(vsSet contains _)
+      val vsSet = vs.toSet
+      val selectedEdges = inducedEdges(vsSet)
+      val subGraph = Graph(
+        vsSet,
+        selectedEdges,
+        vertexData filterKeys vsSet,
+        edgeData filterKeys selectedEdges,
+        inducedNonTerminals(vsSet),
+        connectors filter vsSet
     )
     assert(subGraph subGraphOf this)
     subGraph
   }
 
   def --[E1, V1](subGraph: Graph[E1, V1]) = {
-    assert(subGraph subGraphOf this)
-    assert(subGraph.connectors.isEmpty)
+    //TODO: rething connectors in subGraphOf
+    assert(subGraph.copy(connectors = Nil) subGraphOf this, s"Graph can only remove valid subgraph. $this -- $subGraph)")
+    // assert(subGraph.connectors.isEmpty, "Graph connectors must not be empty")
 
     val removedVertices = subGraph.vertices
     val removedEdges = subGraph.edges ++ incidentEdges(subGraph.vertices)

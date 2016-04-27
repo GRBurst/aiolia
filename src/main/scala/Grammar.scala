@@ -4,6 +4,10 @@ import aiolia.helpers._
 import aiolia.graph._
 import aiolia.graph.types._
 
+object Grammar {
+  def minimal = Grammar(Graph(nonTerminals = List(NonTerminal(1))), Map(1->Graph()))
+}
+
 case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, E]] = Map.empty[Label, Graph[V, E]]) {
   assert((0 until axiom.vertices.size).forall(axiom.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${axiom.vertices}") // needed for autoId in expand
   assert((productions.values.flatMap(_.nonTerminals) ++ axiom.nonTerminals).forall { nonTerminal =>
@@ -12,6 +16,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   }, "All existing nonterminals need to have an equivalent on the lhs")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
   assert(axiom.connectors.isEmpty, "Axiom must not have connectors")
+  assert(axiom.nonTerminals.nonEmpty, "Axiom must have at least one non-terminal")
   //TODO: either axiom has vertices or nonterminals
 
   //TODO: keine leeren hyperkanten auf der rhs in produktionen (nur in axiom erlaubt)
@@ -27,6 +32,12 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     assert(!productions.values.exists(_.nonTerminals.map(_.label) contains nonTerminal), "to-be-removed production is used in another production")
     assert(!(axiom.nonTerminals.map(_.label) contains nonTerminal), "to-be-removed production is used in axiom")
     copy(productions = productions - nonTerminal)
+  }
+
+  def updateProduction[V1 >: V, E1 >: E](production: (Label, Graph[V1, E1])): Grammar[V1, E1] = {
+    val(label, graph) = production
+    assert(productions contains label )
+    copy(productions = productions.updated(label, graph))
   }
 
   def dependencyGraph = {

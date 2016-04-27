@@ -8,4 +8,9 @@ case class Random(seed: Any) {
     assert(it.size >= n)
     r.shuffle(it).take(n)
   }
+  def nextInt(from:Int, until:Int):Int = {
+    assert(from >= 0)
+    assert(until > from)
+    from + r.nextInt(until - from)
+  }
 }
