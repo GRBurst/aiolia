@@ -30,8 +30,10 @@ object Mutation {
     if (grammar.productions.size < 2) return None
 
     val (srcLabel, source) = random.select(grammar.productions)
+    if (source.nonConnectors.isEmpty) return None
 
-    val subVertices = random.select(source.vertices, n = random.r.nextInt(source.vertices.size))
+    val subVertices = random.select(source.nonConnectors, n = random.r.nextInt(source.nonConnectors.size - 1) + 1)
+
     val connectors = source.neighbours(subVertices).toList // order does not matter, it just needs to be the same in newNonTerminal and newRule rhs
     val subGraph = source.inducedSubGraph(subVertices)
     val newLabel = grammar.productions.keys.max + 1
@@ -46,11 +48,11 @@ object Mutation {
     if (grammar.productions.size < 2) return None
 
     val (srcLabel, source) = random.select(grammar.productions)
-    val (targetLabel, target) = random.select(grammar.productions - srcLabel)
+    val validProductions = (grammar.productions - srcLabel).filter { case (label, g) => g.vertices.size < source.connectors.size }
+    if (validProductions.isEmpty) return None
+    val (targetLabel, target) = random.select(validProductions)
 
-    if (target.vertices.size < source.connectors.size) return None
-
-    val connectors = random.select(target.vertices, n = source.connectors.size).toList // TODO: shuffle connectors?
+    val connectors = random.select(target.vertices, n = source.connectors.size).toList
     val nonTerminal = NonTerminal(srcLabel, connectors)
 
     Some(grammar.copy(productions = grammar.productions.updated(targetLabel, target + nonTerminal)))
