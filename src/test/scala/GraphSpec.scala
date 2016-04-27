@@ -623,6 +623,14 @@ class GraphSpec extends org.specs2.mutable.Specification {
           c = C(1, 2))
         g.replaceOne(nt(2, (2, 3, 4, 5)), r, AutoId(7)) mustEqual result
       }
+      "with duplicate nonterminal" >> {
+        val g = graph(V(0 to 1), E(), nts = List(nt(1, (0, 1)), nt(1, (0, 1))))
+        val r = cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1))
+        val result1 = graph(V(0 to 2), E(0 -> 2, 2 -> 1), nts = List(nt(1, (0, 1))))
+        val result2 = graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1))
+        g.replaceOne(nt(1, (0, 1)), r, AutoId(2)) mustEqual result1
+        result1.replaceOne(nt(1, (0, 1)), r, AutoId(3)) mustEqual result2
+      }
     }
   }
 }
