@@ -19,8 +19,8 @@ object Mutation {
     val operations: List[MutOp[V, E]] = List(
       addVertex,
       addEdge,
-      // removeVertex,
-      // removeEdge,
+      removeVertex,
+      removeEdge,
       inlineNonTerminal,
       extractNonTerminal,
       reuseNonTerminal
@@ -58,7 +58,7 @@ object Mutation {
     println("addEdge")
 
     val candidates = grammar.productions.filter(_._2.vertices.size >= 2)
-    if(candidates.isEmpty) return None
+    if (candidates.isEmpty) return None
 
     val (label, replacement) = random.select(candidates)
     // Only choose vertices that are not fully connected (to all other nodes)
@@ -76,7 +76,7 @@ object Mutation {
     println("removeVertex")
 
     val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
-    if(candidates.isEmpty) return None
+    if (candidates.isEmpty) return None
 
     val (label, replacement) = random.select(candidates)
     val vertexCandidates = replacement.nonConnectors
@@ -89,7 +89,7 @@ object Mutation {
     println("removeEdge")
 
     val candidates = grammar.productions.filter(_._2.edges.nonEmpty)
-    if(candidates.isEmpty) return None
+    if (candidates.isEmpty) return None
 
     val (label, replacement) = random.select(candidates)
     val edgeCandidates = replacement.edges
@@ -103,7 +103,7 @@ object Mutation {
     println("inlineNonTerminal")
 
     val candidates = grammar.productions.filter(_._2.nonTerminals.nonEmpty)
-    if(candidates.isEmpty) return None
+    if (candidates.isEmpty) return None
 
     val (label, graph) = random.select(candidates)
     val terminalCandidates = graph.nonTerminals
@@ -145,10 +145,11 @@ object Mutation {
     if (grammar.productions.size < 2) return None
 
     val candidates = grammar.productions.toList.combinations(2).filter {
+      //TODO: avoid cycles in grammar: check for path in dependencyGraph from target to source
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
 
-    if(candidates.isEmpty) return None
+    if (candidates.isEmpty) return None
     val List((srcLabel, source), (targetLabel, target)) = random.select(candidates)
 
     //TODO: target.vertices or target.nonConnectors ?

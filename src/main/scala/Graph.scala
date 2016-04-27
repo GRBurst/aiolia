@@ -178,26 +178,26 @@ case class Graph[+V, +E](
   def incidentNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
     assert(vs.toSet subsetOf vertices)
     val vsSet = vs.toSet
-      nonTerminals.filter(_.connectors.exists(vsSet))
-    }
-    def inducedNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
-      assert(vs.toSet subsetOf vertices)
-      val vsSet = vs.toSet
-      nonTerminals.filter(_.connectors.toSet subsetOf vsSet)
-    }
+    nonTerminals.filter(_.connectors.exists(vsSet))
+  }
+  def inducedNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
+    assert(vs.toSet subsetOf vertices)
+    val vsSet = vs.toSet
+    nonTerminals.filter(_.connectors.toSet subsetOf vsSet)
+  }
 
-    def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
-      assert(vs.toSet subsetOf vertices, "Can only induce on existing vertices")
+  def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
+    assert(vs.toSet subsetOf vertices, "Can only induce on existing vertices")
 
-      val vsSet = vs.toSet
-      val selectedEdges = inducedEdges(vsSet)
-      val subGraph = Graph(
-        vsSet,
-        selectedEdges,
-        vertexData filterKeys vsSet,
-        edgeData filterKeys selectedEdges,
-        inducedNonTerminals(vsSet),
-        connectors filter vsSet
+    val vsSet = vs.toSet
+    val selectedEdges = inducedEdges(vsSet)
+    val subGraph = Graph(
+      vsSet,
+      selectedEdges,
+      vertexData filterKeys vsSet,
+      edgeData filterKeys selectedEdges,
+      inducedNonTerminals(vsSet),
+      connectors filter vsSet
     )
     assert(subGraph subGraphOf this)
     subGraph
@@ -302,4 +302,11 @@ case class Graph[+V, +E](
     (if (connectors.nonEmpty) s", C(${connectors.mkString("-")})" else "") +
     ")"
 
+  def toDOT = {
+    s"""
+digraph G {
+  ${edges.mkString("\n  ")}
+}
+"""
+  }
 }
