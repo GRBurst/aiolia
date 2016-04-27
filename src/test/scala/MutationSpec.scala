@@ -12,7 +12,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
     "remove random vertex" >> {
       "from empty grammar" >> {
         val random = mock[Random]
-        Mutation.removeRandomVertex(Grammar(A(1)), random) mustEqual None
+        Mutation.removeVertex(Grammar(A(1)), random) mustEqual None
       }
 
       "from grammar" >> {
@@ -29,7 +29,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         random.select(g.productions) returns (2 -> rhsA2)
         random.select(V(1)) returns v(1)
 
-        Mutation.removeRandomVertex(g, random) mustEqual Some(grammar(
+        Mutation.removeVertex(g, random) mustEqual Some(grammar(
           axiom,
           1 -> rhsA1,
           2 -> cgraph(C(0, 2), V(0, 2))
@@ -49,7 +49,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
 
         random.select(g.productions) returns (2 -> rhsA2)
 
-        Mutation.removeRandomVertex(g, random) mustEqual None
+        Mutation.removeVertex(g, random) mustEqual None
       }
     }
     "remove random edge" >> {
@@ -67,7 +67,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         random.select(g.productions) returns (1 -> rhsA1)
         random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
 
-        Mutation.removeRandomEdge(g, random) mustEqual Some(grammar(
+        Mutation.removeEdge(g, random) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1), nts = List(nt(2, (0, 2)))),
           2 -> rhsA2
@@ -76,7 +76,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
 
       "from empty grammar" >> {
         val random = mock[Random]
-        Mutation.removeRandomEdge(Grammar(A(1)), random) mustEqual None
+        Mutation.removeEdge(Grammar(A(1)), random) mustEqual None
       }
 
       "select rule without removable edges" >> {
@@ -92,14 +92,14 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
 
         random.select(g.productions) returns (2 -> rhsA2)
 
-        Mutation.removeRandomVertex(g, random) mustEqual None
+        Mutation.removeVertex(g, random) mustEqual None
       }
     }
 
     "inline random nonterminal" >> {
       "on empty grammar" >> {
         val random = mock[Random]
-        Mutation.inlineRandomNonTerminal(Grammar(A(1)), random) mustEqual None
+        Mutation.inlineNonTerminal(Grammar(A(1)), random) mustEqual None
       }
 
       "on grammar" >> {
@@ -124,7 +124,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         random.select(g.productions) returns (1 -> rhs1)
         random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
 
-        Mutation.inlineRandomNonTerminal(g, random) mustEqual Some(grammar(
+        Mutation.inlineNonTerminal(g, random) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 5), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 5, 5 -> 2)),
           2 -> rhs2
@@ -144,7 +144,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
 
         random.select(g.productions) returns (2 -> rhsA2)
 
-        Mutation.inlineRandomNonTerminal(g, random) mustEqual None
+        Mutation.inlineNonTerminal(g, random) mustEqual None
       }
 
     }

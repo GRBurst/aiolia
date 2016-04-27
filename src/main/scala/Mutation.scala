@@ -4,29 +4,100 @@ import aiolia.graph._
 import aiolia.helpers.{Random, AutoId}
 
 object Mutation {
+  type MutOp[V, E] = (Grammar[V, E], Random) => Option[Grammar[V, E]]
 
-  def mutate[V, E](grammar: Grammar[V, E]): Grammar[V, E] = {
-    // pass count of mutations?
-    // - choose production rule
-    //    ? add vertex
-    //    ? add edge
-    //    ? reuse nonterminal
-    //    ? extract nonterminal
-    //    ? remove vertex
-    //    ? remove edge
-    //    ? inline nonterminal
-    //
-    //      ? reuse
-    //        - choose existing nonterminal from left side of grammar, which does not produce a cycle
-    //
-    //      ? new
-    //        - choose subgraph, replace by new nonterminal
-    //        - create new production rule
-    // prune
-    ???
+  def mutate[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1): Grammar[V, E] = {
+    val operations: List[MutOp[V, E]] = List(
+      addVertex,
+      addEdge,
+      // removeVertex,
+      // removeEdge,
+      inlineNonTerminal,
+      extractNonTerminal,
+      reuseNonTerminal
+    )
+    var current = grammar
+    var mutations = 0
+    while (mutations < n) {
+      random.select(operations)(current, random) foreach { newGrammar =>
+        println(newGrammar)
+        current = newGrammar
+        mutations += 1
+      }
+    }
+
+    current.cleanup
+  }
+
+  def addVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    println("addVertex")
+    if (grammar.productions.isEmpty) return None
+
+    val (label, replacement) = random.select(grammar.productions)
+    val vertexLabel = if (replacement.vertices.isEmpty) 0 else replacement.vertices.maxBy(_.label).label + 1
+    val vertex = Vertex(vertexLabel)
+
+    Some(grammar.copy(productions = grammar.productions.updated(label, replacement + vertex)))
+  }
+
+  def addEdge[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    println("addEdge")
+    if (grammar.productions.isEmpty) return None
+
+    val (label, replacement) = random.select(grammar.productions)
+
+    if (replacement.vertices.size < 2) return None
+    val connectableVertices = replacement.vertices.filter(v => replacement.successors(v).size < replacement.vertices.size - 1)
+    if (connectableVertices.isEmpty) return None // fully connected graph
+
+    val vertexIn = random.select(connectableVertices)
+    val vertexOut = random.select(replacement.vertices - vertexIn -- replacement.successors(vertexIn))
+    val edge = Edge(vertexIn, vertexOut)
+
+    Some(grammar.copy(productions = grammar.productions.updated(label, replacement + edge)))
+  }
+
+  def removeVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    println("removeVertex")
+    if (grammar.productions.isEmpty) return None
+
+    val (label, replacement) = random.select(grammar.productions)
+    val vertexCandidates = replacement.vertices -- replacement.connectors
+    if (vertexCandidates.isEmpty) return None
+
+    val vertex = random.select(vertexCandidates)
+    Some(grammar.copy(productions = grammar.productions.updated(label, replacement - vertex)))
+  }
+
+  def removeEdge[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    println("removeEdge")
+    if (grammar.productions.isEmpty) return None
+
+    val (label, replacement) = random.select(grammar.productions)
+    if (replacement.edges.isEmpty) return None
+
+    val edge = random.select(replacement.edges)
+    Some(grammar.copy(productions = grammar.productions.updated(label, replacement - edge)))
+  }
+  //TODO? def removeNonTerminal[V,E](grammar:Grammar[V,E], random:Random):Option[Grammar[V,E]]
+
+  def inlineNonTerminal[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    println("inlineNonTerminal")
+    if (grammar.productions.isEmpty) return None
+
+    val (label, target) = random.select(grammar.productions)
+    if (target.nonTerminals.isEmpty) return None
+
+    val nonTerminal = random.select(target.nonTerminals)
+
+    // TODO: avoid maxBy in default AutoId?
+    val autoId = new AutoId(start = target.vertices.maxBy(_.label).label + 1)
+    val inlined = target.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
+    Some(grammar.copy(productions = grammar.productions.updated(label, inlined)))
   }
 
   def extractNonTerminal[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    println("extractNonTerminal")
     if (grammar.productions.size < 2) return None
 
     val (srcLabel, source) = random.select(grammar.productions)
@@ -45,6 +116,7 @@ object Mutation {
   }
 
   def reuseNonTerminal[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    println("reuseNonTerminal")
     if (grammar.productions.size < 2) return None
 
     val (srcLabel, source) = random.select(grammar.productions)
@@ -56,65 +128,5 @@ object Mutation {
     val nonTerminal = NonTerminal(srcLabel, connectors)
 
     Some(grammar.copy(productions = grammar.productions.updated(targetLabel, target + nonTerminal)))
-  }
-
-  def addRandomEdge[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    if (grammar.productions.isEmpty) return None
-
-    val (label, replacement) = random.select(grammar.productions)
-
-    if (replacement.vertices.size < 2) return None
-
-    val vertexIn = random.select(replacement.vertices)
-    val vertexOut = random.select(replacement.vertices - vertexIn)
-    val edge = Edge(vertexIn, vertexOut)
-
-    Some(grammar.copy(productions = grammar.productions.updated(label, replacement + edge)))
-  }
-
-  def addRandomVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    if (grammar.productions.isEmpty) return None
-
-    val (label, replacement) = random.select(grammar.productions)
-    val vertexLabel = replacement.vertices.maxBy(_.label).label + 1
-    val vertex = Vertex(vertexLabel)
-
-    Some(grammar.copy(productions = grammar.productions.updated(label, replacement + vertex)))
-  }
-
-  def removeRandomVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    if (grammar.productions.isEmpty) return None
-
-    val (label, replacement) = random.select(grammar.productions)
-    val vertexCandidates = replacement.vertices -- replacement.connectors
-    if (vertexCandidates.isEmpty) return None
-
-    val vertex = random.select(vertexCandidates)
-    Some(grammar.copy(productions = grammar.productions.updated(label, replacement - vertex)))
-  }
-
-  def removeRandomEdge[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    if (grammar.productions.isEmpty) return None
-
-    val (label, replacement) = random.select(grammar.productions)
-    if (replacement.edges.isEmpty) return None
-
-    val edge = random.select(replacement.edges)
-    Some(grammar.copy(productions = grammar.productions.updated(label, replacement - edge)))
-  }
-  //TODO? def removeRandomNonTerminal[V,E](grammar:Grammar[V,E], random:Random):Option[Grammar[V,E]]
-
-  def inlineRandomNonTerminal[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    if (grammar.productions.isEmpty) return None
-
-    val (label, target) = random.select(grammar.productions)
-    if (target.nonTerminals.isEmpty) return None
-
-    val nonTerminal = random.select(target.nonTerminals)
-
-    // TODO: avoid maxBy in default AutoId?
-    val autoId = new AutoId(start = target.vertices.maxBy(_.label).label + 1)
-    val inlined = target.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
-    Some(grammar.copy(productions = grammar.productions.updated(label, inlined)))
   }
 }
