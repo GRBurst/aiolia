@@ -273,6 +273,8 @@ case class Graph[+V, +E](
   }
 
   def replaceOne[V1 >: V, E1 >: E](nonTerminal: NonTerminal, replacement: Graph[V1, E1], autoId: AutoId): Graph[V1, E1] = {
+    //TODO: optimization: replace first nonTerminal in graph
+    // we have to remove the nonTerminal from graph, instead we could just use this.nonTerminals.tail
     assert(this.nonTerminals contains nonTerminal)
     assert(nonTerminal.connectors.size == replacement.connectors.size)
 
@@ -284,7 +286,7 @@ case class Graph[+V, +E](
 
     val mappedReplacement = replacement.copy(connectors = Nil) map vertexMap
 
-    this.copy(nonTerminals = this.nonTerminals.filterNot(_ == nonTerminal)) ++ mappedReplacement
+    this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
   }
 
   override def toString = s"Graph(V(${vertices.toList.sortBy(_.label).mkString(" ")}), " +
