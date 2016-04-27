@@ -367,6 +367,40 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
     }
 
+    "metrics" >> {
+      val g = graph(V(0 to 6), E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3))
+      "inDegree" >> {
+        g.inDegree(v(0)) mustEqual 1
+        g.inDegree(v(1)) mustEqual 0
+        g.inDegree(v(2)) mustEqual 1
+        g.inDegree(v(3)) mustEqual 2
+        g.inDegree(v(4)) mustEqual 1
+        g.inDegree(v(5)) mustEqual 1
+        g.inDegree(v(6)) mustEqual 0
+        g.inDegree(v(7)) must throwAn[AssertionError]
+      }
+      "outDegree" >> {
+        g.outDegree(v(0)) mustEqual 0
+        g.outDegree(v(1)) mustEqual 2
+        g.outDegree(v(2)) mustEqual 2
+        g.outDegree(v(3)) mustEqual 1
+        g.outDegree(v(4)) mustEqual 0
+        g.outDegree(v(5)) mustEqual 1
+        g.outDegree(v(6)) mustEqual 0
+        g.outDegree(v(7)) must throwAn[AssertionError]
+      }
+      "degree" >> {
+        g.degree(v(0)) mustEqual 1
+        g.degree(v(1)) mustEqual 2
+        g.degree(v(2)) mustEqual 3
+        g.degree(v(3)) mustEqual 3
+        g.degree(v(4)) mustEqual 1
+        g.degree(v(5)) mustEqual 2
+        g.degree(v(6)) mustEqual 0
+        g.degree(v(7)) must throwAn[AssertionError]
+      }
+    }
+
     "modifications" >> {
       //TODO: what about empty nonterminals in modification operations?
 

@@ -93,6 +93,10 @@ case class Graph[+V, +E](
   def outgoingEdges(v: Vertex) = { assert(vertices contains v); edges.filter(_.in == v) }
   def incomingEdges(v: Vertex) = { assert(vertices contains v); edges.filter(_.out == v) }
 
+  def inDegree(v: Vertex) = predecessors(v).size
+  def outDegree(v: Vertex) = successors(v).size
+  def degree(v: Vertex) = inDegree(v) + outDegree(v)
+
   // lazy caching datastructure for successors, predecessors, incomingEdges, outgoingEdges
   // private def MapVVempty = Map.empty[Vertex, Set[Vertex]].withDefault((v: Vertex) => { assert(vertices contains v); Set.empty[Vertex] })
   // private def MapVEempty = Map.empty[Vertex, Set[Edge]].withDefault((v: Vertex) => { assert(vertices contains v); Set.empty[Edge] })
