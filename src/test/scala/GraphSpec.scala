@@ -614,12 +614,12 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
       "directed cycle" >> {
         val g = graph(V(0 to 3), E(0 -> 1, 0 -> 2, 1 -> 3, 3 -> 2, 3 -> 0, 2 -> 1))
-        g.depthFirstSearch(v(0), revSort = _.toList.sortBy(-_.label)).toList mustEqual VL(0, 1, 3, 2)
+        g.depthFirstSearch(v(0), v => g.successors(v).toList.sortBy(-_.label)).toList mustEqual VL(0, 1, 3, 2)
       }
       "undirected cycle" >> {
         val g = graph(V(0 to 3), E(0 -> 1, 0 -> 2, 1 -> 3, 3 -> 2))
-        g.depthFirstSearch(v(0), revSort = _.toList.sortBy(-_.label)).toList mustEqual VL(0, 1, 3, 2)
-        g.depthFirstSearch(v(0), revSort = _.toList.sortBy(_.label)).toList mustEqual VL(0, 2, 1, 3)
+        g.depthFirstSearch(v(0), v => g.successors(v).toList.sortBy(-_.label)).toList mustEqual VL(0, 1, 3, 2)
+        g.depthFirstSearch(v(0), v => g.successors(v).toList.sortBy(_.label)).toList mustEqual VL(0, 2, 1, 3)
       }
     }
 

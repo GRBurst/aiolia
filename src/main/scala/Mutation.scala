@@ -12,6 +12,8 @@ import util.Try
 // case class AxiomGraph[V,E](graph: Graph[V,E]) extends GrammarGraph[V,E]
 // case class ProductionGraph[V,E](label: Label, graph: Graph[V,E]) extends GrammarGraph[V,E]
 
+// TODO: We are still nondeterministic!
+// This can happen when iterating over HashSets, MashMaps ...
 object Mutation {
   type MutOp[V, E] = (Grammar[V, E], Random) => Option[Grammar[V, E]]
 
@@ -29,7 +31,10 @@ object Mutation {
     var mutations = 0
     while (mutations < n) {
       random.select(operations)(current, random) foreach { newGrammar =>
-        println(newGrammar)
+        // println(newGrammar)
+        //TODO: assert(newGrammar.expand.isConnected, s"Expanded Graph has to be connected:\n$newGrammar\n${newGrammar.expand}")
+        // is this necessary?
+        // then addVertex also needs to add an edge
         current = newGrammar
         mutations += 1
       }
@@ -45,7 +50,7 @@ object Mutation {
   // }
 
   def addVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    println("addVertex")
+    // println("addVertex")
 
     val (label, replacement) = random.select(grammar.productions)
     val vertexLabel = Try(replacement.vertices.maxBy(_.label).label + 1).getOrElse(0)
@@ -55,7 +60,7 @@ object Mutation {
   }
 
   def addEdge[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    println("addEdge")
+    // println("addEdge")
 
     val candidates = grammar.productions.filter(_._2.vertices.size >= 2)
     if (candidates.isEmpty) return None
@@ -73,7 +78,7 @@ object Mutation {
   }
 
   def removeVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    println("removeVertex")
+    // println("removeVertex")
 
     val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
     if (candidates.isEmpty) return None
@@ -86,7 +91,7 @@ object Mutation {
   }
 
   def removeEdge[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    println("removeEdge")
+    // println("removeEdge")
 
     val candidates = grammar.productions.filter(_._2.edges.nonEmpty)
     if (candidates.isEmpty) return None
@@ -100,7 +105,7 @@ object Mutation {
   //TODO? def removeNonTerminal[V,E](grammar:Grammar[V,E], random:Random):Option[Grammar[V,E]]
 
   def inlineNonTerminal[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    println("inlineNonTerminal")
+    // println("inlineNonTerminal")
 
     val candidates = grammar.productions.filter(_._2.nonTerminals.nonEmpty)
     if (candidates.isEmpty) return None
@@ -116,32 +121,34 @@ object Mutation {
   }
 
   def extractNonTerminal[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    println("extractNonTerminal")
+    // println("extractNonTerminal")
     // if (grammar.productions.size < 2) return None
 
-    val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
+    val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
     if (candidates.isEmpty) return None
 
     val (srcLabel, source) = random.select(candidates)
-    val vertexCandidates = source.nonConnectors
+    val vertexCandidates = source.vertices
 
-    val subVertices = random.select(vertexCandidates, n = random.nextInt(1, vertexCandidates.size + 1))
-    assert(subVertices.size > 0)
+    val subVertices = random.select(vertexCandidates, n = random.nextInt(1, vertexCandidates.size + 1)) // min 1, max -1
+    assert(subVertices.size > 0 && subVertices.size <= vertexCandidates.size)
 
-    val connectors = source.neighbours(subVertices).toList // order does not matter, it just needs to be the same in newNonTerminal and newRule rhs
+    // val connectors = source.neighbours(subVertices).toList // order does not matter, it just needs to be the same in newNonTerminal and newRule rhs
+    val connectorCandidates = subVertices
+    val connectors = random.select(connectorCandidates, random.nextInt(1, connectorCandidates.size + 1)).toList
+    assert(connectors.nonEmpty)
     val subGraph = source.inducedSubGraph(subVertices ++ connectors).copy(connectors = connectors)
     val newLabel = grammar.productions.keys.max + 1
     val newNonTerminal = NonTerminal(newLabel, connectors)
     //TODO: translate vertices to local ones for newRule? (in connectors and subGraph), maybe implement Graph.map, Graph.map (in Graph.map, reuse Graph.map. In general, reuse many algorithms of Graph)
     val newRule = (newLabel, subGraph)
 
-    //TODO: Graph -- iterable vertex
-    Some(grammar.addProduction(newRule).updateProduction(srcLabel -> (source -- Graph(subVertices.toSet) + newNonTerminal)))
+    Some(grammar.addProduction(newRule).updateProduction(srcLabel -> (source -- (subGraph.nonConnectors -- source.connectors) + newNonTerminal)))
   }
 
   // Apply random production rule to another production rule's graph
   def reuseNonTerminal[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
-    println("reuseNonTerminal")
+    // println("reuseNonTerminal")
     if (grammar.productions.size < 2) return None
 
     val candidates = grammar.productions.toList.combinations(2).filter {

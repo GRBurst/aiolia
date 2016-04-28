@@ -15,7 +15,12 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   assert((productions.values.flatMap(_.nonTerminals) ++ axiom.nonTerminals).forall { nonTerminal =>
     val rhs = productions.get(nonTerminal.label)
     rhs.isDefined && (nonTerminal.connectors.size == rhs.get.connectors.size)
-  }, "All existing nonterminals need to have an equivalent on the lhs")
+  }, s"All existing nonterminals need to have an equivalent on the lhs: ${
+    (productions.values.flatMap(_.nonTerminals) ++ axiom.nonTerminals).find { nonTerminal =>
+      val rhs = productions.get(nonTerminal.label)
+      rhs.isEmpty || (nonTerminal.connectors.size != rhs.get.connectors.size)
+    }.get
+  }\n$this")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
   assert(axiom.connectors.isEmpty, "Axiom must not have connectors")
   assert(axiom.nonTerminals.nonEmpty, "Axiom must have at least one non-terminal")
@@ -72,9 +77,6 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     val autoId = AutoId(axiom.vertices.size) // assuming that vertices have labels 0..n
 
     while (current.nonTerminals.nonEmpty) {
-      // TODO: endless loop?
-      // Mutation.mutate(Grammar.minimal, Random(6), 500)
-      // println(current.vertices.size)
       val nonTerminal = current.nonTerminals.head
       val replacement = productions(nonTerminal.label)
       current = current.replaceOne(nonTerminal, replacement, autoId)

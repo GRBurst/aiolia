@@ -222,6 +222,11 @@ case class Graph[+V, +E](
     )
   }
 
+  def --(vs: Iterable[Vertex]) = {
+    //TODO: optimize
+    vs.foldLeft(this)((graph, v) => graph - v)
+  }
+
   def ++[V1 >: V, E1 >: E](that: Graph[V1, E1]): Graph[V1, E1] = {
     assert(that.connectors.isEmpty, "Now think about it. What should happen with the connectors?")
     Graph(
@@ -234,7 +239,7 @@ case class Graph[+V, +E](
     )
   }
 
-  def depthFirstSearch(start: Vertex, revSort: Set[Vertex] => Iterable[Vertex] = set => set) = new Iterator[Vertex] {
+  def depthFirstSearch(start: Vertex, continue: Vertex => Iterable[Vertex] = successors) = new Iterator[Vertex] {
     assert(vertices contains start)
     val stack = mutable.Stack(start)
     val seen = mutable.Set[Vertex]()
@@ -243,10 +248,12 @@ case class Graph[+V, +E](
     override def next: Vertex = {
       val current = stack.pop
       seen += current
-      stack pushAll revSort(successors(current) diff seen ++ stack)
+      stack pushAll (continue(current).toSeq diff (seen ++ stack).toSeq)
       current
     }
   }
+
+  def isConnected = depthFirstSearch(vertices.head, neighbours).size == vertices.size
 
   def hasCycle: Boolean = {
     val next = mutable.HashSet.empty ++ vertices
