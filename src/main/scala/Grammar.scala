@@ -82,12 +82,8 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   }
 
   override def toString = s"Grammar(\n  Axiom: $axiom\n${
-    productions.map{
-      case (l, g) => s"  [$l:${g.connectors.mkString("-")}] -> G(V(${g.vertices}), E(${g.edges})" +
-        (if (g.vertexData.nonEmpty) s", {${g.vertexData.toList.sortBy(_._1.label).map{ case (v, d) => s"$v: $d" }.mkString(", ")}}" else "") +
-        (if (g.edgeData.nonEmpty) s", {${g.edgeData.toList.sortBy(_._1.out.label).sortBy(_._1.in.label).map{ case (Edge(in, out), d) => s"$in->$out: $d" }.mkString(", ")}}" else "") +
-        (if (g.nonTerminals.nonEmpty) s", NTS(${g.nonTerminals.mkString(", ")})" else "") +
-        ")"
+    productions.toList.sortBy(_._1).map{
+      case (l, g) => s"  ${NonTerminal(l, g.connectors)} -> ${g.copy(connectors = Nil)}"
     }.mkString("\n")
   }\n)"
 

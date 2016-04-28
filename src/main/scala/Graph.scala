@@ -51,7 +51,7 @@ case class NonTerminal(label: Label, connectors: List[Vertex] = Nil) {
   assert(connectors == connectors.distinct, "connectors in graph need to be distinct")
 
   def contains(v: Vertex) = connectors contains v
-  override def toString = s"[$label:${connectors.mkString("-")}]"
+  override def toString = s"[$label${if (connectors.nonEmpty) s":${connectors.mkString("-")}" else ""}]"
   def map(vm: Label => Label) = NonTerminal(label, connectors map (_ map vm))
 }
 
@@ -294,11 +294,11 @@ case class Graph[+V, +E](
     this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
   }
 
-  override def toString = s"Graph(V(${vertices.toList.sortBy(_.label).mkString(" ")}), " +
+  override def toString = s"G(V(${vertices.toList.sortBy(_.label).mkString(", ")}), " +
     s"E(${edges.toList.sortBy(_.out.label).sortBy(_.in.label).mkString(", ")})" +
     (if (vertexData.nonEmpty) s", {${vertexData.toList.sortBy(_._1.label).map{ case (v, d) => s"$v: $d" }.mkString(", ")}}" else "") +
     (if (edgeData.nonEmpty) s", {${edgeData.toList.sortBy(_._1.out.label).sortBy(_._1.in.label).map{ case (Edge(in, out), d) => s"$in->$out: $d" }.mkString(", ")}}" else "") +
-    (if (nonTerminals.nonEmpty) s", NTS(${nonTerminals.mkString(", ")})" else "") +
+    (if (nonTerminals.nonEmpty) s", NTS(${nonTerminals.sortBy(_.connectors.headOption.map(_.label)).sortBy(_.label).mkString(", ")})" else "") +
     (if (connectors.nonEmpty) s", C(${connectors.mkString("-")})" else "") +
     ")"
 
