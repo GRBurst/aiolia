@@ -1,18 +1,19 @@
 package aiolia.test
 
-import aiolia.{Grammar, Mutation}
+import aiolia.Grammar
 import aiolia.graph._
 import aiolia.graph.dsl._
 import aiolia.helpers.Random
+import aiolia.mutations._
 
 import Helpers._
 
-class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
+class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
   "mutation operator" >> {
     "remove random vertex" >> {
       "from minimal grammar" >> {
         val random = mock[Random]
-        Mutation.removeVertex(Grammar.minimal, random) mustEqual None
+        RemoveVertex(Grammar.minimal, random) mustEqual None
       }
 
       "from grammar" >> {
@@ -29,7 +30,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         random.select(g.productions) returns (2 -> rhsA2)
         random.select(V(1)) returns v(1)
 
-        Mutation.removeVertex(g, random) mustEqual Some(grammar(
+        RemoveVertex(g, random) mustEqual Some(grammar(
           axiom,
           1 -> rhsA1,
           2 -> cgraph(C(0, 2), V(0, 2))
@@ -52,7 +53,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         random.select(g.productions) returns (1 -> rhsA1)
         random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
 
-        Mutation.removeEdge(g, random) mustEqual Some(grammar(
+        RemoveEdge(g, random) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1), nts = List(nt(2, (0, 2)))),
           2 -> rhsA2
@@ -61,7 +62,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
 
       "from minimal grammar" >> {
         val random = mock[Random]
-        Mutation.removeEdge(Grammar.minimal, random) mustEqual None
+        RemoveEdge(Grammar.minimal, random) mustEqual None
       }
 
     }
@@ -69,7 +70,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
     "inline random nonterminal" >> {
       "on minimal grammar" >> {
         val random = mock[Random]
-        Mutation.inlineNonTerminal(Grammar.minimal, random) mustEqual None
+        InlineNonTerminal(Grammar.minimal, random) mustEqual None
       }
 
       "on grammar" >> {
@@ -94,7 +95,7 @@ class MutationSpec extends org.specs2.mutable.Specification with org.specs2.mock
         random.select(g.productions) returns (1 -> rhs1)
         random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
 
-        Mutation.inlineNonTerminal(g, random) mustEqual Some(grammar(
+        InlineNonTerminal(g, random) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 5), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 5, 5 -> 2)),
           2 -> rhs2
