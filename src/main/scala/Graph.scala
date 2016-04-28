@@ -308,13 +308,4 @@ case class Graph[+V, +E](
     (if (nonTerminals.nonEmpty) s", NTS(${nonTerminals.sortBy(_.connectors.headOption.map(_.label)).sortBy(_.label).mkString(", ")})" else "") +
     (if (connectors.nonEmpty) s", C(${connectors.mkString("-")})" else "") +
     ")"
-
-  def toDOT = {
-    s"""
-digraph G {
-  ${edges.mkString("\n  ")}
-  ${vertices.map(v => s"$v [shape = circle]").mkString("\n  ")}
-}
-"""
-  }
 }

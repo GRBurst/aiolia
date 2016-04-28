@@ -1,6 +1,7 @@
 package aiolia
 
 import aiolia._
+import aiolia.export.DOTExport
 import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.graph.dsl._
@@ -11,8 +12,8 @@ object Main extends App {
 
   val grammar = Mutation.mutateDirected(Grammar.minimal, Random(0), 10)
   println(grammar.uniqueVertices)
-  write("grammar.dot", grammar.toDOT)
-  write("graph.dot", grammar.expand.toDOT)
+  write("grammar.dot", DOTExport.toDOT(grammar))
+  write("graph.dot", DOTExport.toDOT(grammar.expand))
 
   def write(filename: String, content: String) {
     Some(new java.io.PrintWriter(filename)).foreach{ p =>
