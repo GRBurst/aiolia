@@ -95,70 +95,46 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   // dot -Tsvg -Kfdp input.dot -o output.svg
   def toDOT = {
     val g = this.uniqueVertices
-    // val dep = g.dependencyGraph
-    s"""
-digraph Grammar {
-  subgraph clusterAxiom {
+    def graph(graphId: String, graph: Graph[V, E]) = {
+      s"""
+  subgraph cluster$graphId {
     style = "filled"
-    color=blue;
+    color=${if (graphId == "Axiom") "blue" else "black"};
     fillcolor=lightgrey;
-    label = "Axiom";
-    ${g.axiom.edges.mkString("\n    ")}
-    ${
-      g.axiom.nonTerminals.zipWithIndex.map{
-        case (nt, i) =>
+    label = "$graphId";
+    ${graph.connectors.map(c => s"${c.label} [style=dashed]").mkString("\n    ")}
+    ${graph.edges.mkString("\n    ")}
+    ${nts(graphId, graph.nonTerminals)}
+  }"""
+    }
 
-          s"""subgraph clusterAxiom_nt${nt.label}_$i {
-    style=filled;
-    color=black;
+    def nts(graphId: String, ns: List[NonTerminal]) = {
+      ns.zipWithIndex.map{
+        case (NonTerminal(label, conn), i) =>
+          s"""
+    subgraph cluster${graphId}_nt${label}_${i} {
+      style=filled;
+      color=black;
       fillcolor=red;
-      label = "nt ${nt.label}";
-      ${nt.connectors.mkString(", ")}
+      label = "nt ${label}";
+      ${conn.mkString(", ")}
     }"""
       }.mkString("\n\n      ")
     }
-  }
+
+    val graphs = ("Axiom" -> g.axiom) :: g.productions.map{ case (label, graph) => (s"$label" -> graph) }.toList
+    s"""
+digraph Grammar {
+  ${graphs.map{ case (label, gr) => graph(label, gr) }.mkString("\n")}
 
   ${
-      g.productions.map{
-        case (label, graph) =>
-          s"""subgraph cluster$label {
-    style=filled;
-    fillcolor=lightgrey;
-    label = "rule $label";
-    ${graph.edges.mkString("\n    ")}
-    ${graph.connectors.map(c => s"${c.label} [style=dashed]").mkString("\n    ")}
-    ${
-            graph.nonTerminals.zipWithIndex.map{
-              case (nt, i) =>
-
-                s"""subgraph cluster${label}_nt${nt.label}_$i {
-    style=filled;
-      fillcolor=red;
-      label = "nt ${nt.label}";
-      ${nt.connectors.mkString(", ")}
-    }"""
-            }.mkString("\n\n      ")
-          }
-  }"""
-      }.mkString("\n\n  ")
-    }
-
-    ${
-      g.axiom.nonTerminals.zipWithIndex.map{
-        case (nt, i) => s"""clusterAxiom_nt${nt.label}_$i -> cluster${nt.label}"""
-      }.mkString("\n  ")
-    }
-    ${
-      productions.flatMap{
+      graphs.flatMap{
         case (label, graph) => graph.nonTerminals.zipWithIndex.map{
           case (nt, i) =>
-
             s"""cluster${label}_nt${nt.label}_$i -> cluster${nt.label}"""
         }
       }.mkString("\n  ")
     }
-
 }
   """
   }
