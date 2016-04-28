@@ -77,7 +77,9 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     val autoId = AutoId(axiom.vertices.size) // assuming that vertices have labels 0..n
 
     while (current.nonTerminals.nonEmpty) {
-      val nonTerminal = current.nonTerminals.head
+      // println(s"expand ${current.nonTerminals.size}")
+      // val nonTerminal = current.nonTerminals.head
+      val nonTerminal = current.nonTerminals.minBy(_.label) // "more" deterministic (?), optimization: Heap/PriorityQueue
       val replacement = productions(nonTerminal.label)
       current = current.replaceOne(nonTerminal, replacement, autoId)
     }

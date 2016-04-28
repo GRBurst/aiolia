@@ -227,6 +227,11 @@ case class Graph[+V, +E](
     vs.foldLeft(this)((graph, v) => graph - v)
   }
 
+  def removeNonTerminals(vs: Iterable[NonTerminal]) = {
+    //TODO: optimize
+    vs.foldLeft(this)((graph, v) => graph - v)
+  }
+
   def ++[V1 >: V, E1 >: E](that: Graph[V1, E1]): Graph[V1, E1] = {
     assert(that.connectors.isEmpty, "Now think about it. What should happen with the connectors?")
     Graph(
@@ -253,12 +258,16 @@ case class Graph[+V, +E](
     }
   }
 
+  def isEmpty = vertices.size == 0
+
+  //TODO: rename? undirected case with n*(n-1)/2?
   def isComplete = {
     val n = vertices.size
-    edges.size == n * (n - 1) / 2
+    edges.size == n * (n - 1)
   }
 
-  def isConnected = depthFirstSearch(vertices.head, neighbours).size == vertices.size
+  //TODO: optimization: isComplete || depthFirst...
+  def isConnected = isEmpty || depthFirstSearch(vertices.head, neighbours).size == vertices.size
 
   def hasCycle: Boolean = {
     val next = mutable.HashSet.empty ++ vertices

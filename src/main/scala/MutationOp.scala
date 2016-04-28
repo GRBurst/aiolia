@@ -22,13 +22,17 @@ object AddVertex extends MutationOp {
 
 object AddConnectedVertex extends MutationOp {
   def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
-    val candidates = grammar.productions.filter(_._2.vertices.size >= 2)
+    val candidates = grammar.productions
     rand.selectOpt(candidates).map {
       case (label, graph) =>
-        val existingVertex = rand.select(graph.vertices)
-        val newVertex = Vertex(nextLabel(graph.vertices))
-        val newEdge = if (rand.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
-        grammar.updateProduction(label -> (graph + newVertex + newEdge))
+        if (graph.isEmpty)
+          grammar.updateProduction(label -> (graph + Vertex(0)))
+        else {
+          val existingVertex = rand.select(graph.vertices)
+          val newVertex = Vertex(nextLabel(graph.vertices))
+          val newEdge = if (rand.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
+          grammar.updateProduction(label -> (graph + newVertex + newEdge))
+        }
     }
   }
 }
@@ -83,18 +87,19 @@ object InlineNonTerminal extends MutationOp {
         val autoId = new AutoId(start = nextLabel(graph.vertices)) // TODO: avoid maxBy in default AutoId?
         val inlined = graph.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
 
-        grammar.updateProduction(label -> inlined)
+        val result = grammar.updateProduction(label -> inlined)
+        assert(result.expand == grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nafter:$result")
+        result
     }
   }
 }
 
 object ExtractNonTerminal extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
-    val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
+    val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
     rand.selectOpt(candidates).map {
       case (srcLabel, source) =>
-        val subVertices = rand.selectMinOne(source.vertices)
-        assert(subVertices.nonEmpty && subVertices.size <= source.vertices.size)
+        val subVertices = rand.selectMinOne(source.nonConnectors)
 
         // val connectors = source.neighbours(subVertices).toList // order does not matter, it just needs to be the same in newNonTerminal and newRule rhs
         val connectorCandidates = subVertices
@@ -106,7 +111,9 @@ object ExtractNonTerminal extends MutationOp {
         //TODO: translate vertices to local ones for newRule? (in connectors and subGraph), maybe implement Graph.map, Graph.map (in Graph.map, reuse Graph.map. In general, reuse many algorithms of Graph)
         val newRule = (newLabel, subGraph)
 
-        grammar.addProduction(newRule).updateProduction(srcLabel -> (source -- (subGraph.nonConnectors -- source.connectors) + newNonTerminal))
+        val result = grammar.addProduction(newRule).updateProduction(srcLabel -> (source.removeNonTerminals(subGraph.nonTerminals) + newNonTerminal -- subGraph.nonConnectors))
+        assert(result.expand == grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.uniqueVertices.expand}\nsource: [$srcLabel] -> $source\nExtract: $subGraph\nnewNonTerminal: $newNonTerminal\nafter:$result\nexpanded:${result.uniqueVertices.expand}\n")
+        result
     }
   }
 }

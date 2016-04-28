@@ -25,9 +25,9 @@ object Mutation {
     AddEdge,
     //TODO: removeConnectedVertex,
     //TODO: removeConnectedEdge,
-    InlineNonTerminal,
-    ExtractNonTerminal,
-    ReuseNonTerminal
+    // InlineNonTerminal,
+    ExtractNonTerminal
+  // ReuseNonTerminal
   )
 
   val directedAcyclicConnectedGraphOperators: List[MutationOp] = List(
@@ -42,9 +42,10 @@ object Mutation {
   }
 
   def mutateDirectedConnected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
-    assert(grammar.expand.isConnected)
+    assert(grammar.expand.isConnected, s"not connected: ${grammar.expand}")
     val newGrammar = mutate(grammar, directedConnectedGraphOperators, random, n)
     assert(newGrammar.expand.isConnected)
+    newGrammar
   }
 
   def mutateAcyclicConnected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
@@ -53,17 +54,23 @@ object Mutation {
     val newGrammar = mutate(grammar, directedConnectedGraphOperators, random, n)
     assert(newGrammar.expand.isConnected)
     assert(!newGrammar.expand.hasCycle)
+    newGrammar
   }
 
   private def mutate[V, E](grammar: Grammar[V, E], operators: List[MutationOp], random: Random, n: Int): Grammar[V, E] = {
     //TODO: assert constraints after every mutation
     var current = grammar
-    var mutations = 0
-    while (mutations < n) {
+    var i = 0
+    while (i < n) {
+      // println(s"mutate $i")
       //TODO: only select from operators which are possible to apply
-      random.select(operators)(current, random) foreach { newGrammar =>
+      val operator = random.select(operators)
+      println(operator)
+      val resultOption = operator(current, random)
+      resultOption foreach { newGrammar =>
         current = newGrammar
-        mutations += 1
+        assert(current.expand.isConnected, s"not connected: ${current.expand}") //TODO: this assert is temporary, remove it later
+        i += 1
       }
     }
     current.cleanup

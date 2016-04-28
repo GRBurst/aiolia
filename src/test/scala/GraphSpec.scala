@@ -399,6 +399,29 @@ class GraphSpec extends org.specs2.mutable.Specification {
         g.degree(v(6)) mustEqual 0
         g.degree(v(7)) must throwAn[AssertionError]
       }
+
+      "isComplete" >> {
+        graph(V(), E()).isComplete must beTrue
+        graph(V(1), E()).isComplete must beTrue
+        graph(V(1, 2), E()).isComplete must beFalse
+        graph(V(1, 2), E(1 -> 2)).isComplete must beFalse
+        graph(V(1, 2), E(1 -> 2, 2 -> 1)).isComplete must beTrue
+      }
+
+      "isEmpty" >> {
+        graph(V(), E()).isEmpty must beTrue
+        graph(V(1), E()).isEmpty must beFalse
+        graph(V(1, 2), E()).isEmpty must beFalse
+        graph(V(1, 2), E(1 -> 2)).isEmpty must beFalse
+      }
+
+      "isConnected" >> {
+        graph(V(), E()).isConnected must beTrue
+        graph(V(1), E()).isConnected must beTrue
+        graph(V(1, 2), E()).isConnected must beFalse
+        graph(V(1, 2), E(1 -> 2)).isConnected must beTrue
+        graph(V(1, 2, 3), E(1 -> 2)).isConnected must beFalse
+      }
     }
 
     "modifications" >> {
