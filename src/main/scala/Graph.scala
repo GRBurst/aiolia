@@ -253,6 +253,11 @@ case class Graph[+V, +E](
     }
   }
 
+  def isComplete = {
+    val n = vertices.size
+    edges.size == n * (n - 1) / 2
+  }
+
   def isConnected = depthFirstSearch(vertices.head, neighbours).size == vertices.size
 
   def hasCycle: Boolean = {

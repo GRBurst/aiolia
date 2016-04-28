@@ -60,6 +60,7 @@ object Mutation {
     var current = grammar
     var mutations = 0
     while (mutations < n) {
+      //TODO: only select from operators which are possible to apply
       random.select(operators)(current, random) foreach { newGrammar =>
         current = newGrammar
         mutations += 1
