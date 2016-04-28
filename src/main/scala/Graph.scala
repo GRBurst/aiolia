@@ -306,6 +306,7 @@ case class Graph[+V, +E](
     s"""
 digraph G {
   ${edges.mkString("\n  ")}
+  ${vertices.map(v => s"$v [shape = circle]").mkString("\n  ")}
 }
 """
   }

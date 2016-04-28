@@ -4,6 +4,8 @@ import aiolia.helpers._
 import aiolia.graph._
 import aiolia.graph.types._
 
+import collection.mutable
+
 object Grammar {
   def minimal = Grammar(Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))
 }
@@ -89,45 +91,68 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
 
   // render with
   // dot -Tsvg -Kfdp input.dot -o output.svg
+  // (fdp layout engine has cluster support)
   def toDOT = {
     val g = this.uniqueVertices
+
+    // define graph clusters for axiom and rhs of production rules
+    // (contains clusters for nonterminals)
     def graph(graphId: String, graph: Graph[V, E]) = {
       s"""
   subgraph cluster$graphId {
-    style = "filled"
-    color=${if (graphId == "Axiom") "blue" else "black"};
-    fillcolor=lightgrey;
-    label = "$graphId";
+    style = filled
+    color = "${if (graphId == "Axiom") "#369AFF" else "#BBBBBB"}"
+    fillcolor = "${if (graphId == "Axiom") "#C9E4FF" else "#EEEEEE"}"
+    label = "$graphId"
     ${graph.connectors.map(c => s"${c.label} [style=dashed]").mkString("\n    ")}
-    ${graph.edges.mkString("\n    ")}
+    ${graph.edges.map(e => s"$e").mkString("\n    ")}
+    ${graph.vertices.map(v => s"$v [shape = circle]").mkString("\n    ")}
     ${nts(graphId, graph.nonTerminals)}
   }"""
     }
 
-    def nts(graphId: String, ns: List[NonTerminal]) = {
+    // define nonterminal clusters
+    def nts(graphId: String, ns: List[NonTerminal]): String = {
+      // GraphViz cannot handle overlapping clusters
+      // So we draw the overlapping nonterminals as their string representation
+      val used = mutable.HashSet.empty[Vertex]
+
+      val fillColor = "#BCFFC4"
+      val color = "#49EA5C"
+
       ns.zipWithIndex.map{
-        case (NonTerminal(label, conn), i) =>
-          s"""
+        case (nonTerminal @ NonTerminal(label, conn), i) =>
+          if ((used intersect conn.toSet).nonEmpty)
+            s""""$nonTerminal" [style = filled, color = "$color", fillcolor = "$fillColor", shape = rect]"""
+          else {
+            used ++= conn
+            s"""
     subgraph cluster${graphId}_nt${label}_${i} {
-      style=filled;
-      color=black;
-      fillcolor=red;
-      label = "nt ${label}";
+      style = filled
+      color = "$color"
+      fillcolor = "$fillColor"
+      label = "${label}"
       ${conn.mkString(", ")}
     }"""
-      }.mkString("\n\n      ")
+          }
+      }.mkString("\n\n    ")
     }
 
-    val graphs = ("Axiom" -> g.axiom) :: g.productions.map{ case (label, graph) => (s"$label" -> graph) }.toList
+    val graphs = ("Axiom" -> g.axiom) :: g.productions.toList.sortBy(_._1).map{ case (label, graph) => (s"$label" -> graph) }
     s"""
 digraph Grammar {
   ${graphs.map{ case (label, gr) => graph(label, gr) }.mkString("\n")}
 
+
   ${
+      // interconnect nonterminal- with rule-connectors
       graphs.flatMap{
         case (label, graph) => graph.nonTerminals.zipWithIndex.map{
           case (nt, i) =>
-            s"""cluster${label}_nt${nt.label}_$i -> cluster${nt.label}"""
+            (if (nt.connectors.isEmpty)
+              s"""cluster${label}_nt${nt.label}_$i -> cluster${nt.label} [style=dashed]\n"""
+            else "") +
+              (nt.connectors zip g.productions(nt.label).connectors).map{ case (c1, c2) => s"$c1 -> $c2 [style=dashed]" }.mkString("\n  ")
         }
       }.mkString("\n  ")
     }

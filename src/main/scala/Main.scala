@@ -9,6 +9,15 @@ import aiolia.helpers._
 object Main extends App {
   println("Good Bye Aiolia")
 
-  val dot = Mutation.mutate(Grammar.minimal, Random(12), 30).toDOT
-  Some(new java.io.PrintWriter("grammar.dot")).foreach{ p => p.write(dot); p.close }
+  val grammar = Mutation.mutate(Grammar.minimal, Random(0), 10)
+  println(grammar.uniqueVertices)
+  write("grammar.dot", grammar.toDOT)
+  write("graph.dot", grammar.expand.toDOT)
+
+  def write(filename: String, content: String) {
+    Some(new java.io.PrintWriter(filename)).foreach{ p =>
+      p.write(content)
+      p.close
+    }
+  }
 }
