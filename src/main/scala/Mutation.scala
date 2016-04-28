@@ -12,34 +12,66 @@ import util.Try
 // case class AxiomGraph[V,E](graph: Graph[V,E]) extends GrammarGraph[V,E]
 // case class ProductionGraph[V,E](label: Label, graph: Graph[V,E]) extends GrammarGraph[V,E]
 
-// TODO: We are still nondeterministic!
-// This can happen when iterating over HashSets, MashMaps ...
 object Mutation {
+  // TODO: Mutate is still not perfectly deterministic!
+  // This can happen when iterating over HashSets, MashMaps ...
   type MutOp[V, E] = (Grammar[V, E], Random) => Option[Grammar[V, E]]
 
-  def mutate[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1): Grammar[V, E] = {
-    val operations: List[MutOp[V, E]] = List(
-      addVertex,
-      addEdge,
-      removeVertex,
-      removeEdge,
-      inlineNonTerminal,
-      extractNonTerminal,
-      reuseNonTerminal
-    )
+  def directedGraphOperators[V, E]: List[MutOp[V, E]] = List(
+    addVertex,
+    addEdge,
+    removeVertex,
+    removeEdge,
+    inlineNonTerminal,
+    extractNonTerminal,
+    reuseNonTerminal
+  )
+
+  def directedConnectedGraphOperators[V, E]: List[MutOp[V, E]] = List(
+    addConnectedVertex,
+    addEdge,
+    //TODO: removeConnectedVertex,
+    //TODO: removeConnectedEdge,
+    inlineNonTerminal,
+    extractNonTerminal,
+    reuseNonTerminal
+  )
+
+  def directedAcyclicConnectedGraphOperators[V, E]: List[MutOp[V, E]] = List(
+    //TODO add/remove acyclic vertex/edge
+    inlineNonTerminal,
+    extractNonTerminal,
+    reuseNonTerminal
+  )
+
+  def mutateDirected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
+    mutate(grammar, directedGraphOperators, random, n)
+  }
+
+  def mutateDirectedConnected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
+    assert(grammar.expand.isConnected)
+    val newGrammar = mutate(grammar, directedConnectedGraphOperators, random, n)
+    assert(newGrammar.expand.isConnected)
+  }
+
+  def mutateAcyclicConnected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
+    assert(grammar.expand.isConnected)
+    assert(!grammar.expand.hasCycle)
+    val newGrammar = mutate(grammar, directedConnectedGraphOperators, random, n)
+    assert(newGrammar.expand.isConnected)
+    assert(!newGrammar.expand.hasCycle)
+  }
+
+  private def mutate[V, E](grammar: Grammar[V, E], operators: List[MutOp[V, E]], random: Random, n: Int): Grammar[V, E] = {
+    //TODO: assert constraints after every mutation
     var current = grammar
     var mutations = 0
     while (mutations < n) {
-      random.select(operations)(current, random) foreach { newGrammar =>
-        // println(newGrammar)
-        //TODO: assert(newGrammar.expand.isConnected, s"Expanded Graph has to be connected:\n$newGrammar\n${newGrammar.expand}")
-        // is this necessary?
-        // then addVertex also needs to add an edge
+      random.select(operators)(current, random) foreach { newGrammar =>
         current = newGrammar
         mutations += 1
       }
     }
-
     current.cleanup
   }
 
@@ -57,6 +89,18 @@ object Mutation {
     val vertex = Vertex(vertexLabel)
 
     Some(grammar.updateProduction(label -> (replacement + vertex)))
+  }
+
+  def addConnectedVertex[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
+    // println("addConnectedVertex")
+
+    val (label, replacement) = random.select(grammar.productions)
+    val vertexLabel = Try(replacement.vertices.maxBy(_.label).label + 1).getOrElse(0)
+    val newVertex = Vertex(vertexLabel)
+    val existingVertex = random.select(replacement.vertices)
+    val newEdge = if (random.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
+
+    Some(grammar.updateProduction(label -> (replacement + newVertex + newEdge)))
   }
 
   def addEdge[V, E](grammar: Grammar[V, E], random: Random): Option[Grammar[V, E]] = {
