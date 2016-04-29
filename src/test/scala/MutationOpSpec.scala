@@ -13,6 +13,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
     "remove random vertex" >> {
       "from minimal grammar" >> {
         val random = mock[Random]
+        random.selectOpt(Map.empty) returns None
         RemoveVertex(Grammar.minimal, random) mustEqual None
       }
 
@@ -27,7 +28,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
-        random.select(g.productions) returns (2 -> rhsA2)
+        random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((2 -> rhsA2))
         random.select(V(1)) returns v(1)
 
         RemoveVertex(g, random) mustEqual Some(grammar(
@@ -50,7 +51,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
-        random.select(g.productions) returns (1 -> rhsA1)
+        random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((1 -> rhsA1))
         random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
 
         RemoveEdge(g, random) mustEqual Some(grammar(
@@ -62,6 +63,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
 
       "from minimal grammar" >> {
         val random = mock[Random]
+        random.selectOpt(Map.empty) returns None
         RemoveEdge(Grammar.minimal, random) mustEqual None
       }
 
@@ -70,6 +72,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
     "inline random nonterminal" >> {
       "on minimal grammar" >> {
         val random = mock[Random]
+        random.selectOpt(Map.empty) returns None
         InlineNonTerminal(Grammar.minimal, random) mustEqual None
       }
 
@@ -92,7 +95,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
           2 -> rhs2
         )
 
-        random.select(g.productions) returns (1 -> rhs1)
+        random.selectOpt(Map(1 -> rhs1)) returns Some((1 -> rhs1))
         random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
 
         InlineNonTerminal(g, random) mustEqual Some(grammar(

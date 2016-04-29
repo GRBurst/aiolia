@@ -40,7 +40,6 @@ object AddConnectedVertex extends MutationOp {
 object AddEdge extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
     val candidates = grammar.productions.filter { !_._2.isComplete }
-
     rand.selectOpt(candidates).map {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)

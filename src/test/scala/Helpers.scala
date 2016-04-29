@@ -4,6 +4,8 @@ import aiolia._
 import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.graph.dsl._
+import org.mockito.ArgumentMatcher
+import org.mockito.Matchers.argThat
 
 object Helpers {
   //TODO: move graph helper functions to dsl?
@@ -43,5 +45,12 @@ object Helpers {
 
   def grammar[V, E](axiom: Graph[V, E], rules: (Label, Graph[V, E])*): Grammar[V, E] = {
     Grammar(axiom, rules.map{ case (label, graph) => label -> graph }.toMap)
+  }
+
+  class MapContains(production: (Label, Graph[_,_])) extends ArgumentMatcher[Map[Label, Graph[_,_]]] {
+    def matches(map: Any): Boolean = map.asInstanceOf[Map[Label, Graph[_,_]]].toList.contains(production)
+  }
+  object MapContains {
+    def apply(production: (Label, Graph[_,_])) = argThat(new MapContains(production))
   }
 }
