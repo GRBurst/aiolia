@@ -151,6 +151,17 @@ case class Graph[+V, +E](
       case Edge(in, `v`)  => in
     }
   }
+  def neighboursOverNonTerminals(v: Vertex): Set[Vertex] = {
+    assert(vertices contains v)
+    nonTerminals.collect{
+      case NonTerminal(_, connectors) if (connectors contains v) => connectors.toSet - v
+    }.toSet.flatten
+  }
+
+  def neighboursOverNonTerminals(vs: Iterable[Vertex]): Set[Vertex] = {
+    assert(vs.toSet subsetOf vertices)
+    vs.map(neighboursOverNonTerminals).flatten.toSet
+  }
   // open neighbourhood
   def neighbours(vs: Iterable[Vertex]): Set[Vertex] = {
     assert(vs.toSet subsetOf vertices)

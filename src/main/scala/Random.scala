@@ -5,6 +5,8 @@ case class Random(seed: Any) {
 
   def select[T](it: Iterable[T]): T = it.iterator.drop(r.nextInt(it.size)).next
 
+  //TODO: def select[I[T] <: Iterable[T]](it: I[T], n: Int): I[T] = {
+  // to return the same type of collection as the input
   def select[T](it: Iterable[T], n: Int): Iterable[T] = {
     assert(n <= it.size)
     r.shuffle(it).take(n)
