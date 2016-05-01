@@ -326,13 +326,15 @@ case class Graph[+V, +E](
     assert(this.nonTerminals contains nonTerminal)
     assert(nonTerminal.connectors.size == replacement.connectors.size)
 
-    // match connectors from nonTerminal with the ones from replacment graph
-    val existingVertices = (replacement.connectors.map(_.label) zip nonTerminal.connectors.map(_.label)).toMap
-    // newly created vertices that will be merged into the graph
-    val newVertices = replacement.nonConnectors.map(_.label -> autoId.nextId).toMap
-    val vertexMap: Map[Label, Label] = newVertices ++ existingVertices
+    def autoIdFor(v: Vertex):Label = autoId.nextId
+    // def autoIdFor(v: Vertex):Label = if(this.vertices.contains(v)) autoId.nextId else { autoId.setIfHigher(v.label); v.label }
 
-    val mappedReplacement = replacement.copy(connectors = Nil) map vertexMap
+    val connectorMapping = (replacement.connectors.map(_.label) zip nonTerminal.connectors.map(_.label)).toMap
+    val nonConnectorMapping = replacement.nonConnectors.map(v => v.label -> autoIdFor(v)).toMap
+    val vertexMapping: Map[Label, Label] = nonConnectorMapping ++ connectorMapping
+
+    assert(vertexMapping.size == replacement.vertices.size)
+    val mappedReplacement = replacement.copy(connectors = Nil) map vertexMapping
 
     this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
   }

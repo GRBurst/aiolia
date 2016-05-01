@@ -15,4 +15,6 @@ class AutoId(var start: Int) extends Iterable[Int] {
     def hasNext = true
     def next = nextId
   }
+
+  def setIfHigher(ref: Int) {if(ref > start) start = ref + 1}
 }

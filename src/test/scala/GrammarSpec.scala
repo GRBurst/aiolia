@@ -24,9 +24,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     }
 
     "expand edges" >> {
-      val h1 = nt(1, (0, 1, 2))
-      val h2 = nt(1, (0, 2, 1))
-      val axiom = graph(V(0 to 2), nts = List(h1, h2))
+      val axiom = graph(V(0 to 2), nts = List(nt(1, (0, 1, 2)), nt(1, (0, 2, 1))))
 
       val g = grammar(
         axiom,
