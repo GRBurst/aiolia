@@ -110,34 +110,33 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
 
     "extract NonTerminal" >> {
       import ExtractNonTerminal.extract
-      //TODO: special case: extract vertex with degree 0
-      //TODO: extract all vertices
-      //TODO: neigbours over nonterminals (between all combinations of connectors and vertices)
       //TODO: data
       //
-      def t[V, E](source: Graph[V, E], vertices: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E], newLabel: Label) = {
-        val (newSource, extracted) = extract(source, vertices, newLabel)
+      def t[V, E](source: Graph[V, E], subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E], newLabel: Label) = {
+        val (newSource, extracted) = extract(source, subV, newLabel)
 
         newSource.copy(nonTerminals = Nil) mustEqual wantedNewSource.copy(nonTerminals = Nil)
-        extracted.copy(connectors = Nil) mustEqual wantedExtracted.copy(connectors = Nil)
 
-        newSource.nonTerminals.size mustEqual source.nonTerminals.size + 1
-        val newNonTerminal = (newSource.nonTerminals diff source.nonTerminals).head
+        extracted.copy(connectors = Nil, nonTerminals = Nil) mustEqual wantedExtracted.copy(connectors = Nil, nonTerminals = Nil)
+        extracted.nonTerminals must containTheSameElementsAs(wantedExtracted.nonTerminals)
+        extracted.connectors must containTheSameElementsAs(wantedExtracted.connectors)
+
+        (newSource.nonTerminals diff source.nonTerminals diff extracted.nonTerminals).size mustEqual 1
+        val newNonTerminal = (newSource.nonTerminals diff source.nonTerminals diff extracted.nonTerminals).head
         newNonTerminal.label mustEqual newLabel
         newNonTerminal.connectors mustEqual extracted.connectors
-        extracted.connectors.toSet mustEqual wantedExtracted.connectors.toSet
-
-        (newSource.nonTerminals diff List(newNonTerminal)) mustEqual wantedNewSource.nonTerminals
+        (newSource.nonTerminals diff List(newNonTerminal)) must containTheSameElementsAs(wantedNewSource.nonTerminals)
 
         (newSource.vertices ++ extracted.vertices) mustEqual source.vertices
         (newSource.edges ++ extracted.edges) mustEqual source.edges
         (source.connectors.toSet subsetOf newSource.connectors.toSet) must beTrue
+        (subV.filterNot(source.allDegree(_) == 0) intersect newSource.nonConnectors) must beEmpty
       }
 
       "connected" >> {
         val source = cgraph(C(3, 4), V(3, 4, 5, 6), E(4 -> 3, 3 -> 5, 5 -> 6, 4 -> 5))
         val newLabel = 17
-        def c[V, E](vertices: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, vertices, wantedNewSource, wantedExtracted, newLabel)
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, newLabel)
 
         c(V(3), cgraph(C(3, 4), V(3, 4, 5, 6), E(4 -> 5, 5 -> 6)), cgraph(C(3, 4, 5), V(3, 4, 5), E(4 -> 3, 3 -> 5)))
         c(V(4), cgraph(C(3, 4), V(3, 4, 5, 6), E(3 -> 5, 5 -> 6)), cgraph(C(3, 4, 5), V(3, 4, 5), E(4 -> 3, 4 -> 5)))
@@ -149,7 +148,53 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         c(V(4, 5), cgraph(C(3, 4), V(3, 4, 6), E()), cgraph(C(3, 4, 6), V(3, 4, 5, 6), E(4 -> 3, 3 -> 5, 5 -> 6, 4 -> 5)))
         c(V(4, 6), cgraph(C(3, 4), V(3, 4, 5), E(3 -> 5)), cgraph(C(3, 4, 5), V(3, 4, 5, 6), E(4 -> 3, 5 -> 6, 4 -> 5)))
         c(V(5, 6), cgraph(C(3, 4), V(3, 4), E(4 -> 3)), cgraph(C(3, 4), V(3, 4, 5, 6), E(3 -> 5, 5 -> 6, 4 -> 5)))
+        c(V(3, 4, 5, 6), cgraph(C(3, 4), V(3, 4), E()), cgraph(C(3, 4), V(3, 4, 5, 6), E(4 -> 3, 3 -> 5, 5 -> 6, 4 -> 5)))
       }
+
+      "connected only over nonterminals" >> {
+        val source = cgraph(C(3, 4), V(3, 4, 5, 6), nts = List(nt(1, (4, 3)), nt(1, (3, 5)), nt(1, (5, 6)), nt(1, (4, 5))))
+        val newLabel = 17
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, newLabel)
+
+        c(V(3), cgraph(C(3, 4), V(3, 4, 5, 6), nts = List(nt(1, (4, 5)), nt(1, (5, 6)))), cgraph(C(3, 4, 5), V(3, 4, 5), nts = List(nt(1, (4, 3)), nt(1, (3, 5)))))
+        c(V(4), cgraph(C(3, 4), V(3, 4, 5, 6), nts = List(nt(1, (3, 5)), nt(1, (5, 6)))), cgraph(C(3, 4, 5), V(3, 4, 5), nts = List(nt(1, (4, 3)), nt(1, (4, 5)))))
+        c(V(5), cgraph(C(3, 4), V(3, 4, 6), nts = List(nt(1, (4, 3)))), cgraph(C(3, 4, 6), V(3, 4, 5, 6), nts = List(nt(1, (3, 5)), nt(1, (4, 5)), nt(1, (5, 6)))))
+        c(V(6), cgraph(C(3, 4), V(3, 4, 5), nts = List(nt(1, (3, 5)), nt(1, (4, 3)), nt(1, (4, 5)))), cgraph(C(5), V(5, 6), nts = List(nt(1, (5, 6)))))
+        c(V(3, 4), cgraph(C(3, 4), V(3, 4, 5, 6), nts = List(nt(1, (5, 6)))), cgraph(C(3, 4, 5), V(3, 4, 5), nts = List(nt(1, (3, 5)), nt(1, (4, 3)), nt(1, (4, 5)))))
+        c(V(3, 5), cgraph(C(3, 4), V(3, 4, 6), E()), cgraph(C(3, 4, 6), V(3, 4, 5, 6), nts = List(nt(1, (4, 3)), nt(1, (3, 5)), nt(1, (5, 6)), nt(1, (4, 5)))))
+        c(V(3, 6), cgraph(C(3, 4), V(3, 4, 5), nts = List(nt(1, (4, 5)))), cgraph(C(3, 4, 5), V(3, 4, 5, 6), nts = List(nt(1, (4, 3)), nt(1, (3, 5)), nt(1, (5, 6)))))
+        c(V(4, 5), cgraph(C(3, 4), V(3, 4, 6), E()), cgraph(C(3, 4, 6), V(3, 4, 5, 6), nts = List(nt(1, (4, 3)), nt(1, (3, 5)), nt(1, (5, 6)), nt(1, (4, 5)))))
+        c(V(4, 6), cgraph(C(3, 4), V(3, 4, 5), nts = List(nt(1, (3, 5)))), cgraph(C(3, 4, 5), V(3, 4, 5, 6), nts = List(nt(1, (4, 3)), nt(1, (5, 6)), nt(1, (4, 5)))))
+        c(V(5, 6), cgraph(C(3, 4), V(3, 4), nts = List(nt(1, (4, 3)))), cgraph(C(3, 4), V(3, 4, 5, 6), nts = List(nt(1, (3, 5)), nt(1, (5, 6)), nt(1, (4, 5)))))
+        c(V(3, 4, 5, 6), cgraph(C(3, 4), V(3, 4), E()), cgraph(C(3, 4), V(3, 4, 5, 6), nts = List(nt(1, (4, 3)), nt(1, (3, 5)), nt(1, (5, 6)), nt(1, (4, 5)))))
+      }
+
+      "extract V(0) from graph(V(0))" >> {
+        val source = graph(V(0))
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
+        c(V(0), cgraph(C(), V(0)), cgraph(C(0), V(0)))
+      }
+      "aaa" >> {
+        val source = graph(V(0, 1, 2, 3), E(0 -> 1, 1 -> 0, 2 -> 1, 2 -> 3))
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
+        c(V(0, 1), cgraph(C(), V()), cgraph(C(), V()))
+
+        // java.lang.AssertionError: assertion failed: Extract should not affect expanded graph.
+        // before:Grammar(
+        //   Axiom: G(V(), E(), NTS([1]))
+        //   [1] -> G(V(0, 1, 2, 3), E(0 -> 1, 1 -> 0, 2 -> 1, 2 -> 3))
+        // )
+        // expanded:G(V(0, 1, 2, 3), E(0 -> 1, 1 -> 0, 2 -> 1, 2 -> 3))
+        // source: [1] -> G(V(0, 1, 2, 3), E(0 -> 1, 1 -> 0, 2 -> 1, 2 -> 3))
+        // Extract: G(V(0, 1), E(0 -> 1, 1 -> 0), C(1))
+        // after:Grammar(
+        //   Axiom: G(V(), E(), NTS([1]))
+        //   [1] -> G(V(1, 2, 3), E(2 -> 1, 2 -> 3), NTS([2:1]))
+        //   [2:1] -> G(V(0, 1), E(0 -> 1, 1 -> 0))
+        // )
+        // expanded:G(V(0, 1, 2, 3), E(0 -> 3, 1 -> 0, 1 -> 2, 3 -> 0))
+      }.pendingUntilFixed
     }
+
   }
 }

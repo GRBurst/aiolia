@@ -98,13 +98,20 @@ object InlineNonTerminal extends MutationOp {
 object ExtractNonTerminal extends MutationOp {
   def extract[V, E](source: Graph[V, E], subV: Set[Vertex], newLabel: Label): (Graph[V, E], Graph[V, E]) = {
     assert(subV.nonEmpty && (subV subsetOf source.vertices))
-    val newVertices = subV ++ source.neighbours(subV) ++ source.neighboursOverNonTerminals(subV)
+    // println(s"source: $source")
+    // println(s"subV: $subV")
+    val newVertices = subV ++ source.allNeighbours(subV)
+    val isolatedVertices = subV.filter(source.allDegree(_) == 0)
+    // println(s"newVertices: $newVertices (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)})")
     val extracted = Graph(
       vertices = newVertices,
       edges = source.inducedEdges(subV) ++ source.incidentEdges(subV),
-      nonTerminals = source.inducedNonTerminals(subV) ++ source.incidentNonTerminals(subV),
-      connectors = (subV.filter(source.degree(_) == 0).toList ++ source.neighbours(subV) ++ source.neighboursOverNonTerminals(subV) ++ (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
+      nonTerminals = (source.inducedNonTerminals(subV) ++ source.incidentNonTerminals(subV)) diff (source.inducedNonTerminals(subV) intersect source.incidentNonTerminals(subV)),
+      connectors = (isolatedVertices.toList ++
+        source.allNeighbours(subV) ++
+        (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
     )
+    // println(s"connectors: ${extracted.connectors} (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)})")
     assert(extracted.connectors.nonEmpty, s"\nbefore: subGraph.connectors empty.\nsource: $source\nsubVertices: $subV\nnewVertices: $newVertices\nsubGraph: $extracted")
 
     val newNonTerminal = NonTerminal(newLabel, extracted.connectors)
@@ -113,6 +120,11 @@ object ExtractNonTerminal extends MutationOp {
       edges = source.edges -- extracted.edges,
       nonTerminals = (source.nonTerminals diff extracted.nonTerminals) :+ newNonTerminal
     )
+
+    assert((newSource.vertices ++ extracted.vertices) == source.vertices)
+    assert((newSource.edges ++ extracted.edges) == source.edges)
+    assert(source.connectors.toSet subsetOf newSource.connectors.toSet)
+    assert((subV intersect newSource.nonConnectors) == isolatedVertices)
 
     (newSource, extracted)
   }

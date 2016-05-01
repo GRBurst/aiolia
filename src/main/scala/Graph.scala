@@ -8,7 +8,9 @@ object types {
 
 object dsl {
   import types._
-  //TODO: LinkedHashSet for predictable vertex/edge traversal in tests
+  //TODO: graph dsl: LinkedHashSet for predictable vertex/edge traversal in tests
+  //TODO: graph dsl: G as alias for Graph
+  //TODO: implicits for accessors: V,E,NT,C, ....
 
   // Graph construction
   def v(label: Label) = Vertex(label)
@@ -79,6 +81,8 @@ case class Graph[+V, +E](
   assert((vertexData.keySet intersect connectors.toSet).isEmpty, "Connectors cannot store data")
 
   def nonConnectors = vertices -- connectors
+  def isolatedVertices = vertices.filter(degree(_) == 0)
+  def allIsolatedVertices = vertices.filter(allDegree(_) == 0)
 
   def subGraphOf[V1 >: V, E1 >: E](superGraph: Graph[V1, E1]) = {
     (this.vertices subsetOf superGraph.vertices) &&
@@ -96,6 +100,8 @@ case class Graph[+V, +E](
   def inDegree(v: Vertex) = predecessors(v).size
   def outDegree(v: Vertex) = successors(v).size
   def degree(v: Vertex) = inDegree(v) + outDegree(v)
+  def nonTerminalDegree(v: Vertex) = neighboursOverNonTerminals(v).size
+  def allDegree(v: Vertex) = degree(v) + nonTerminalDegree(v)
 
   // lazy caching datastructure for successors, predecessors, incomingEdges, outgoingEdges
   // private def MapVVempty = Map.empty[Vertex, Set[Vertex]].withDefault((v: Vertex) => { assert(vertices contains v); Set.empty[Vertex] })
@@ -151,6 +157,11 @@ case class Graph[+V, +E](
       case Edge(in, `v`)  => in
     }
   }
+  // open neighbourhood
+  def neighbours(vs: Iterable[Vertex]): Set[Vertex] = {
+    assert(vs.toSet subsetOf vertices)
+    vs.flatMap(neighbours).toSet -- vs
+  }
   def neighboursOverNonTerminals(v: Vertex): Set[Vertex] = {
     assert(vertices contains v)
     nonTerminals.flatMap{
@@ -163,11 +174,10 @@ case class Graph[+V, +E](
     assert(vs.toSet subsetOf vertices)
     vs.map(neighboursOverNonTerminals).flatten.toSet -- vs
   }
-  // open neighbourhood
-  def neighbours(vs: Iterable[Vertex]): Set[Vertex] = {
-    assert(vs.toSet subsetOf vertices)
-    vs.flatMap(neighbours).toSet -- vs
-  }
+
+  def allNeighbours(v: Vertex) = neighbours(v) ++ neighboursOverNonTerminals(v)
+  def allNeighbours(vs: Iterable[Vertex]) = neighbours(vs) ++ neighboursOverNonTerminals(vs)
+
   def incidentEdges(v: Vertex): Set[Edge] = {
     assert(vertices contains v)
     edges.filter(_ contains v)

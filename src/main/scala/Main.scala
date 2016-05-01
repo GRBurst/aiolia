@@ -10,7 +10,7 @@ import aiolia.helpers._
 object Main extends App {
   println("Good Bye Aiolia")
 
-  val grammar = Mutation.mutateDirectedConnected(Grammar.minimal, Random(0), 100)
+  val grammar = Mutation.mutateDirectedConnected(Grammar.minimal, Random(1), 100)
   println(grammar.uniqueVertices)
   write("grammar.dot", DOTExport.toDOT(grammar))
   write("graph.dot", DOTExport.toDOT(grammar.expand))
