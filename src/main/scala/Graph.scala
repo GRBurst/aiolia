@@ -31,6 +31,8 @@ object dsl {
   }
 }
 
+case object IsotopicException extends Exception
+
 import types._
 import collection.mutable
 
@@ -337,6 +339,28 @@ case class Graph[+V, +E](
     val mappedReplacement = replacement.copy(connectors = Nil) map vertexMapping
 
     this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
+  }
+
+  def isIsomorphicTo[V1,E1](that:Graph[V1, E1]): Boolean = {
+    if(this.vertices.size != that.vertices.size) return false
+    if(this.vertices.size <= 1) return true
+    if(this.edges.size != that.edges.size) return false
+    // if(this.vertices.toList.map(this.degree).sorted != that.vertices.toList.map(that.degree).sorted) return false
+
+    if(vertices.size > 8) // are you crayz!
+      throw IsotopicException
+    val range = 0 until this.vertices.size
+    val normalizedThis = this.map((this.vertices.map(_.label) zip range).toMap)
+    val normalizedThat = that.map((that.vertices.map(_.label) zip range).toMap)
+    range.permutations.exists(perm => (normalizedThis map (range zip perm).toMap) == normalizedThat)
+
+    // val Ahr = this.vertices.head
+    // val Rha = this - Ahr
+    // that.vertices.exists{candy =>
+    //   this.inDegree(Ahr) == that.inDegree(candy) &&
+    //   this.outDegree(Ahr) == that.outDegree(candy) &&
+    //   Rha.isIsomorphicTo(that - candy)
+    // }
   }
 
   override def toString = s"G(V(${vertices.toList.sortBy(_.label).mkString(", ")}), " +

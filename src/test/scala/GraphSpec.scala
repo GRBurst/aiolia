@@ -678,6 +678,20 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
     }
 
+    "graph isomorphism" >> {
+      (graph(V(1)) isIsomorphicTo graph(V())) must beFalse
+      (graph(V(1)) isIsomorphicTo graph(V(2))) must beTrue
+      (graph(V(1,3)) isIsomorphicTo graph(V(2))) must beFalse
+      (graph(V(1,3)) isIsomorphicTo graph(V(2,4))) must beTrue
+      (graph(V(1,3),E(1 -> 3)) isIsomorphicTo graph(V(2,4))) must beFalse
+      (graph(V(1,3),E(1 -> 3)) isIsomorphicTo graph(V(2,4), E(4 -> 2))) must beTrue
+      (graph(V(1,3),E(1 -> 3)) isIsomorphicTo graph(V(2,4), E(4 -> 2, 2 -> 4))) must beFalse
+      (graph(V(1,3),E(1 -> 3,3 -> 1)) isIsomorphicTo graph(V(2,4), E(4 -> 2, 2 -> 4))) must beTrue
+      (graph(V(0 to 4),E(0->1,1->2,2->3,3->4)) isIsomorphicTo graph(V(0 to 4), E(0->1,1->2,2->3,3->4))) must beTrue
+      (graph(V(0 to 5),E(0->1,1->2,2->3,3->4,1->5)) isIsomorphicTo graph(V(0 to 5), E(0->1,1->2,2->3,3->4,2->5))) must beFalse
+      (graph(V(0 to 5),E(0->1,1->2,2->3,3->4,1->0)) isIsomorphicTo graph(V(0 to 5), E(0->1,1->2,2->3,3->4,2->0))) must beFalse
+    }
+
     "replace nonTerminal by graph with connectors" >> {
       "assert: must replace existing nonTerminal" >> {
         graph(V(), nts = List(nt(1))).replaceOne(nt(2), graph(), AutoId(0)) must throwAn[AssertionError]

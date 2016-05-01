@@ -138,7 +138,7 @@ object ExtractNonTerminal extends MutationOp {
         val (newSource, extracted) = extract(source, subVertices, newLabel)
 
         val result = grammar.addProduction(newLabel -> extracted).updateProduction(srcLabel -> newSource)
-        assert(result.expand == grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.uniqueVertices.expand}\nsource: [$srcLabel] -> $source\nExtract: $extracted\nafter:$result\nexpanded:${result.uniqueVertices.expand}\n")
+        assert(result.expand isIsomorphicTo grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nsource: [$srcLabel] -> $source\nSubVertices: $subVertices\nExtract: $extracted\nafter:$result\nexpanded:${result.expand}\n")
         result
     }
   }
