@@ -173,7 +173,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
         c(V(0), cgraph(C(), V(0)), cgraph(C(0), V(0)))
       }
-      "aaa" >> {
+      "extract all vertices when no connectors are present, muahahaha" >> {
         val source = cgraph(C(), V(1, 2, 3), E(2 -> 1, 2 -> 3), nts = List(nt(1, (1, 2))))
         def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
         c(V(1, 2, 3), cgraph(C(), V(1, 2, 3), E()), cgraph(C(1, 2, 3), V(1, 2, 3), E(2 -> 1, 2 -> 3), nts = List(nt(1, (1, 2)))))
