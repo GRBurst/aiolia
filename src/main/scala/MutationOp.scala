@@ -110,8 +110,11 @@ object ExtractNonTerminal extends MutationOp {
       connectors = (isolatedVertices.toList ++
         source.allNeighbours(subV) ++
         (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
+      // connectors = (if (source.connectors.isEmpty && subV.size == source.vertices.size) subV else isolatedVertices.toList ++
+      //   source.allNeighbours(subV) ++
+      //   (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
     )
-    // println(s"connectors: ${extracted.connectors} (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)})")
+    // println(s"connectors: ${extracted.connectors} (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)}) ++ allNeighbours: ${source.allNeighbours(subV)}")
     assert(extracted.connectors.nonEmpty, s"\nbefore: subGraph.connectors empty.\nsource: $source\nsubVertices: $subV\nnewVertices: $newVertices\nsubGraph: $extracted")
 
     val newNonTerminal = NonTerminal(newLabel, extracted.connectors)
@@ -124,7 +127,6 @@ object ExtractNonTerminal extends MutationOp {
     assert((newSource.vertices ++ extracted.vertices) == source.vertices)
     assert((newSource.edges ++ extracted.edges) == source.edges)
     assert(source.connectors.toSet subsetOf newSource.connectors.toSet)
-    assert((subV intersect newSource.nonConnectors) == isolatedVertices)
 
     (newSource, extracted)
   }
