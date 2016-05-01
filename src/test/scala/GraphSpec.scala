@@ -241,7 +241,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.neighbours(v(6)) mustEqual V()
           g.neighbours(v(7)) must throwAn[AssertionError]
         }
-        "form multiple vertices" >> {
+
+        "over edges form multiple vertices" >> {
           g.neighbours(V(0)) mustEqual V(1)
           g.neighbours(V(1)) mustEqual V(0, 2)
           g.neighbours(V(2)) mustEqual V(1, 4, 3)
@@ -256,6 +257,37 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.neighbours(V(5, 3)) mustEqual V(2)
           g.neighbours(V(6, 2, 3, 4)) mustEqual V(5, 1)
           g.neighbours(g.vertices) mustEqual V()
+        }
+
+        "over nonTerminals" >> {
+          g.neighboursOverNonTerminals(v(0)) mustEqual V()
+          g.neighboursOverNonTerminals(v(1)) mustEqual V(5)
+          g.neighboursOverNonTerminals(v(2)) mustEqual V(3, 5)
+          g.neighboursOverNonTerminals(v(3)) mustEqual V(2, 5)
+          g.neighboursOverNonTerminals(v(4)) mustEqual V()
+          g.neighboursOverNonTerminals(v(5)) mustEqual V(1, 2, 3)
+          g.neighboursOverNonTerminals(v(6)) mustEqual V()
+          g.neighboursOverNonTerminals(v(7)) must throwAn[AssertionError]
+        }
+
+        "over nonTerminals from multiple vertices" >> {
+          g.neighboursOverNonTerminals(V(0)) mustEqual V()
+          g.neighboursOverNonTerminals(V(1)) mustEqual V(5)
+          g.neighboursOverNonTerminals(V(2)) mustEqual V(3, 5)
+          g.neighboursOverNonTerminals(V(3)) mustEqual V(2, 5)
+          g.neighboursOverNonTerminals(V(4)) mustEqual V()
+          g.neighboursOverNonTerminals(V(5)) mustEqual V(1, 2, 3)
+          g.neighboursOverNonTerminals(V(6)) mustEqual V()
+          g.neighboursOverNonTerminals(V(7)) must throwAn[AssertionError]
+
+          g.neighboursOverNonTerminals(V()) mustEqual V()
+          g.neighboursOverNonTerminals(V(1, 2)) mustEqual V(3, 5)
+          g.neighboursOverNonTerminals(V(5, 3)) mustEqual V(1, 2)
+          g.neighboursOverNonTerminals(V(6, 2, 3, 4)) mustEqual V(5)
+          g.neighboursOverNonTerminals(g.vertices) mustEqual V()
+
+          val g2 = graph(V(1, 2, 3), nts = List(nt(0, (1, 2)), nt(1, (2, 1))))
+          g2.neighboursOverNonTerminals(V(1, 2)) mustEqual V()
         }
       }
 
