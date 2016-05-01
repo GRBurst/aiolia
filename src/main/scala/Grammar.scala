@@ -24,9 +24,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
   assert(axiom.connectors.isEmpty, "Axiom must not have connectors")
   assert(axiom.nonTerminals.nonEmpty, "Axiom must have at least one non-terminal")
-  //TODO: either axiom has vertices or nonterminals
-
-  //TODO: keine leeren hyperkanten auf der rhs in produktionen (nur in axiom erlaubt)
+  // TODO: assert(productions.values.forall(_.nonTerminals.forall(_.connectors.nonEmpty)), "no empty nonterminals allowed in productions")
 
   def addProduction[V1 >: V, E1 >: E](production: (Label, Graph[V1, E1])): Grammar[V1, E1] = {
     assert(!(productions.keys.toSet contains production._1), s"productions already contain a rule with label ${production._1}\nproductions:\n${productions.mkString("\n")}")

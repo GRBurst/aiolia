@@ -96,31 +96,37 @@ object InlineNonTerminal extends MutationOp {
 }
 
 object ExtractNonTerminal extends MutationOp {
+  def extract[V, E](source: Graph[V, E], subV: Set[Vertex], newLabel: Label): (Graph[V, E], Graph[V, E]) = {
+    assert(subV.nonEmpty && (subV subsetOf source.vertices))
+    val newVertices = subV ++ source.neighbours(subV) ++ source.neighboursOverNonTerminals(subV)
+    val extracted = Graph(
+      vertices = newVertices,
+      edges = source.inducedEdges(subV) ++ source.incidentEdges(subV),
+      nonTerminals = source.inducedNonTerminals(subV) ++ source.incidentNonTerminals(subV),
+      connectors = (subV.filter(source.degree(_) == 0).toList ++ source.neighbours(subV) ++ source.neighboursOverNonTerminals(subV) ++ (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
+    )
+    assert(extracted.connectors.nonEmpty, s"\nbefore: subGraph.connectors empty.\nsource: $source\nsubVertices: $subV\nnewVertices: $newVertices\nsubGraph: $extracted")
+
+    val newNonTerminal = NonTerminal(newLabel, extracted.connectors)
+    val newSource = source.copy(
+      vertices = source.vertices -- extracted.nonConnectors,
+      edges = source.edges -- extracted.edges,
+      nonTerminals = (source.nonTerminals diff extracted.nonTerminals) :+ newNonTerminal
+    )
+
+    (newSource, extracted)
+  }
+
   override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
     val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
     rand.selectOpt(candidates).map {
       case (srcLabel, source) =>
         val subVertices = rand.selectMinOne(source.vertices).toSet
-        val newVertices = subVertices ++ source.neighbours(subVertices) ++ source.neighboursOverNonTerminals(subVertices)
-        val subGraph = Graph(
-          vertices = newVertices,
-          edges = source.inducedEdges(subVertices) ++ source.incidentEdges(subVertices),
-          nonTerminals = source.inducedNonTerminals(subVertices) ++ source.incidentNonTerminals(subVertices),
-          connectors = (subVertices.filter(source.degree(_) == 0).toList ++ source.neighbours(subVertices) ++ source.neighboursOverNonTerminals(subVertices) ++ (source.connectors intersect subVertices.toSeq)).toList.distinct // TODO: keep order
-        )
-        assert(subGraph.connectors.nonEmpty, s"\nbefore: grammar: $grammar\nsubGraph.connectors empty.\nsource: $source\nsubVertices: $subVertices\nnewVertices: $newVertices\nsubGraph: $subGraph")
-
         val newLabel = grammar.productions.keys.max + 1
-        val newNonTerminal = NonTerminal(newLabel, subGraph.connectors)
+        val (newSource, extracted) = extract(source, subVertices, newLabel)
 
-        val newSource = source.copy(
-          vertices = source.vertices -- subGraph.nonConnectors,
-          edges = source.edges -- subGraph.edges,
-          nonTerminals = (source.nonTerminals diff subGraph.nonTerminals) :+ newNonTerminal
-        )
-
-        val result = grammar.addProduction(newLabel -> subGraph).updateProduction(srcLabel -> newSource)
-        assert(result.expand == grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.uniqueVertices.expand}\nsource: [$srcLabel] -> $source\nExtract: $subGraph\nnewNonTerminal: $newNonTerminal\nafter:$result\nexpanded:${result.uniqueVertices.expand}\n")
+        val result = grammar.addProduction(newLabel -> extracted).updateProduction(srcLabel -> newSource)
+        assert(result.expand == grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.uniqueVertices.expand}\nsource: [$srcLabel] -> $source\nExtract: $extracted\nafter:$result\nexpanded:${result.uniqueVertices.expand}\n")
         result
     }
   }

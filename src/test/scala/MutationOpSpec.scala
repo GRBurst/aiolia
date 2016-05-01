@@ -3,12 +3,14 @@ package aiolia.test
 import aiolia.Grammar
 import aiolia.graph._
 import aiolia.graph.dsl._
+import aiolia.graph.types._
 import aiolia.helpers.Random
 import aiolia.mutations._
 
 import Helpers._
 
 class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
+  args.report(failtrace = true) // prints more stacktrace information when grouping matchers in helper functions
   "mutation operator" >> {
     "remove random vertex" >> {
       "from minimal grammar" >> {
@@ -37,8 +39,8 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
           2 -> cgraph(C(0, 2), V(0, 2))
         ))
       }
-
     }
+
     "remove random edge" >> {
       "from grammar" >> {
         val random = mock[Random]
@@ -104,7 +106,50 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
           2 -> rhs2
         ))
       }.pendingUntilFixed("- some Mockito on maps issue")
+    }
 
+    "extract NonTerminal" >> {
+      import ExtractNonTerminal.extract
+      //TODO: special case: extract vertex with degree 0
+      //TODO: extract all vertices
+      //TODO: neigbours over nonterminals (between all combinations of connectors and vertices)
+      //TODO: data
+      //
+      def t[V, E](source: Graph[V, E], vertices: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E], newLabel: Label) = {
+        val (newSource, extracted) = extract(source, vertices, newLabel)
+
+        newSource.copy(nonTerminals = Nil) mustEqual wantedNewSource.copy(nonTerminals = Nil)
+        extracted.copy(connectors = Nil) mustEqual wantedExtracted.copy(connectors = Nil)
+
+        newSource.nonTerminals.size mustEqual source.nonTerminals.size + 1
+        val newNonTerminal = (newSource.nonTerminals diff source.nonTerminals).head
+        newNonTerminal.label mustEqual newLabel
+        newNonTerminal.connectors mustEqual extracted.connectors
+        extracted.connectors.toSet mustEqual wantedExtracted.connectors.toSet
+
+        (newSource.nonTerminals diff List(newNonTerminal)) mustEqual wantedNewSource.nonTerminals
+
+        (newSource.vertices ++ extracted.vertices) mustEqual source.vertices
+        (newSource.edges ++ extracted.edges) mustEqual source.edges
+        (source.connectors.toSet subsetOf newSource.connectors.toSet) must beTrue
+      }
+
+      "connected" >> {
+        val source = cgraph(C(3, 4), V(3, 4, 5, 6), E(4 -> 3, 3 -> 5, 5 -> 6, 4 -> 5))
+        val newLabel = 17
+        def c[V, E](vertices: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, vertices, wantedNewSource, wantedExtracted, newLabel)
+
+        c(V(3), cgraph(C(3, 4), V(3, 4, 5, 6), E(4 -> 5, 5 -> 6)), cgraph(C(3, 4, 5), V(3, 4, 5), E(4 -> 3, 3 -> 5)))
+        c(V(4), cgraph(C(3, 4), V(3, 4, 5, 6), E(3 -> 5, 5 -> 6)), cgraph(C(3, 4, 5), V(3, 4, 5), E(4 -> 3, 4 -> 5)))
+        c(V(5), cgraph(C(3, 4), V(3, 4, 6), E(4 -> 3)), cgraph(C(3, 4, 6), V(3, 4, 5, 6), E(3 -> 5, 4 -> 5, 5 -> 6)))
+        c(V(6), cgraph(C(3, 4), V(3, 4, 5), E(3 -> 5, 4 -> 3, 4 -> 5)), cgraph(C(5), V(5, 6), E(5 -> 6)))
+        c(V(3, 4), cgraph(C(3, 4), V(3, 4, 5, 6), E(5 -> 6)), cgraph(C(3, 4, 5), V(3, 4, 5), E(3 -> 5, 4 -> 3, 4 -> 5)))
+        c(V(3, 5), cgraph(C(3, 4), V(3, 4, 6), E()), cgraph(C(3, 4, 6), V(3, 4, 5, 6), E(4 -> 3, 3 -> 5, 5 -> 6, 4 -> 5)))
+        c(V(3, 6), cgraph(C(3, 4), V(3, 4, 5), E(4 -> 5)), cgraph(C(3, 4, 5), V(3, 4, 5, 6), E(4 -> 3, 3 -> 5, 5 -> 6)))
+        c(V(4, 5), cgraph(C(3, 4), V(3, 4, 6), E()), cgraph(C(3, 4, 6), V(3, 4, 5, 6), E(4 -> 3, 3 -> 5, 5 -> 6, 4 -> 5)))
+        c(V(4, 6), cgraph(C(3, 4), V(3, 4, 5), E(3 -> 5)), cgraph(C(3, 4, 5), V(3, 4, 5, 6), E(4 -> 3, 5 -> 6, 4 -> 5)))
+        c(V(5, 6), cgraph(C(3, 4), V(3, 4), E(4 -> 3)), cgraph(C(3, 4), V(3, 4, 5, 6), E(3 -> 5, 5 -> 6, 4 -> 5)))
+      }
     }
   }
 }
