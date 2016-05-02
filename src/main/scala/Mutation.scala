@@ -25,16 +25,19 @@ object Mutation {
     AddEdge,
     //TODO: removeConnectedVertex,
     //TODO: removeConnectedEdge,
-    // InlineNonTerminal,
+    InlineNonTerminal,
     ExtractNonTerminal
   // ReuseNonTerminal
   )
 
-  val directedAcyclicConnectedGraphOperators: List[MutationOp] = List(
-    //TODO add/remove acyclic vertex/edge
+  val directedAcyclicGraphOperators: List[MutationOp] = List(
+    AddVertex,
+    AddAcyclicEdge,
+    RemoveVertex,
+    RemoveEdge,
     InlineNonTerminal,
-    ExtractNonTerminal,
-    ReuseNonTerminal
+    ExtractNonTerminal
+  // ReuseNonTerminal
   )
 
   def mutateDirected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
@@ -47,9 +50,9 @@ object Mutation {
       s"not connected: ${grammar.expand}")
   }
 
-  def mutateAcyclicConnected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
-    mutate(grammar, directedConnectedGraphOperators, random, n,
-      (g: Grammar[V, E]) => g.expand.isConnected && !g.expand.hasCycle)
+  def mutateDirectedAcyclic[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
+    mutate(grammar, directedAcyclicGraphOperators, random, n,
+      (g: Grammar[V, E]) => !g.expand.hasCycle)
   }
 
   private def mutate[V, E](

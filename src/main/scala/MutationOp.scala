@@ -39,6 +39,26 @@ object AddConnectedVertex extends MutationOp {
   }
 }
 
+object AddAcyclicEdge extends MutationOp {
+  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
+    val candidates = grammar.productions.filter { !_._2.isComplete }
+    rand.selectOpt(candidates).flatMap {
+      case (label, graph) =>
+        // Only choose vertices that are not fully connected (to all other nodes)
+        val vertexInCandidates = graph.vertices.filter(v => graph.outDegree(v) < graph.vertices.size - 1)
+        val vertexIn = rand.select(vertexInCandidates)
+        val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors)
+        rand.selectOpt(vertexOutCandidates).flatMap { vertexOut =>
+          val edge = Edge(vertexIn, vertexOut)
+          val result = grammar.updateProduction(label -> (graph + edge))
+          // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
+          // TODO: prevent creating cycles in the first place
+          if (result.expand.hasCycle) None else Some(result)
+        }
+    }
+  }
+}
+
 object AddEdge extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
     val candidates = grammar.productions.filter { !_._2.isComplete }

@@ -16,12 +16,12 @@ object Main extends App {
   // write("graph.dot", DOTExport.toDOT(grammar.expand))
 
   for (i <- 0 to 14245981) try {
-    println(Mutation.mutateDirectedConnected(Grammar.minimal, Random(i), 100))
+    println(Mutation.mutateDirectedAcyclic(Grammar.minimal, Random(i), 100))
   }
   catch {
     // case _@ IsotopicException =>
     case e: AssertionError => {
-      println("\n\nASSERTION\n" + e.getMessage)
+      println("\n\nASSERTION\n" + e.getMessage + "\n" + e.getStackTrace.mkString("\n"))
       Thread.sleep(2000)
     }
   }
