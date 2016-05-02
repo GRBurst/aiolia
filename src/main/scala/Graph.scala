@@ -328,7 +328,7 @@ case class Graph[+V, +E](
     assert(this.nonTerminals contains nonTerminal)
     assert(nonTerminal.connectors.size == replacement.connectors.size)
 
-    def autoIdFor(v: Vertex):Label = autoId.nextId
+    def autoIdFor(v: Vertex): Label = autoId.nextId
     // def autoIdFor(v: Vertex):Label = if(this.vertices.contains(v)) autoId.nextId else { autoId.setIfHigher(v.label); v.label }
 
     val connectorMapping = (replacement.connectors.map(_.label) zip nonTerminal.connectors.map(_.label)).toMap
@@ -341,26 +341,24 @@ case class Graph[+V, +E](
     this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
   }
 
-  def isIsomorphicTo[V1,E1](that:Graph[V1, E1]): Boolean = {
-    if(this.vertices.size != that.vertices.size) return false
-    if(this.vertices.size <= 1) return true
-    if(this.edges.size != that.edges.size) return false
-    // if(this.vertices.toList.map(this.degree).sorted != that.vertices.toList.map(that.degree).sorted) return false
+  def isIsomorphicTo[V1, E1](that: Graph[V1, E1]): Boolean = {
+    if (this.vertices.size != that.vertices.size) return false
+    val thisLabels = this.vertices.map(_.label)
+    val thatLabels = that.vertices.map(_.label)
 
-    if(vertices.size > 8) // are you crayz!
-      throw IsotopicException
-    val range = 0 until this.vertices.size
-    val normalizedThis = this.map((this.vertices.map(_.label) zip range).toMap)
-    val normalizedThat = that.map((that.vertices.map(_.label) zip range).toMap)
-    range.permutations.exists(perm => (normalizedThis map (range zip perm).toMap) == normalizedThat)
+    def recurse(perm: Map[Label, Label]): Boolean = {
+      if (perm.size == this.vertices.size) {
+        println((this, perm, that, (this map perm) == that))
+        (this map perm) == that
+      }
+      else {
+        val thisCandidates = thisLabels -- perm.keySet
+        val thatCandidates = thatLabels -- perm.values
+        recurse(perm + (thisCandidates.head -> thatCandidates.head))
+      }
+    }
 
-    // val Ahr = this.vertices.head
-    // val Rha = this - Ahr
-    // that.vertices.exists{candy =>
-    //   this.inDegree(Ahr) == that.inDegree(candy) &&
-    //   this.outDegree(Ahr) == that.outDegree(candy) &&
-    //   Rha.isIsomorphicTo(that - candy)
-    // }
+    recurse(Map.empty)
   }
 
   override def toString = s"G(V(${vertices.toList.sortBy(_.label).mkString(", ")}), " +
