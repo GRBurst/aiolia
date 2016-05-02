@@ -25,7 +25,7 @@ object Mutation {
     AddEdge,
     //TODO: removeConnectedVertex,
     //TODO: removeConnectedEdge,
-    InlineNonTerminal,
+    // InlineNonTerminal,
     ExtractNonTerminal
   // ReuseNonTerminal
   )
@@ -70,6 +70,7 @@ object Mutation {
       val operator = random.select(operators)
       val resultOption = operator(current, random)
       resultOption foreach { newGrammar =>
+        println(s"mutation $i/$n: ${operator.getClass.getName}")
         assert(invariant(newGrammar), s"\nbefore ${operator.getClass.getName}:\n$current\nexpanded: ${current.expand}\nafter ${operator.getClass.getName}: $invariantError\n${newGrammar}\nexpanded: ${newGrammar.expand}")
         current = newGrammar
         i += 1

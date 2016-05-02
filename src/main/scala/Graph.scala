@@ -343,18 +343,35 @@ case class Graph[+V, +E](
 
   def isIsomorphicTo[V1, E1](that: Graph[V1, E1]): Boolean = {
     if (this.vertices.size != that.vertices.size) return false
+    if (this.edges.size != that.edges.size) return false
+    if (this.vertices.toList.map(this.degree).sorted != that.vertices.toList.map(that.degree).sorted) return false
+
+    if (this.vertices.size > 20) println(s"Isomorphism testing on Graph with ${this.vertices.size} vertices...")
+
     val thisLabels = this.vertices.map(_.label)
     val thatLabels = that.vertices.map(_.label)
 
+    def prune(candA: Label, candB: Label, perm: Map[Label, Label]) = {
+      val (vA, vB) = (Vertex(candA), Vertex(candB))
+      this.inDegree(vA) != that.inDegree(vB) ||
+        this.outDegree(vA) != that.outDegree(vB) ||
+        this.nonTerminalDegree(vA) != that.nonTerminalDegree(vB) ||
+        perm.toList.exists{ case (a, b) => this.edges.contains(Edge(Vertex(a), vA)) != that.edges.contains(Edge(Vertex(b), vB)) } ||
+        perm.toList.exists{ case (a, b) => this.edges.contains(Edge(vA, Vertex(a))) != that.edges.contains(Edge(vB, Vertex(b))) }
+      // !(this.inducedSubGraph((thisLabels -- perm.keySet - candA).map(Vertex(_))) isIsomorphicTo that.inducedSubGraph((thatLabels -- perm.values - candB).map(Vertex(_))))
+    }
+
     def recurse(perm: Map[Label, Label]): Boolean = {
       if (perm.size == this.vertices.size) {
-        println((this, perm, that, (this map perm) == that))
         (this map perm) == that
       }
       else {
         val thisCandidates = thisLabels -- perm.keySet
         val thatCandidates = thatLabels -- perm.values
-        recurse(perm + (thisCandidates.head -> thatCandidates.head))
+        val thisCandidate = thisCandidates.head
+        thatCandidates.filterNot(prune(thisCandidate, _, perm)).exists { thatCandidate =>
+          recurse(perm + (thisCandidate -> thatCandidate))
+        }
       }
     }
 

@@ -94,7 +94,7 @@ object InlineNonTerminal extends MutationOp {
         val inlined = inline(graph, nonTerminal, grammar)
 
         val result = grammar.updateProduction(label -> inlined)
-        assert(result.expand == grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nafter:$result")
+        assert(result.expand isIsomorphicTo grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nafter:$result")
         result
     }
   }
