@@ -25,7 +25,7 @@ object Mutation {
     AddEdge,
     //TODO: removeConnectedVertex,
     //TODO: removeConnectedEdge,
-    // InlineNonTerminal,
+    InlineNonTerminal,
     ExtractNonTerminal
   // ReuseNonTerminal
   )

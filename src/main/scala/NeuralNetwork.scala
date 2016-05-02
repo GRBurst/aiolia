@@ -6,6 +6,7 @@ import collection.mutable
 
 object NeuralNetwork {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) = {
+    //TODO: cleanup parts of the network which are not reachable from the output vertices
     new NeuralNetwork(in, out, graph)
   }
 }

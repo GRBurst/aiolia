@@ -15,7 +15,15 @@ object Main extends App {
   // write("grammar.dot", DOTExport.toDOT(grammar))
   // write("graph.dot", DOTExport.toDOT(grammar.expand))
 
-  for(i <- 0 to 14245981) try {Mutation.mutateDirectedConnected(Grammar.minimal,Random(i),1000)} catch { case _:IsotopicException$ => ; case e:AssertionError => {println("\n\nASSERTION\n"+e.getMessage);Thread.sleep(2000)}}
+  for (i <- 0 to 14245981) try {
+    Mutation.mutateDirectedConnected(Grammar.minimal, Random(i), 1000)
+  }
+  catch {
+    case _@ IsotopicException =>
+    case e: AssertionError => {
+      println("\n\nASSERTION\n" + e.getMessage); Thread.sleep(2000)
+    }
+  }
 
   def write(filename: String, content: String) {
     Some(new java.io.PrintWriter(filename)).foreach{ p =>

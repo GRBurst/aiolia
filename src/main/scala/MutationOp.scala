@@ -80,13 +80,18 @@ object RemoveEdge extends MutationOp {
 //TODO? def removeNonTerminal[V,E](grammar:Grammar[V,E], rand:Random):Option[Grammar[V,E]]
 
 object InlineNonTerminal extends MutationOp {
+  def inline[V, E](graph: Graph[V, E], nonTerminal: NonTerminal, grammar: Grammar[V, E]): Graph[V, E] = {
+    val autoId = AutoId(nextLabel(graph.vertices)) // TODO: avoid maxBy in default AutoId?
+    graph.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
+  }
+
   override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
     val candidates = grammar.productions.filter(_._2.nonTerminals.nonEmpty)
     rand.selectOpt(candidates).map {
       case (label, graph) =>
         val nonTerminal = rand.select(graph.nonTerminals)
-        val autoId = new AutoId(start = nextLabel(graph.vertices)) // TODO: avoid maxBy in default AutoId?
-        val inlined = graph.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
+
+        val inlined = inline(graph, nonTerminal, grammar)
 
         val result = grammar.updateProduction(label -> inlined)
         assert(result.expand == grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nafter:$result")
