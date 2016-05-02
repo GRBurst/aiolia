@@ -106,7 +106,8 @@ object ExtractNonTerminal extends MutationOp {
     // println(s"source: $source")
     // println(s"subV: $subV")
     val newVertices = subV ++ source.allNeighbours(subV)
-    val isolatedVertices = subV.filter(source.allDegree(_) == 0)
+    val connectedComponents = source.connectedComponents(v => source.allNeighbours(v))
+    val isolatedVertices = connectedComponents.filter(component => (component subsetOf subV) && (component intersect source.connectors.toSet).isEmpty).flatten
     // println(s"newVertices: $newVertices (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)})")
     val extracted = Graph(
       vertices = newVertices,

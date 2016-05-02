@@ -179,6 +179,26 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         c(V(1, 2, 3), cgraph(C(), V(1, 2, 3), E()), cgraph(C(1, 2, 3), V(1, 2, 3), E(2 -> 1, 2 -> 3), nts = List(nt(1, (1, 2)))))
 
       }
+      "extract isolated subgraph" >> {
+        val source = cgraph(C(), V(2, 3, 4, 5), E(4 -> 3))
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
+        c(V(3, 4), cgraph(C(), V(2, 3, 4, 5), E()), cgraph(C(3, 4), V(3, 4), E(4 -> 3)))
+      }
+      "extract isolated subgraph over nonTerminal" >> {
+        val source = cgraph(C(), V(2, 3, 4, 5), E(), nts = List(nt(7, (4, 3))))
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
+        c(V(3, 4), cgraph(C(), V(2, 3, 4, 5), E()), cgraph(C(3, 4), V(3, 4), E(), nts = List(nt(7, (4, 3)))))
+      }
+      "extract multiple isolated subgraphs" >> {
+        val source = cgraph(C(), V(2, 3, 4, 5, 6), E(2 -> 3, 4 -> 5))
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
+        c(V(2, 3, 4, 5), cgraph(C(), V(2, 3, 4, 5, 6), E()), cgraph(C(2, 3, 4, 5), V(2, 3, 4, 5), E(2 -> 3, 4 -> 5)))
+      }
+      "extract multiple isolated subgraphs over nonTerminals" >> {
+        val source = cgraph(C(), V(2, 3, 4, 5, 6), E(), nts = List(nt(1, (2, 3)), nt(2, (4, 5))))
+        def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
+        c(V(2, 3, 4, 5), cgraph(C(), V(2, 3, 4, 5, 6), E()), cgraph(C(2, 3, 4, 5), V(2, 3, 4, 5), E(), nts = List(nt(1, (2, 3)), nt(2, (4, 5)))))
+      }
     }
 
   }

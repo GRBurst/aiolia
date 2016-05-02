@@ -290,6 +290,19 @@ case class Graph[+V, +E](
     edges.size == n * (n - 1)
   }
 
+  def connectedComponents: Set[Set[Vertex]] = connectedComponents(neighbours)
+  def connectedComponents(neighbourSelector: Vertex => Iterable[Vertex]): Set[Set[Vertex]] = {
+    val toVisit = mutable.HashSet.empty ++ vertices
+    val components = mutable.HashSet.empty[Set[Vertex]]
+    while (toVisit.nonEmpty) {
+      val start = toVisit.head
+      val component = depthFirstSearch(start, neighbourSelector).toSet
+      components += component
+      toVisit --= component
+    }
+    components.toSet
+  }
+
   //TODO: optimization: isComplete || depthFirst...
   def isConnected = isEmpty || depthFirstSearch(vertices.head, neighbours).size == vertices.size
 
