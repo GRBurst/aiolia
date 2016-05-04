@@ -5,6 +5,7 @@ import aiolia.graph._
 import aiolia.graph.types._
 
 import collection.mutable
+import annotation.tailrec
 
 object Grammar {
   def minimal = Grammar(Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))
@@ -23,7 +24,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   }\n$this")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
   assert(axiom.connectors.isEmpty, "Axiom must not have connectors")
-  assert(axiom.nonTerminals.nonEmpty, "Axiom must have at least one non-terminal")
+  assert(axiom.nonTerminals.nonEmpty, s"Axiom must have at least one non-terminal\n$this")
   // TODO: assert(productions.values.forall(_.nonTerminals.forall(_.connectors.nonEmpty)), "no empty nonterminals allowed in productions")
 
   def addProduction[V1 >: V, E1 >: E](production: (Label, Graph[V1, E1])): Grammar[V1, E1] = {
@@ -70,19 +71,13 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     })
   }
 
-  def expand = {
-    var current = axiom
-    val autoId = AutoId(axiom.vertices.size) // assuming that vertices have labels 0..n
-
-    while (current.nonTerminals.nonEmpty) {
-      // println(s"expand ${current.nonTerminals.size}")
-      // val nonTerminal = current.nonTerminals.head
-      val nonTerminal = current.nonTerminals.minBy(_.label) // "more" deterministic (?), optimization: Heap/PriorityQueue
-      val replacement = productions(nonTerminal.label)
-      current = current.replaceOne(nonTerminal, replacement, autoId)
-    }
-
-    current
+  def expand: Graph[V, E] = expand(AutoId(axiom.vertices.size))
+  @tailrec final def expand(autoId: AutoId): Graph[V, E] = {
+    val nonTerminal = axiom.nonTerminals.head
+    val replacement = productions(nonTerminal.label)
+    val next = axiom.replaceOne(nonTerminal, replacement, autoId)
+    if (next.nonTerminals.isEmpty) next
+    else copy(axiom = next).expand(autoId)
   }
 
   override def toString = s"Grammar(\n  Axiom: $axiom\n${
