@@ -5,44 +5,50 @@ import aiolia.graph.types._
 import aiolia.helpers.{Random, AutoId}
 import aiolia.mutations._
 import util.Try
+import annotation.tailrec
 
 object Mutation {
   // TODO: Mutate is still not perfectly deterministic!
   // This can happen when iterating over HashSets, MashMaps ...
 
-  val directedGraphOperators: List[MutationOp] = List(
-    AddVertex,
-    AddEdge,
-    RemoveVertex,
-    RemoveEdge,
-    InlineNonTerminal,
-    ExtractNonTerminal,
-    ReuseNonTerminal
-  )
-
-  val directedConnectedGraphOperators: List[MutationOp] = List(
-    AddConnectedVertex,
-    AddEdge,
-    //TODO: removeConnectedVertex,
-    //TODO: removeConnectedEdge,
-    InlineNonTerminal,
-    ExtractNonTerminal
-  // ReuseNonTerminal
-  )
-
-  val directedAcyclicGraphOperators: List[MutationOp] = List(
-    AddVertex,
-    AddAcyclicEdge,
-    RemoveVertex,
-    RemoveEdge,
-    InlineNonTerminal,
-    ExtractNonTerminal
-  // ReuseNonTerminal
-  )
+  val directedGraphOperators: List[MutationOp] =
+    AddVertex ::
+      AddEdge ::
+      RemoveVertex ::
+      RemoveEdge ::
+      InlineNonTerminal ::
+      ExtractNonTerminal ::
+      ReuseNonTerminal ::
+      Nil
 
   def mutateDirected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
     mutate(grammar, directedGraphOperators, random, n)
   }
+
+  val directedAcyclicGraphOperators: List[MutationOp] =
+    AddVertex ::
+      AddAcyclicEdge ::
+      RemoveVertex ::
+      RemoveEdge ::
+      InlineNonTerminal ::
+      ExtractNonTerminal ::
+      // ReuseNonTerminal ::
+      Nil
+
+  def mutateDirectedAcyclic[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
+    mutate(grammar, directedAcyclicGraphOperators, random, n,
+      (g: Grammar[V, E]) => !g.expand.hasCycle)
+  }
+
+  val directedConnectedGraphOperators: List[MutationOp] =
+    AddConnectedVertex ::
+      AddEdge ::
+      //TODO: removeConnectedVertex ::
+      //TODO: removeConnectedEdge ::
+      InlineNonTerminal ::
+      ExtractNonTerminal ::
+      // ReuseNonTerminal ::
+      Nil
 
   def mutateDirectedConnected[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
     mutate(grammar, directedConnectedGraphOperators, random, n,
@@ -50,12 +56,7 @@ object Mutation {
       s"not connected: ${grammar.expand}")
   }
 
-  def mutateDirectedAcyclic[V, E](grammar: Grammar[V, E], random: Random, n: Int = 1) = {
-    mutate(grammar, directedAcyclicGraphOperators, random, n,
-      (g: Grammar[V, E]) => !g.expand.hasCycle)
-  }
-
-  private def mutate[V, E](
+  @tailrec private def mutate[V, E](
     grammar:        Grammar[V, E],
     operators:      List[MutationOp],
     random:         Random,
@@ -63,23 +64,19 @@ object Mutation {
     invariant:      Grammar[V, E] => Boolean = (_: Grammar[V, E]) => true,
     invariantError: => String                = ""
   ): Grammar[V, E] = {
+    assert(n >= 0)
     assert(invariant(grammar), invariantError)
 
-    var current = grammar
-    var i = 0
-    while (i < n) {
-      // println(s"mutate $i")
-      //TODO: only select from operators which are possible to apply
+    if (n == 0) grammar.cleanup
+    else {
       val operator = random.select(operators)
-      val resultOption = operator(current, random)
-      resultOption foreach { newGrammar =>
-        println(s"mutation $i/$n: ${operator.getClass.getName}")
-        assert(invariant(newGrammar), s"\nbefore ${operator.getClass.getName}:\n$current\nexpanded: ${current.expand}\nafter ${operator.getClass.getName}: $invariantError\n${newGrammar}\nexpanded: ${newGrammar.expand}")
-        current = newGrammar
-        i += 1
+      operator(grammar, random) match {
+        case None => mutate(grammar, operators, random, n, invariant, invariantError)
+        case Some(mutatedGrammar) =>
+          println(s"mutation $n: ${operator.getClass.getName}")
+          assert(invariant(mutatedGrammar), s"\nbefore ${operator.getClass.getName}:\n$grammar\nexpanded: ${grammar.expand}\nafter ${operator.getClass.getName}: $invariantError\n${mutatedGrammar}\nexpanded: ${mutatedGrammar.expand}")
+          mutate(mutatedGrammar, operators, random, n - 1, invariant, invariantError)
       }
     }
-
-    current.cleanup
   }
 }
