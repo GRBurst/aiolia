@@ -1,6 +1,6 @@
 package aiolia.test
 
-import aiolia.Grammar
+import aiolia.{Grammar, MutationOpConfig}
 import aiolia.graph._
 import aiolia.graph.dsl._
 import aiolia.graph.types._
@@ -14,14 +14,12 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
   "mutation operator" >> {
     "remove random vertex" >> {
       "from minimal grammar" >> {
-        val random = mock[Random]
-        random.selectOpt(Map.empty) returns None
-        RemoveVertex(Grammar.minimal, random) mustEqual None
+        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(Map.empty) returns None
+        RemoveVertex(Grammar.minimal, c) mustEqual None
       }
 
       "from grammar" >> {
-        val random = mock[Random]
-
         val h1 = nt(1, (0, 1, 2))
         val h2 = nt(1, (0, 2, 1))
         val axiom = graph(V(0 to 2), nts = List(h1, h2))
@@ -30,10 +28,11 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
-        random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((2 -> rhsA2))
-        random.select(V(1)) returns v(1)
+        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((2 -> rhsA2))
+        c.random.select(V(1)) returns v(1)
 
-        RemoveVertex(g, random) mustEqual Some(grammar(
+        RemoveVertex(g, c) mustEqual Some(grammar(
           axiom,
           1 -> rhsA1,
           2 -> cgraph(C(0, 2), V(0, 2))
@@ -43,8 +42,6 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
 
     "remove random edge" >> {
       "from grammar" >> {
-        val random = mock[Random]
-
         val h1 = nt(1, (0, 1, 2))
         val h2 = nt(1, (0, 2, 1))
         val axiom = graph(V(0 to 2), nts = List(h1, h2))
@@ -53,10 +50,11 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
-        random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((1 -> rhsA1))
-        random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
+        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((1 -> rhsA1))
+        c.random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
 
-        RemoveEdge(g, random) mustEqual Some(grammar(
+        RemoveEdge(g, c) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1), nts = List(nt(2, (0, 2)))),
           2 -> rhsA2
@@ -64,23 +62,21 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
       }
 
       "from minimal grammar" >> {
-        val random = mock[Random]
-        random.selectOpt(Map.empty) returns None
-        RemoveEdge(Grammar.minimal, random) mustEqual None
+        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(Map.empty) returns None
+        RemoveEdge(Grammar.minimal, c) mustEqual None
       }
 
     }
 
     "inline random nonterminal" >> {
       "on minimal grammar" >> {
-        val random = mock[Random]
-        random.selectOpt(Map.empty) returns None
-        InlineNonTerminal(Grammar.minimal, random) mustEqual None
+        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(Map.empty) returns None
+        InlineNonTerminal(Grammar.minimal, c) mustEqual None
       }
 
       "on grammar" >> {
-        val random = mock[Random].smart
-
         val axiom = graph(
           V(0 to 2),
           nts = List(
@@ -97,15 +93,16 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
           2 -> rhs2
         )
 
-        random.selectOpt(Map(1 -> rhs1)) returns Some((1 -> rhs1))
-        random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
+        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(Map(1 -> rhs1)) returns Some((1 -> rhs1))
+        c.random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
 
-        InlineNonTerminal(g, random) mustEqual Some(grammar(
+        InlineNonTerminal(g, c) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 5), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 5, 5 -> 2)),
           2 -> rhs2
         ))
-      }.pendingUntilFixed("- some Mockito on maps issue")
+      }
     }
 
     "extract NonTerminal" >> {

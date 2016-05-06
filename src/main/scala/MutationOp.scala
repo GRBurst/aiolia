@@ -1,56 +1,74 @@
 package aiolia.mutations
 
-import aiolia.Grammar
+import aiolia.{Grammar, MutationOpConfig}
 import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.helpers.{Random, AutoId}
 import util.Try
 
-trait MutationOp {
-  def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
+// TODO: Mutate is still not perfectly deterministic!
+// This can happen when iterating over HashSets, MashMaps ...
 
-  def apply[V, E](grammar: Grammar[V, E], rand: Random): Option[Grammar[V, E]]
+trait MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]): Option[Grammar[V, E]]
+
+  // helpers
+  def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
 }
 
 object AddVertex extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
-    val (label, graph) = rand.select(grammar.productions)
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
+    val (label, graph) = random.select(grammar.productions)
     val vertex = Vertex(nextLabel(graph.vertices))
-    Some(grammar.updateProduction(label -> (graph + vertex)))
+    val newVertices = graph.vertices + vertex
+    val newVertexData = initVertexData().map(i => graph.vertexData + (vertex -> i)).getOrElse(graph.vertexData)
+    val newGraph = graph.copy(vertices = newVertices, vertexData = newVertexData)
+    Some(grammar.updateProduction(label -> newGraph))
   }
 }
 
-object AddConnectedVertex extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
-    val candidates = grammar.productions
-    rand.selectOpt(candidates).map {
+object MutateVertex extends MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
+    val candidates = grammar.productions.filter(_._2.vertexData.nonEmpty)
+    random.selectOpt(candidates).map {
       case (label, graph) =>
-        if (graph.isEmpty)
-          grammar.updateProduction(label -> (graph + Vertex(0)))
-        else {
-          val existingVertex = rand.select(graph.vertices)
-          val newVertex = Vertex(nextLabel(graph.vertices))
-          val newEdge = if (rand.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
-          val result = grammar.updateProduction(label -> (graph + newVertex + newEdge))
-          assert(result.expand.isConnected)
-          result
-        }
+        val (v, data) = random.select(graph.vertexData)
+        grammar.updateProduction(label -> graph.copy(vertexData = graph.vertexData.updated(v, mutateVertexData(data))))
+    }
+  }
+}
+
+object RemoveVertex extends MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
+    val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
+    random.selectOpt(candidates).map {
+      case (label, graph) =>
+        val vertex = random.select(graph.nonConnectors)
+        grammar.updateProduction(label -> (graph - vertex))
     }
   }
 }
 
 object AddAcyclicEdge extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
+  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
     val candidates = grammar.productions.filter { !_._2.isComplete }
-    rand.selectOpt(candidates).flatMap {
+    random.selectOpt(candidates).flatMap {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)
         val vertexInCandidates = graph.vertices.filter(v => graph.outDegree(v) < graph.vertices.size - 1)
-        val vertexIn = rand.select(vertexInCandidates)
+        val vertexIn = random.select(vertexInCandidates)
         val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors)
-        rand.selectOpt(vertexOutCandidates).flatMap { vertexOut =>
+        random.selectOpt(vertexOutCandidates).flatMap { vertexOut =>
           val edge = Edge(vertexIn, vertexOut)
-          val result = grammar.updateProduction(label -> (graph + edge))
+          val newGraph = (graph + edge, initEdgeData()) match {
+            case (graph, Some(data)) => graph.copy(edgeData = graph.edgeData + (edge -> data))
+            case (graph, None)       => graph
+          }
+          val result = grammar.updateProduction(label -> newGraph)
           // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
           // TODO: prevent creating cycles in the first place
           if (result.expand.hasCycle) None else Some(result)
@@ -60,44 +78,70 @@ object AddAcyclicEdge extends MutationOp {
 }
 
 object AddEdge extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
+  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
     val candidates = grammar.productions.filter { !_._2.isComplete }
-    rand.selectOpt(candidates).map {
+    random.selectOpt(candidates).map {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)
         val vertexInCandidates = graph.vertices.filter(v => graph.outDegree(v) < graph.vertices.size - 1)
-        val vertexIn = rand.select(vertexInCandidates)
+        val vertexIn = random.select(vertexInCandidates)
         val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn)
-        val vertexOut = rand.select(vertexOutCandidates)
+        val vertexOut = random.select(vertexOutCandidates)
         val edge = Edge(vertexIn, vertexOut)
-        grammar.updateProduction(label -> (graph + edge))
+        val newGraph = (graph + edge, initEdgeData()) match {
+          case (graph, Some(data)) => graph.copy(edgeData = graph.edgeData + (edge -> data))
+          case (graph, None)       => graph
+        }
+        grammar.updateProduction(label -> newGraph)
     }
   }
 }
 
-object RemoveVertex extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
-    val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
-    rand.selectOpt(candidates).map {
+object MutateEdge extends MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
+    val candidates = grammar.productions.filter(_._2.edgeData.nonEmpty)
+    random.selectOpt(candidates).map {
       case (label, graph) =>
-        val vertex = rand.select(graph.nonConnectors)
-        grammar.updateProduction(label -> (graph - vertex))
+        val (v, data) = random.select(graph.edgeData)
+        val newData = mutateEdgeData(data)
+        grammar.updateProduction(label -> graph.copy(edgeData = graph.edgeData.updated(v, newData)))
+    }
+  }
+}
+
+object AddConnectedVertex extends MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
+    val candidates = grammar.productions
+    random.selectOpt(candidates).map {
+      case (label, graph) =>
+        if (graph.isEmpty)
+          grammar.updateProduction(label -> (graph + Vertex(0)))
+        else {
+          val existingVertex = random.select(graph.vertices)
+          val newVertex = Vertex(nextLabel(graph.vertices))
+          val newEdge = if (random.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
+          val result = grammar.updateProduction(label -> (graph + newVertex + newEdge))
+          assert(result.expand.isConnected)
+          result
+        }
     }
   }
 }
 
 object RemoveEdge extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
+  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
     val candidates = grammar.productions.filter(_._2.edges.nonEmpty)
-    rand.selectOpt(candidates).map {
+    random.selectOpt(candidates).map {
       case (label, graph) =>
-        val edge = rand.select(graph.edges)
+        val edge = random.select(graph.edges)
         grammar.updateProduction(label -> (graph - edge))
     }
   }
 }
-
-//TODO? def removeNonTerminal[V,E](grammar:Grammar[V,E], rand:Random):Option[Grammar[V,E]]
 
 object InlineNonTerminal extends MutationOp {
   def inline[V, E](graph: Graph[V, E], nonTerminal: NonTerminal, grammar: Grammar[V, E]): Graph[V, E] = {
@@ -105,11 +149,12 @@ object InlineNonTerminal extends MutationOp {
     graph.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
   }
 
-  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
+  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
     val candidates = grammar.productions.filter(_._2.nonTerminals.nonEmpty)
-    rand.selectOpt(candidates).map {
+    random.selectOpt(candidates).map {
       case (label, graph) =>
-        val nonTerminal = rand.select(graph.nonTerminals)
+        val nonTerminal = random.select(graph.nonTerminals)
 
         val inlined = inline(graph, nonTerminal, grammar)
 
@@ -154,11 +199,12 @@ object ExtractNonTerminal extends MutationOp {
     (newSource, extracted)
   }
 
-  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
+  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
     val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
-    rand.selectOpt(candidates).map {
+    random.selectOpt(candidates).map {
       case (srcLabel, source) =>
-        val subVertices = rand.selectMinOne(source.vertices).toSet
+        val subVertices = random.selectMinOne(source.vertices).toSet
         val newLabel = grammar.productions.keys.max + 1
         val (newSource, extracted) = extract(source, subVertices, newLabel)
 
@@ -171,7 +217,8 @@ object ExtractNonTerminal extends MutationOp {
 
 // Apply rand production rule to another production rule's graph
 object ReuseNonTerminal extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], rand: Random) = {
+  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config.{random => rand, _}
     val candidates = grammar.productions.toList.combinations(2).filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
