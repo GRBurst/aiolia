@@ -6,6 +6,7 @@ import aiolia.graph.dsl._
 
 import Helpers._
 
+//TODO: Rename to: RecurrentNeuralNetwork
 class NeuralNetworkSpec extends org.specs2.mutable.Specification {
   "neuronal network" >> {
     "labels of vertices must be in order 0..|vertices|" >> {

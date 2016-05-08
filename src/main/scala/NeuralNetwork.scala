@@ -39,14 +39,17 @@ class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Flo
 
   def outputData = out map (n => prevState(n.label))
 
+  def sigmoid(x: Float): Float = x / Math.sqrt(x * x + 1).toFloat
+  def dot(as: List[Float], bs: List[Float]): Float = ((as zip bs) map { case (a, b) => a * b }).sum
+
   def think() {
     for (neuron <- neurons -- in) {
-      def sigmoid(x: Float): Float = x / Math.sqrt(x * x + 1).toFloat
       val incoming = graph.incomingEdges(neuron).toList
       val incomingData = incoming.map(edge => prevState(edge.in.label))
       val weights = incoming map weight
-      def dot(as: List[Float], bs: List[Float]): Float = ((as zip bs) map { case (a, b) => a * b }).sum
 
+      //TODO: incomingData and weights come from Sets, so the order may not be correct.
+      // only use incomingEdges and get to the neurons from there
       state(neuron.label) = sigmoid(dot(incomingData, weights) + bias(neuron))
     }
 
