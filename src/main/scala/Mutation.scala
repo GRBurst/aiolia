@@ -84,11 +84,11 @@ object Mutation {
 
     if (n == 0) grammar.cleanup
     else {
-      val operator = random.select(operators) // TODO: make sure that operators is only created once
+      val operator = random.select(operators)
+      // println(s"mutation $n: ${operator.getClass.getName}")
       operator(grammar, config) match {
         case None => mutate(grammar, config, n)
         case Some(mutatedGrammar) =>
-          // println(s"mutation $n: ${operator.getClass.getName}")
           assert(invariant(mutatedGrammar), s"\nbefore ${operator.getClass.getName}:\n$grammar\nexpanded: ${grammar.expand}\nafter ${operator.getClass.getName}: $invariantError\n${mutatedGrammar}\nexpanded: ${mutatedGrammar.expand}")
           mutate(mutatedGrammar, config, n - 1)
       }
