@@ -4,16 +4,19 @@ import aiolia.graph._
 
 import collection.mutable
 
-object NeuralNetwork {
+object RecurrentNeuralNetwork {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) = {
     //TODO: cleanup parts of the network which are not reachable from the output vertices
-    new NeuralNetwork(in, out, graph)
+    new RecurrentNeuralNetwork(in, out, graph)
   }
 }
 
-class NeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) {
-  // Important for data indexing in neural network
-  assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
+class RecurrentNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) {
+
+  assert(
+    (0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)),
+    s"vertices need to have labels 0..|vertices|\n${graph.vertices}"
+  ) // Important for data indexing
 
   assert(in.forall(graph.incomingEdges(_).isEmpty), "Input neurons should not have incoming edges")
   assert(out.forall(graph.outgoingEdges(_).isEmpty), "Output neurons should not have outgoing edges")
