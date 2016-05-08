@@ -234,3 +234,22 @@ object ReuseNonTerminal extends MutationOp {
     }
   }
 }
+
+object ReuseNonTerminalAcyclic extends MutationOp {
+  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config.{random => rand, _}
+    val candidates = grammar.productions.toList.combinations(2).filter {
+      case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
+    }.toList //TODO: optimize
+
+    rand.selectOpt(candidates).flatMap {
+      case List((srcLabel, source), (targetLabel, target)) =>
+        //TODO: target.vertices or target.nonConnectors ?
+        val connectors = rand.select(target.vertices, n = source.connectors.size).toList
+        val nonTerminal = NonTerminal(srcLabel, connectors)
+
+        //TODO: cycle detection!
+        Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap{ g => if (g.expand.hasCycle) None else Some(g) }
+    }
+  }
+}

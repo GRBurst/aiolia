@@ -37,7 +37,7 @@ class FeedForwardNetworkMutation(seed: Any) extends MutationConfig[Double, Doubl
     RemoveEdge ::
 
     ExtractNonTerminal ::
-    ReuseNonTerminal ::
+    ReuseNonTerminalAcyclic ::
     InlineNonTerminal ::
     //TODO? RemoveNonTerminal
 
@@ -88,7 +88,7 @@ object Mutation {
       operator(grammar, config) match {
         case None => mutate(grammar, config, n)
         case Some(mutatedGrammar) =>
-          println(s"mutation $n: ${operator.getClass.getName}")
+          // println(s"mutation $n: ${operator.getClass.getName}")
           assert(invariant(mutatedGrammar), s"\nbefore ${operator.getClass.getName}:\n$grammar\nexpanded: ${grammar.expand}\nafter ${operator.getClass.getName}: $invariantError\n${mutatedGrammar}\nexpanded: ${mutatedGrammar.expand}")
           mutate(mutatedGrammar, config, n - 1)
       }
