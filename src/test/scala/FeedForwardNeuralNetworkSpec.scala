@@ -12,6 +12,10 @@ class FeedForwardNeuralNetworkSpec extends org.specs2.mutable.Specification {
     val n = FeedForwardNeuralNetwork(VL(0), VL(0), graph(V(0), E(), vData(0 -> 0.8)))
     n.compute(List(0.2)) mustEqual List(sigmoid(0.2 + 0.8))
   }
+  "input and output not connected" >> {
+    val n = FeedForwardNeuralNetwork(VL(0), VL(1), graph(V(0, 1), E(), vData(0 -> 0.8, 1 -> 2.1)))
+    n.compute(List(0.2)) mustEqual List(sigmoid(2.1))
+  }
   "one input -> one output" >> {
     val n = FeedForwardNeuralNetwork(VL(0), VL(1), graph(V(0, 1), E(0 -> 1),
       vData(0 -> 0.1, 1 -> 0.2),

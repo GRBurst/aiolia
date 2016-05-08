@@ -6,7 +6,9 @@ import collection.mutable
 
 object FeedForwardNeuralNetwork {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) = {
-    new FeedForwardNeuralNetwork(in, out, graph)
+    val badEdges = graph.edges.filter{ case Edge(i, o) => (in contains o) || (out contains i) }
+    val cleanedGraph = graph.copy(edges = graph.edges -- badEdges, edgeData = graph.edgeData -- badEdges)
+    new FeedForwardNeuralNetwork(in, out, cleanedGraph)
   }
 }
 
@@ -25,6 +27,7 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
 
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1).toFloat
   def compute(data: List[Double]): List[Double] = {
+    // println(s"compute: on $graph\nin: $in -> out:$out\ndata: $data")
     //TODO: optimization: cache already calculated neurons in hashmap
     def eval(neuron: Vertex): Double = {
       val outData = in.indexOf(neuron) match {
@@ -32,12 +35,12 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
         case -1 =>
           val inputs = graph.incomingEdges(neuron).toList
           inputs match {
-            case Nil => bias(neuron) //TODO: nodes without inputs = sigmoid(bias)?
+            case Nil => 0 //TODO: nodes without inputs = sigmoid(bias)?
             case es =>
               (es map { case e @ Edge(in, _) => eval(in) * weight(e) }).sum
           }
       }
-      sigmoid(outData + bias(neuron))
+      sigmoid(outData + bias.get(neuron).getOrElse(0.0)) //TODO: assert that all neurons have bias?
     }
 
     out map eval
