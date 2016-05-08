@@ -196,6 +196,9 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         def c[V, E](subV: Set[Vertex], wantedNewSource: Graph[V, E], wantedExtracted: Graph[V, E]) = t(source, subV, wantedNewSource, wantedExtracted, 17)
         c(V(2, 3, 4, 5), cgraph(C(), V(2, 3, 4, 5, 6), E()), cgraph(C(2, 3, 4, 5), V(2, 3, 4, 5), E(), nts = List(nt(1, (2, 3)), nt(2, (4, 5)))))
       }
+
+      "with vertex data" >> todo
+      "with edge data" >> todo
     }
 
   }

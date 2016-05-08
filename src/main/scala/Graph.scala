@@ -124,7 +124,7 @@ case class Graph[+V, +E](
     copy(edges = edges + e)
   }
 
-  def +(h: NonTerminal) = copy(nonTerminals = h :: nonTerminals)
+  def +(nt: NonTerminal) = copy(nonTerminals = nt :: nonTerminals)
 
   def -(v: Vertex) = {
     assert(vertices contains v, s"Vertex $v does not exist in $vertices")
@@ -146,9 +146,9 @@ case class Graph[+V, +E](
     copy(edges = edges - e, edgeData = edgeData - e)
   }
 
-  def -(h: NonTerminal) = {
-    assert(nonTerminals contains h, s"NonTerminal $h does not exist in $nonTerminals")
-    val i = nonTerminals indexOf h
+  def -(nt: NonTerminal) = {
+    assert(nonTerminals contains nt, s"NonTerminal $nt does not exist in $nonTerminals")
+    val i = nonTerminals indexOf nt
     copy(nonTerminals = nonTerminals.take(i) ++ nonTerminals.drop(i + 1))
   }
 
@@ -249,6 +249,11 @@ case class Graph[+V, +E](
   def --(vs: Iterable[Vertex]) = {
     //TODO: optimize
     vs.foldLeft(this)((graph, v) => graph - v)
+  }
+
+  def removeEdges(es: Iterable[Edge]) = {
+    //TODO: optimize
+    es.foldLeft(this)((graph, e) => graph - e)
   }
 
   def removeNonTerminals(vs: Iterable[NonTerminal]) = {

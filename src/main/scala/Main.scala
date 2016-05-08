@@ -15,9 +15,12 @@ object Main extends App {
   // write("grammar.dot", DOTExport.toDOT(grammar))
   // write("graph.dot", DOTExport.toDOT(grammar.expand))
 
-  for (i <- 0 to 1) try {
-    val feedForward = new FeedForwardNetworkMutation(i)
-    println(Mutation.mutate(Grammar.minimal, feedForward, 10))
+  for (seed <- 0 to 1) try {
+    val digraph = new DirectedGraphMutation(seed)
+    println(Mutation.mutate(Grammar.minimal, digraph, 100))
+
+    val feedForward = new FeedForwardNetworkMutation(seed)
+    println(Mutation.mutate(Grammar.minimal, feedForward, 100))
   }
   catch {
     // case _@ IsotopicException =>

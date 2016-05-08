@@ -7,6 +7,25 @@ import aiolia.mutations._
 import util.Try
 import annotation.tailrec
 
+class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] {
+  val operators = (
+    AddVertex ::
+    RemoveVertex ::
+
+    AddAcyclicEdge ::
+    RemoveEdge ::
+
+    ExtractNonTerminal ::
+    ReuseNonTerminal ::
+    InlineNonTerminal ::
+    //TODO? RemoveNonTerminal
+
+    Nil
+  )
+
+  override val random = Random(seed)
+}
+
 class FeedForwardNetworkMutation(seed: Any) extends MutationConfig[Double, Double] {
   val operators = (
     AddVertex ::

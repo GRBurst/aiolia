@@ -28,6 +28,23 @@ object AddVertex extends MutationOp {
   }
 }
 
+object AddConnectedVertex extends MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    import config._
+    val (label, graph) = random.select(grammar.productions)
+    if (graph.isEmpty)
+      Some(grammar.updateProduction(label -> (graph + Vertex(0))))
+    else {
+      val existingVertex = random.select(graph.vertices)
+      val newVertex = Vertex(nextLabel(graph.vertices))
+      val newEdge = if (random.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
+      val result = grammar.updateProduction(label -> (graph + newVertex + newEdge))
+      assert(result.expand.isConnected)
+      Some(result)
+    }
+  }
+}
+
 object MutateVertex extends MutationOp {
   def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config._
@@ -111,26 +128,6 @@ object MutateEdge extends MutationOp {
   }
 }
 
-object AddConnectedVertex extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
-    import config._
-    val candidates = grammar.productions
-    random.selectOpt(candidates).map {
-      case (label, graph) =>
-        if (graph.isEmpty)
-          grammar.updateProduction(label -> (graph + Vertex(0)))
-        else {
-          val existingVertex = random.select(graph.vertices)
-          val newVertex = Vertex(nextLabel(graph.vertices))
-          val newEdge = if (random.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
-          val result = grammar.updateProduction(label -> (graph + newVertex + newEdge))
-          assert(result.expand.isConnected)
-          result
-        }
-    }
-  }
-}
-
 object RemoveEdge extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config._
@@ -170,25 +167,28 @@ object ExtractNonTerminal extends MutationOp {
     assert(subV.nonEmpty && (subV subsetOf source.vertices))
     // println(s"source: $source")
     // println(s"subV: $subV")
-    val newVertices = subV ++ source.allNeighbours(subV)
     val connectedComponents = source.connectedComponents(v => source.allNeighbours(v))
     val isolatedVertices = connectedComponents.filter(component => (component subsetOf subV) && (component intersect source.connectors.toSet).isEmpty).flatten
-    // println(s"newVertices: $newVertices (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)})")
-    val extracted = Graph(
-      vertices = newVertices,
-      edges = source.inducedEdges(subV) ++ source.incidentEdges(subV),
-      nonTerminals = (source.inducedNonTerminals(subV) ++ source.incidentNonTerminals(subV)) diff (source.inducedNonTerminals(subV) intersect source.incidentNonTerminals(subV)),
-      connectors = (if (source.connectors.isEmpty && subV.size == source.vertices.size) subV else isolatedVertices.toList ++
-        source.allNeighbours(subV) ++
-        (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
-    )
+
+    val extractedVertices = subV ++ source.allNeighbours(subV)
+    val extractedEdges = source.inducedEdges(subV) ++ source.incidentEdges(subV)
+    val extractedNonTerminals = (source.inducedNonTerminals(subV) ++ source.incidentNonTerminals(subV)) diff (source.inducedNonTerminals(subV) intersect source.incidentNonTerminals(subV))
+    val extractedConnectors = (if (source.connectors.isEmpty && subV.size == source.vertices.size) subV else isolatedVertices.toList ++
+      source.allNeighbours(subV) ++
+      (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
+    val extractedVertexData = source.vertexData.filterKeys(extractedVertices -- extractedConnectors)
+    val extractedEdgeData = source.edgeData.filterKeys(extractedEdges)
+    // println(s"extractedVertices: $extractedVertices (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)})")
+    val extracted = Graph(extractedVertices, extractedEdges, extractedVertexData, extractedEdgeData, extractedNonTerminals, extractedConnectors)
     // println(s"connectors: ${extracted.connectors} (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)}) ++ allNeighbours: ${source.allNeighbours(subV)}")
-    assert(extracted.connectors.nonEmpty, s"\nbefore: subGraph.connectors empty.\nsource: $source\nsubVertices: $subV\nnewVertices: $newVertices\nsubGraph: $extracted")
+    assert(extracted.connectors.nonEmpty, s"\nbefore: subGraph.connectors empty.\nsource: $source\nsubVertices: $subV\nnewVertices: $extractedVertices\nsubGraph: $extracted")
 
     val newNonTerminal = NonTerminal(newLabel, extracted.connectors)
     val newSource = source.copy(
       vertices = source.vertices -- extracted.nonConnectors,
       edges = source.edges -- extracted.edges,
+      vertexData = source.vertexData -- extracted.nonConnectors,
+      edgeData = source.edgeData -- extracted.edges,
       nonTerminals = (source.nonTerminals diff extracted.nonTerminals) :+ newNonTerminal
     )
 
