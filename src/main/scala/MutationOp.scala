@@ -72,23 +72,24 @@ object RemoveVertex extends MutationOp {
 object AddAcyclicEdge extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config._
-    val candidates = grammar.productions.filter { !_._2.isComplete }
+    val candidates = grammar.productions.filter { !_._2.isComplete } // TODO: filter feedForward inputs/outputs
     random.selectOpt(candidates).flatMap {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)
-        val vertexInCandidates = graph.vertices.filter(v => (graph.outDegree(v) < graph.vertices.size - 1)) -- feedForwardOutputs //TODO: this can result in zero vetices
-        val vertexIn = random.select(vertexInCandidates)
-        val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors) -- feedForwardInputs //TODO: this can result in zero vetices
-        random.selectOpt(vertexOutCandidates).flatMap { vertexOut =>
-          val edge = Edge(vertexIn, vertexOut)
-          val newGraph = (graph + edge, initEdgeData()) match {
-            case (graph, Some(data)) => graph.copy(edgeData = graph.edgeData + (edge -> data))
-            case (graph, None)       => graph
+        val vertexInCandidates = graph.vertices.filter(v => (graph.outDegree(v) < graph.vertices.size - 1)) -- feedForwardOutputs
+        random.selectOpt(vertexInCandidates).flatMap{ vertexIn =>
+          val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors) -- feedForwardInputs
+          random.selectOpt(vertexOutCandidates).flatMap { vertexOut =>
+            val edge = Edge(vertexIn, vertexOut)
+            val newGraph = (graph + edge, initEdgeData()) match {
+              case (graph, Some(data)) => graph.copy(edgeData = graph.edgeData + (edge -> data))
+              case (graph, None)       => graph
+            }
+            val result = grammar.updateProduction(label -> newGraph)
+            // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
+            // TODO: prevent creating cycles in the first place
+            if (result.expand.hasCycle) None else Some(result)
           }
-          val result = grammar.updateProduction(label -> newGraph)
-          // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
-          // TODO: prevent creating cycles in the first place
-          if (result.expand.hasCycle) None else Some(result)
         }
     }
   }
