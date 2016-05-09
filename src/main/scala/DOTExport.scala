@@ -5,11 +5,24 @@ import aiolia.graph._
 import collection.mutable
 
 object DOTExport {
-  def toDOT[V,E](graph: Graph[V,E]) = { import graph._
+  def toDOT[V, E](graph: Graph[V, E], feedForwardInputs: List[Vertex] = Nil, feedForwardOutputs: List[Vertex] = Nil) = {
+    import graph._
+
+    def t(c: Double) = 255 - (c.abs * 255).toInt.max(0).min(255) // range -1..1 => 0..255
+    def edgeColor(e: Edge) = graph.edgeData.get(e) match {
+      case Some(d: Double) =>
+        if (d >= 0)
+          "#" + ("%02X" format t(d)) * 3
+        else { "#" + ("%02X%02X%02X" format (t(d) / 2, t(d) / 3, t(d))) }
+      case _ => "#000000"
+    }
     s"""
-digraph G {
-  ${edges.mkString("\n  ")}
-  ${vertices.map(v => s"$v [shape = circle]").mkString("\n  ")}
+digraph G {  
+  rankdir = "LR"
+  ${edges.map(e => s"""$e [color = "${edgeColor(e)}"]""").mkString("\n  ")}
+  ${(vertices -- feedForwardInputs -- feedForwardOutputs).map(v => s"$v [shape = circle]").mkString("\n  ")}
+  ${feedForwardInputs.map(v => s"""$v [shape = circle, rank = "source"]""").mkString("\n  ")}
+  ${feedForwardOutputs.map(v => s"""$v [shape = circle, rank = "sink"]""").mkString("\n  ")}
 }
 """
   }
@@ -17,7 +30,8 @@ digraph G {
   // render with
   // dot -Tsvg -Kfdp input.dot -o output.svg
   // (fdp layout engine has cluster support)
-  def toDOT[V,E](grammar: Grammar[V,E]) = { import grammar._
+  def toDOT[V, E](grammar: Grammar[V, E]) = {
+    import grammar._
     val g = uniqueVertices
 
     // define graph clusters for axiom and rhs of production rules
