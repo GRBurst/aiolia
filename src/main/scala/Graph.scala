@@ -81,6 +81,9 @@ case class Graph[+V, +E](
   assert(nonTerminals.groupBy(_.label).values.forall(_.map(_.connectors.size).distinct.size == 1), "NonTerminals with same label must have the same number of connectors")
   assert(connectors.toSet subsetOf vertices, s"Only existing vertices can be used as connectors. (Connectors = $connectors not subset of Vertices = $vertices)")
   assert((vertexData.keySet intersect connectors.toSet).isEmpty, "Connectors cannot store data")
+  // assert(!edgeData.keys.exists{ case Edge(in, out) => (connectors contains in) && (connectors contains out) }, "Edges between connectors can not have data") // this could cause a data conflict when inlining this graph on anther which also stores data on edges between the same connectors
+  // assert(!edges.exists{ case Edge(in, out) => nonTerminals.exists(nt => (nt.connectors contains in) && (nt.connectors contains out)) }, s"Nonterminals can not overlap edges:\nedges: ${edges.filter{ case Edge(in, out) => nonTerminals.exists(nt => (nt.connectors contains in) && (nt.connectors contains out)) }}")
+  // assert(!nonTerminals.combinations(2).exists{ case List(nt1, nt2) => nt1.connectors.intersect(nt2.connectors).size > 1 }, "Nonterminals can not overlap with other nonterminals with more than one vertex. Else they could overlap in an edge.")
 
   def nonConnectors = vertices -- connectors
   def isolatedVertices = vertices.filter(degree(_) == 0)
@@ -263,6 +266,8 @@ case class Graph[+V, +E](
 
   def ++[V1 >: V, E1 >: E](that: Graph[V1, E1]): Graph[V1, E1] = {
     assert(that.connectors.isEmpty, "Now think about it. What should happen with the connectors?")
+    assert((this.vertices intersect that.vertices).nonEmpty, "Don't overwrite vertices!")
+    assert((this.edges intersect that.edges).nonEmpty, "Don't overwrite edges!")
     Graph(
       this.vertices ++ that.vertices,
       this.edges ++ that.edges,
@@ -341,6 +346,7 @@ case class Graph[+V, +E](
   }
 
   def replaceOne[V1 >: V, E1 >: E](nonTerminal: NonTerminal, replacement: Graph[V1, E1], autoId: AutoId): Graph[V1, E1] = {
+    // println(s"replaceOne: $nonTerminal\n$replacement")
     //TODO: optimization: replace first nonTerminal in graph
     // we have to remove the nonTerminal from graph, instead we could just use this.nonTerminals.tail
     assert(this.nonTerminals contains nonTerminal)
@@ -360,6 +366,7 @@ case class Graph[+V, +E](
   }
 
   def isIsomorphicTo[V1, E1](that: Graph[V1, E1]): Boolean = {
+    println("isIsomorphicTo")
     if (this.vertices.size != that.vertices.size) return false
     if (this.edges.size != that.edges.size) return false
     if (this.vertices.toList.map(this.degree).sorted != that.vertices.toList.map(that.degree).sorted) return false
