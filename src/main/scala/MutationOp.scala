@@ -76,9 +76,9 @@ object AddAcyclicEdge extends MutationOp {
     random.selectOpt(candidates).flatMap {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)
-        val vertexInCandidates = graph.vertices.filter(v => graph.outDegree(v) < graph.vertices.size - 1)
+        val vertexInCandidates = graph.vertices.filter(v => (graph.outDegree(v) < graph.vertices.size - 1)) -- feedForwardOutputs //TODO: this can result in zero vetices
         val vertexIn = random.select(vertexInCandidates)
-        val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors)
+        val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors) -- feedForwardInputs //TODO: this can result in zero vetices
         random.selectOpt(vertexOutCandidates).flatMap { vertexOut =>
           val edge = Edge(vertexIn, vertexOut)
           val newGraph = (graph + edge, initEdgeData()) match {
@@ -156,7 +156,7 @@ object InlineNonTerminal extends MutationOp {
         val inlined = inline(graph, nonTerminal, grammar)
 
         val result = grammar.updateProduction(label -> inlined)
-        assert(result.expand isIsomorphicTo grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nafter:$result")
+        assert(result.expand isIsomorphicTo grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nselected: [$label] -> $nonTerminal\nafter:$result\nexpanded:${result.expand}\n")
         result
     }
   }
@@ -249,7 +249,9 @@ object ReuseNonTerminalAcyclic extends MutationOp {
         val nonTerminal = NonTerminal(srcLabel, connectors)
 
         //TODO: cycle detection!
-        Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap{ g => if (g.expand.hasCycle) None else Some(g) }
+        Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap{ g =>
+          if (g.expand.hasCycle) None else Some(g)
+        }
     }
   }
 }

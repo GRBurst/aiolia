@@ -6,9 +6,9 @@ import collection.mutable
 
 object FeedForwardNeuralNetwork {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) = {
-    val badEdges = graph.edges.filter{ case Edge(i, o) => (in contains o) || (out contains i) }
-    val cleanedGraph = graph.copy(edges = graph.edges -- badEdges, edgeData = graph.edgeData -- badEdges)
-    new FeedForwardNeuralNetwork(in, out, cleanedGraph)
+    // val badEdges = graph.edges.filter{ case Edge(i, o) => (in contains o) || (out contains i) }
+    // val cleanedGraph = graph.copy(edges = graph.edges -- badEdges, edgeData = graph.edgeData -- badEdges)
+    new FeedForwardNeuralNetwork(in, out, graph)
   }
 }
 
@@ -26,10 +26,12 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
   import graph.{edgeData => weight}
 
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1).toFloat
-  def compute(data: List[Double]): List[Double] = {
+  def compute(data: IndexedSeq[Double]): Seq[Double] = {
+    val cachedResults = mutable.HashMap[Vertex, Double]()
     // println(s"compute: on $graph\nin: $in -> out:$out\ndata: $data")
-    //TODO: optimization: cache already calculated neurons in hashmap
     def eval(neuron: Vertex): Double = {
+      cachedResults.get(neuron).foreach{ return _ }
+
       val outData = in.indexOf(neuron) match {
         case i if i >= 0 => data(i) //TODO: send input data through sigmoid?
         case -1 =>
@@ -40,7 +42,9 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
               (es map { case e @ Edge(in, _) => eval(in) * weight(e) }).sum
           }
       }
-      sigmoid(outData + bias.get(neuron).getOrElse(0.0)) //TODO: assert that all neurons have bias?
+      val result = sigmoid(outData + bias.get(neuron).getOrElse(0.0)) //TODO: assert that all neurons have bias?
+      cachedResults(neuron) = result
+      result
     }
 
     out map eval

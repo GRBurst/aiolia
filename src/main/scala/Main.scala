@@ -1,26 +1,22 @@
 package aiolia
 
-import aiolia._
 import aiolia.export.DOTExport
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.graph.dsl._
 import aiolia.helpers._
+import aiolia.graph.dsl._
 
-object Main extends App {
+object Main { // extends App {
   println("Good Bye Aiolia")
 
   // val grammar = Mutation.mutateDirectedConnected(Grammar.minimal, Random(3), 100)
   // println(grammar.uniqueVertices)
-  // write("grammar.dot", DOTExport.toDOT(grammar))
-  // write("graph.dot", DOTExport.toDOT(grammar.expand))
+  // File.write("grammar.dot", DOTExport.toDOT(grammar))
+  // File.write("graph.dot", DOTExport.toDOT(grammar.expand))
 
-  for (seed <- 0 to 1) try {
+  for (seed <- 0 to 100) try {
     val digraph = new DirectedGraphMutation(seed)
     println(Mutation.mutate(Grammar.minimal, digraph, 100))
-
-    val feedForward = new FeedForwardNetworkMutation(seed)
-    println(Mutation.mutate(Grammar.minimal, feedForward, 100))
   }
   catch {
     // case _@ IsotopicException =>
@@ -30,10 +26,4 @@ object Main extends App {
     }
   }
 
-  def write(filename: String, content: String) {
-    Some(new java.io.PrintWriter(filename)).foreach{ p =>
-      p.write(content)
-      p.close
-    }
-  }
 }

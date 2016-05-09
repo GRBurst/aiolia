@@ -12,7 +12,7 @@ class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] 
     AddVertex ::
     RemoveVertex ::
 
-    AddAcyclicEdge ::
+    AddEdge ::
     RemoveEdge ::
 
     ExtractNonTerminal ::
@@ -26,23 +26,23 @@ class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] 
   override val random = Random(seed)
 }
 
-class FeedForwardNetworkMutation(seed: Any) extends MutationConfig[Double, Double] {
+class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List[Vertex], override val feedForwardOutputs: List[Vertex]) extends MutationConfig[Double, Double] {
   val operators = (
-    AddVertex ::
-    MutateVertex ::
-    RemoveVertex ::
+    (AddVertex, 3) ::
+    (MutateVertex, 6) ::
+    (RemoveVertex, 1) ::
 
-    AddAcyclicEdge ::
-    MutateEdge ::
-    RemoveEdge ::
+    (AddAcyclicEdge, 9) ::
+    (MutateEdge, 18) ::
+    (RemoveEdge, 1) ::
 
-    ExtractNonTerminal ::
-    ReuseNonTerminalAcyclic ::
-    InlineNonTerminal ::
+    // ExtractNonTerminal ::
+    // ReuseNonTerminalAcyclic ::
+    // InlineNonTerminal ::
     //TODO? RemoveNonTerminal
 
     Nil
-  )
+  ).flatMap{ case (op, n) => List.fill(n)(op) }
 
   override val random = Random(seed)
   override def invariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle
@@ -58,6 +58,10 @@ trait MutationOpConfig[V, E] {
   def initEdgeData(): Option[E] = None
   def mutateVertexData(d: V): V = d
   def mutateEdgeData(d: E): E = d
+
+  //feed forward
+  val feedForwardInputs: List[Vertex] = Nil
+  val feedForwardOutputs: List[Vertex] = Nil
 }
 
 trait MutationConfig[V, E] extends MutationOpConfig[V, E] {

@@ -23,8 +23,8 @@ scalacOptions ++=
   "-language:_" ::
   "-Xlint:_" ::
   "-Ywarn-unused" ::
-  "-Xdisable-assertions" ::
-  "-optimize" ::
+  // "-Xdisable-assertions" ::
+  // "-optimize" ::
   Nil
 
 initialCommands in console := """
