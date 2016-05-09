@@ -25,7 +25,7 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
   import graph.{vertexData => bias}
   import graph.{edgeData => weight}
 
-  def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1).toFloat
+  def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
   def compute(data: IndexedSeq[Double]): Seq[Double] = {
     val cachedResults = mutable.HashMap[Vertex, Double]()
     // println(s"compute: on $graph\nin: $in -> out:$out\ndata: $data")

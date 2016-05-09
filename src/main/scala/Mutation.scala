@@ -32,13 +32,13 @@ class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List
     (MutateVertex, 6) ::
     (RemoveVertex, 1) ::
 
-    (AddAcyclicEdge, 9) ::
+    (AddAcyclicEdge, 20) ::
     (MutateEdge, 18) ::
     (RemoveEdge, 1) ::
 
-    // ExtractNonTerminal ::
-    // ReuseNonTerminalAcyclic ::
-    // InlineNonTerminal ::
+    (ExtractNonTerminal, 0) ::
+    (ReuseNonTerminalAcyclic, 0) ::
+    (InlineNonTerminal, 0) ::
     //TODO? RemoveNonTerminal
 
     Nil

@@ -12,6 +12,8 @@ object Image {
 class Image(im: BufferedImage) {
   def w = im.getWidth
   def h = im.getHeight
+  def pixels = w * h
+
   def getPixel(x: Int, y: Int): Int = im.getRGB(x, y)
   def getPixelRGB(x: Int, y: Int): (Int, Int, Int) = {
     val c = getPixel(x, y)
@@ -42,10 +44,25 @@ class Image(im: BufferedImage) {
     for (y <- 0 until h; x <- 0 until w) {
       val (r1, g1, b1) = this.getPixelRGB(x, y)
       val (r2, g2, b2) = that.getPixelRGB(x, y)
-      error += (r1 - r2).abs
-      error += (g1 - g2).abs
-      error += (b1 - b2).abs
+      error += (r1 - r2) * (r1 - r2)
+      error += (g1 - g2) * (g1 - g2)
+      error += (b1 - b2) * (b1 - b2)
     }
-    error
+    Math.sqrt(error / pixels / 255 / 255)
+  }
+
+  def resized(_newW: Int, _newH: Int = -1): Image = {
+    val newW = _newW.max(1)
+    val newH = (if (_newH == -1) ((h.toDouble / w.toDouble) * newW).toInt else _newH).max(1)
+
+    // creates output image
+    val outputImage = new BufferedImage(newW, newH, im.getType())
+
+    // scales the input image to the output image
+    val g2d = outputImage.createGraphics()
+    g2d.drawImage(im, 0, 0, newW, newH, null)
+    g2d.dispose()
+
+    new Image(outputImage)
   }
 }
