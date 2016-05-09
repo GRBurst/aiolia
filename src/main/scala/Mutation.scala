@@ -7,16 +7,34 @@ import aiolia.mutations._
 import util.Try
 import annotation.tailrec
 
-class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] {
+class BugHunter(seed: Any) extends MutationConfig[Double, String] {
   val operators = (
     AddVertex ::
     RemoveVertex ::
-
     AddEdge ::
     RemoveEdge ::
+    ExtractNonTerminal ::
+    InlineNonTerminal ::
+    Nil
+  )
+
+  override val random: Random = Random(seed)
+  override def initVertexData() = Some(random.r.nextGaussian)
+  override def initEdgeData() = Some(random.r.nextGaussian.toString)
+  override def mutateVertexData(d: Double) = d + 1
+  override def mutateEdgeData(d: String) = d + "a"
+}
+
+class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] {
+  val operators = (
+    AddVertex ::
+    // RemoveVertex ::
+
+    AddEdge ::
+    // RemoveEdge ::
 
     ExtractNonTerminal ::
-    ReuseNonTerminal ::
+    // ReuseNonTerminal ::
     InlineNonTerminal ::
     //TODO? RemoveNonTerminal
 
@@ -89,7 +107,7 @@ object Mutation {
     if (n == 0) grammar.cleanup
     else {
       val operator = random.select(operators)
-      // println(s"mutation $n: ${operator.getClass.getName}")
+      println(s"mutation $n: ${operator.getClass.getName}")
       operator(grammar, config) match {
         case None => mutate(grammar, config, n)
         case Some(mutatedGrammar) =>

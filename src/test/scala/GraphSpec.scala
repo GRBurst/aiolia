@@ -701,19 +701,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
     "replace nonTerminal by graph with connectors" >> {
       "assert: must replace existing nonTerminal" >> {
         graph(V(), nts = List(nt(1))).replaceOne(nt(2), graph(), AutoId(0)) must throwAn[AssertionError]
-      }
-      "grammar expand simulation" >> {
-        val axiom = graph(V(0 to 2), nts = List(nt(1, (0, 1, 2)), nt(1, (0, 2, 1))))
-        val replacement = cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1))
-
-        val axiom2 = axiom.replaceOne(nt(1, (0, 1, 2)), replacement, AutoId(3))
-        axiom2 mustEqual graph(V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1), nts = List(nt(1, (0, 2, 1))))
-
-        val axiom3 = axiom2.replaceOne(nt(1, (0, 2, 1)), replacement, AutoId(5))
-        axiom3 mustEqual graph(V(0 to 6), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 1, 1 -> 6, 1 -> 5, 5 -> 6, 6 -> 2))
-      }.pendingUntilFixed
-
-      "assert: must replace existing nonTerminal" >> {
         graph(V(1), nts = List(nt(1, (1)))).replaceOne(nt(1, (1)), graph(V(1), c = C()), AutoId(0)) must throwAn[AssertionError]
       }
 

@@ -6,7 +6,7 @@ import aiolia.graph.types._
 import aiolia.helpers._
 import aiolia.graph.dsl._
 
-object Main { // extends App {
+object Main extends App {
   println("Good Bye Aiolia")
 
   // val grammar = Mutation.mutateDirectedConnected(Grammar.minimal, Random(3), 100)
@@ -14,9 +14,12 @@ object Main { // extends App {
   // File.write("grammar.dot", DOTExport.toDOT(grammar))
   // File.write("graph.dot", DOTExport.toDOT(grammar.expand))
 
-  for (seed <- 0 to 100) try {
-    val digraph = new DirectedGraphMutation(seed)
-    println(Mutation.mutate(Grammar.minimal, digraph, 100))
+  for (seed <- -5 to 325) try {
+    println(seed)
+    // val digraph = new DirectedGraphMutation(seed)
+    // println(Mutation.mutate(Grammar.minimal, digraph, 100))
+    val mut = new BugHunter(seed)
+    println(Mutation.mutate(Grammar.minimal, mut, 100))
   }
   catch {
     // case _@ IsotopicException =>
