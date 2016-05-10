@@ -2,21 +2,19 @@ name := "aiolia"
 
 version := "0.1"
 
-scalaVersion := "2.11.8"
+val scalaV = "2.12.0-M4"
 
-val scalaV = "2.11.7"
-
-val paradiseVersion = "2.1.0"
+scalaVersion := scalaV
 
 libraryDependencies ++=
-  "org.specs2" %% "specs2-core" % "3.7.2" % "test" ::
-  "org.specs2" %% "specs2-mock" % "3.7.2" % "test" ::
+  "org.specs2" % "specs2-core_2.12.0-M3" % "3.7.2" % "test" ::
+  "org.specs2" % "specs2-mock_2.12.0-M3" % "3.7.2" % "test" ::
   "org.scala-lang" % "scala-reflect" % scalaV ::
   "org.scala-lang" % "scala-compiler" % scalaV ::
   "net.coobird" % "thumbnailator" % "0.4.8" ::
   Nil
 
-addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
 scalacOptions in Test ++= Seq("-Yrangepos") // for specs2
 
@@ -32,8 +30,8 @@ scalacOptions ++=
   "-language:_" ::
   "-Xlint:_" ::
   "-Ywarn-unused" ::
-  // "-Xdisable-assertions" ::
-  // "-optimize" ::
+  "-Xdisable-assertions" ::
+  "-Yopt:_" :: // enables all optimizations
   Nil
 
 initialCommands in console := """
