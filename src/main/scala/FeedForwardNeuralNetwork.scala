@@ -26,7 +26,32 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
   import graph.{edgeData => weight}
 
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
-  def compute(data: IndexedSeq[Double]): Seq[Double] = {
+  lazy val compiledFunction = {
+    val universe: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
+    import universe._
+
+    def code(neuron: Vertex): universe.Tree = {
+      val outData = in.indexOf(neuron) match {
+        case i if i >= 0 => q"data($i)"
+        case -1 =>
+          val inputs = graph.incomingEdges(neuron).toList
+          inputs match {
+            case Nil => q"0"
+            case es =>
+              (es map { case e @ Edge(in, _) => q"${code(in)} * ${weight(e)}" }).reduce((a, b) => q"$a + $b")
+          }
+      }
+      q"sigmoid($outData + ${bias.get(neuron).getOrElse(0.0)})"
+    }
+
+    val result = out map code
+    val sigmoid = q"def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1) "
+
+    Compiler[Function1[IndexedSeq[Double], Seq[Double]]](q"(data:IndexedSeq[Double]) => {$sigmoid;$result}")
+  }
+  def compute(data: IndexedSeq[Double]): Seq[Double] = compiledFunction(data)
+
+  def compute_recursive(data: IndexedSeq[Double]): Seq[Double] = {
     val cachedResults = mutable.HashMap[Vertex, Double]()
     // println(s"compute: on $graph\nin: $in -> out:$out\ndata: $data")
     def eval(neuron: Vertex): Double = {

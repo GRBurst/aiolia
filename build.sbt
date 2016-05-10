@@ -4,10 +4,18 @@ version := "0.1"
 
 scalaVersion := "2.11.8"
 
+val scalaV = "2.11.7"
+
+val paradiseVersion = "2.1.0"
+
 libraryDependencies ++=
   "org.specs2" %% "specs2-core" % "3.7.2" % "test" ::
   "org.specs2" %% "specs2-mock" % "3.7.2" % "test" ::
+  "org.scala-lang" % "scala-reflect" % scalaV ::
+  "org.scala-lang" % "scala-compiler" % scalaV ::
   Nil
+
+addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)
 
 scalacOptions in Test ++= Seq("-Yrangepos") // for specs2
 
@@ -33,4 +41,7 @@ import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.graph.dsl._
 import aiolia.helpers._
+
+val universe: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
+import universe._
 """
