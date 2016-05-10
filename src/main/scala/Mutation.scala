@@ -63,7 +63,11 @@ class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List
   ).flatMap{ case (n, op) => List.fill(n)(op) }
 
   override val random = Random(seed)
-  override def invariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle
+  override def invariant(grammar: Grammar[Double, Double]): Boolean = (
+    !grammar.expand.hasCycle &&
+    feedForwardInputs.forall(grammar.expand.inDegree(_) == 0) &&
+    feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0)
+  )
   override def initVertexData() = Some(random.r.nextGaussian)
   override def initEdgeData() = Some(random.r.nextGaussian)
   override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.1

@@ -76,9 +76,9 @@ object AddAcyclicEdge extends MutationOp {
     random.selectOpt(candidates).flatMap {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)
-        val vertexInCandidates = graph.vertices.filter(v => (graph.outDegree(v) < graph.vertices.size - 1)) -- feedForwardOutputs
+        val vertexInCandidates = graph.vertices.filter(v => (graph.outDegree(v) < graph.vertices.size - 1))
         random.selectOpt(vertexInCandidates).flatMap{ vertexIn =>
-          val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors) -- feedForwardInputs
+          val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors)
           random.selectOpt(vertexOutCandidates).flatMap { vertexOut =>
             val edge = Edge(vertexIn, vertexOut)
             val newGraph = (graph + edge, initEdgeData()) match {
@@ -88,7 +88,9 @@ object AddAcyclicEdge extends MutationOp {
             val result = grammar.updateProduction(label -> newGraph)
             // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
             // TODO: prevent creating cycles in the first place
-            if (result.expand.hasCycle) None else Some(result)
+            if (result.expand.hasCycle ||
+              feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
+              feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
           }
         }
     }
@@ -157,7 +159,7 @@ object InlineNonTerminal extends MutationOp {
         val inlined = inline(graph, nonTerminal, grammar)
 
         val result = grammar.updateProduction(label -> inlined)
-        assert(result.expand isIsomorphicTo grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nselected: [$label] -> $nonTerminal\nafter:$result\nexpanded:${result.expand}\n")
+        // assert(result.expand isIsomorphicTo grammar.expand, s"Inline should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nselected: [$label] -> $nonTerminal\nafter:$result\nexpanded:${result.expand}\n")
         result
     }
   }
@@ -210,7 +212,7 @@ object ExtractNonTerminal extends MutationOp {
         val (newSource, extracted) = extract(source, subVertices, newLabel)
 
         val result = grammar.addProduction(newLabel -> extracted).updateProduction(srcLabel -> newSource)
-        assert(result.expand isIsomorphicTo grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nsource: [$srcLabel] -> $source\nSubVertices: $subVertices\nExtract: $extracted\nafter:$result\nexpanded:${result.expand}\n")
+        // assert(result.expand isIsomorphicTo grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nsource: [$srcLabel] -> $source\nSubVertices: $subVertices\nExtract: $extracted\nafter:$result\nexpanded:${result.expand}\n")
         result
     }
   }
@@ -220,7 +222,7 @@ object ExtractNonTerminal extends MutationOp {
 object ReuseNonTerminal extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config.{random => rand, _}
-    val candidates = grammar.productions.toList.combinations(2).flatMap{case ab@List(a,b) => List(ab, List(b,a))}.filter {
+    val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
 
@@ -239,7 +241,7 @@ object ReuseNonTerminal extends MutationOp {
 object ReuseNonTerminalAcyclic extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config.{random => rand, _}
-    val candidates = grammar.productions.toList.combinations(2).flatMap{case ab@List(a,b) => List(ab, List(b,a))}.filter {
+    val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
 
@@ -251,7 +253,10 @@ object ReuseNonTerminalAcyclic extends MutationOp {
 
         //TODO: cycle detection!
         Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap{ g =>
-          if (g.dependencyGraph.hasCycle || g.expand.hasCycle) None else Some(g)
+          if (g.dependencyGraph.hasCycle ||
+            feedForwardInputs.exists(g.expand.inDegree(_) > 0) ||
+            feedForwardOutputs.exists(g.expand.outDegree(_) > 0) ||
+            g.expand.hasCycle) None else Some(g)
         }
     }
   }
