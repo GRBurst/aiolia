@@ -82,21 +82,16 @@ object ImageCompression extends App {
     def generateImage(grammar: Genotype, w: Int = target.w, h: Int = target.h, prefix: String = ""): Image = {
       val network = FeedForwardNeuralNetwork(VL(0, 1), VL(2, 3, 4), grammar.expand)
       val image = Image.create(w, h)
-      if (image.pixels < compilePixelThreshold) {
-        if (prefix.nonEmpty) print(s"$prefix evaluating...      ")
-        image.fill{ (x, y) =>
-          val col = network.compute(Array(x, y))
-          (col(0), col(1), col(2))
-        }
-      }
-      else {
+
+      if (image.pixels >= compilePixelThreshold) {
         if (prefix.nonEmpty) print(s"$prefix compiling...      ")
         network.compile()
-        if (prefix.nonEmpty) print(s"$prefix evaluating...      ")
-        image.fill{ (x, y) =>
-          val col = network.compute_compiled(Array(x, y))
-          (col(0), col(1), col(2))
-        }
+      }
+
+      if (prefix.nonEmpty) print(s"$prefix evaluating...      ")
+      image.fill{ (x, y) =>
+        val Array(r, g, b) = network.compute(Array(x, y))
+        (r, g, b)
       }
     }
 
