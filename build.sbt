@@ -2,13 +2,13 @@ name := "aiolia"
 
 version := "0.1"
 
-val scalaV = "2.12.0-M4"
+val scalaV = "2.11.8"
 
 scalaVersion := scalaV
 
 libraryDependencies ++=
-  "org.specs2" % "specs2-core_2.12.0-M3" % "3.7.2" % "test" ::
-  "org.specs2" % "specs2-mock_2.12.0-M3" % "3.7.2" % "test" ::
+  "org.specs2" % "specs2-core_2.11" % "3.7.2" % "test" ::
+  "org.specs2" % "specs2-mock_2.11" % "3.7.2" % "test" ::
   "org.scala-lang" % "scala-reflect" % scalaV ::
   "org.scala-lang" % "scala-compiler" % scalaV ::
   "net.coobird" % "thumbnailator" % "0.4.8" ::
@@ -30,8 +30,8 @@ scalacOptions ++=
   "-language:_" ::
   "-Xlint:_" ::
   "-Ywarn-unused" ::
-  "-Xdisable-assertions" ::
-  "-Yopt:_" :: // enables all optimizations
+  // "-Xdisable-assertions" ::
+  // "-Yopt:_" :: // enables all optimizations
   Nil
 
 initialCommands in console := """
