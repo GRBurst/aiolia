@@ -239,7 +239,7 @@ object ReuseNonTerminal extends MutationOp {
 object ReuseNonTerminalAcyclic extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config.{random => rand, _}
-    val candidates = grammar.productions.toList.combinations(2).filter {
+    val candidates = grammar.productions.toList.combinations(2).flatMap{case ab@List(a,b) => List(ab, List(b,a))}.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
 
@@ -251,7 +251,7 @@ object ReuseNonTerminalAcyclic extends MutationOp {
 
         //TODO: cycle detection!
         Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap{ g =>
-          if (g.expand.hasCycle) None else Some(g)
+          if (g.dependencyGraph.hasCycle || g.expand.hasCycle) None else Some(g)
         }
     }
   }
