@@ -5,3 +5,7 @@
 /target
 /project/target
 /project/project/target
+*.dot
+*.svg
+*.png
+*.jpg
