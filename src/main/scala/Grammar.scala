@@ -71,7 +71,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     })
   }
 
-  def expand: Graph[V, E] = expand(AutoId(axiom.vertices.size))
+  lazy val expand: Graph[V, E] = expand(AutoId(axiom.vertices.size))
   @tailrec final def expand(autoId: AutoId): Graph[V, E] = {
     val nonTerminal = axiom.nonTerminals.head
     val replacement = productions(nonTerminal.label)
