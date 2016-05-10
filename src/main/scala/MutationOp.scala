@@ -220,7 +220,7 @@ object ExtractNonTerminal extends MutationOp {
 object ReuseNonTerminal extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config.{random => rand, _}
-    val candidates = grammar.productions.toList.combinations(2).filter {
+    val candidates = grammar.productions.toList.combinations(2).flatMap{case ab@List(a,b) => List(ab, List(b,a))}.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
 

@@ -201,5 +201,32 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
       "with edge data" >> todo
     }
 
+    "reuse NonTerminal" >> {
+
+      "reuse test" >> {
+
+        val nt1 = nt(1, (0, 1))
+
+        val axiom = graph(V(0 to 2), nts = List(nt1))
+
+        val rhs1 = cgraph(C(0, 1), V(0, 1), E(0 -> 1))
+        val rhs2 = cgraph(C(0, 2), V(0, 2), E(0 -> 2))
+
+        val g = grammar(axiom, 1 -> rhs1, 2 -> rhs2)
+
+        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(List(List((1 -> rhs1), (2 -> rhs2)), List((2 -> rhs2), (1 -> rhs1)) )) returns Some(List((1 -> rhs1), (2 -> rhs2)))
+        c.random.select(V(0, 2), 2) returns V(0, 2)
+
+        ReuseNonTerminal(g, c) mustEqual Some(grammar(
+          axiom,
+          1 -> rhs1,
+          2 -> cgraph(C(0, 2), V(0, 2), E(0 -> 2), nts = List(nt(1, (0, 2))))
+        ))
+
+      }
+
+    }
+
   }
 }
