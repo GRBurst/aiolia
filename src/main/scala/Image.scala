@@ -1,12 +1,15 @@
 package aiolia
 
 import java.awt.image.BufferedImage
+import java.awt.Dimension
 import javax.imageio.ImageIO
-import java.io.File
+import net.coobird.thumbnailator.Thumbnailator
+import net.coobird.thumbnailator.makers.FixedSizeThumbnailMaker
+import net.coobird.thumbnailator.resizers.DefaultResizerFactory
 
 object Image {
   def create(w: Int, h: Int) = new Image(new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB))
-  def read(filename: String) = new Image(ImageIO.read(new File(filename)))
+  def read(filename: String) = new Image(ImageIO.read(new java.io.File(filename)))
 }
 
 class Image(im: BufferedImage) {
@@ -34,7 +37,7 @@ class Image(im: BufferedImage) {
   }
 
   def write(filename: String) = {
-    ImageIO.write(im, "png", new File(filename));
+    ImageIO.write(im, "png", new java.io.File(filename));
     this
   }
 
@@ -52,17 +55,14 @@ class Image(im: BufferedImage) {
   }
 
   def resized(_newW: Int, _newH: Int = -1): Image = {
+
+
     val newW = _newW.max(1)
     val newH = (if (_newH == -1) ((h.toDouble / w.toDouble) * newW).toInt else _newH).max(1)
 
-    // creates output image
-    val outputImage = new BufferedImage(newW, newH, im.getType())
+    val resizer = DefaultResizerFactory.getInstance().getResizer(new Dimension(w, h), new Dimension(newW, newH))
+    val scaledImage = new FixedSizeThumbnailMaker(newW, newH, false, true).resizer(resizer).make(im);
 
-    // scales the input image to the output image
-    val g2d = outputImage.createGraphics()
-    g2d.drawImage(im, 0, 0, newW, newH, null)
-    g2d.dispose()
-
-    new Image(outputImage)
+    new Image(scaledImage)
   }
 }
