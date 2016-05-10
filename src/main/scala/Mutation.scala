@@ -46,21 +46,21 @@ class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] 
 
 class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List[Vertex], override val feedForwardOutputs: List[Vertex]) extends MutationConfig[Double, Double] {
   val operators = (
-    (AddVertex, 3) ::
-    (MutateVertex, 6) ::
-    (RemoveVertex, 1) ::
+    2 -> AddVertex ::
+    3 -> MutateVertex ::
+    1 -> RemoveVertex ::
 
-    (AddAcyclicEdge, 20) ::
-    (MutateEdge, 18) ::
-    (RemoveEdge, 1) ::
+    8 -> AddAcyclicEdge ::
+    3 -> MutateEdge ::
+    1 -> RemoveEdge ::
 
-    (ExtractNonTerminal, 0) ::
-    (ReuseNonTerminalAcyclic, 0) ::
-    (InlineNonTerminal, 0) ::
+    1 -> ExtractNonTerminal ::
+    1 -> ReuseNonTerminalAcyclic ::
+    1 -> InlineNonTerminal ::
     //TODO? RemoveNonTerminal
 
     Nil
-  ).flatMap{ case (op, n) => List.fill(n)(op) }
+  ).flatMap{ case (n, op) => List.fill(n)(op) }
 
   override val random = Random(seed)
   override def invariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle
@@ -107,7 +107,7 @@ object Mutation {
     if (n == 0) grammar.cleanup
     else {
       val operator = random.select(operators)
-      println(s"mutation $n: ${operator.getClass.getName}")
+      // println(s"mutation $n: ${operator.getClass.getName}")
       operator(grammar, config) match {
         case None => mutate(grammar, config, n)
         case Some(mutatedGrammar) =>

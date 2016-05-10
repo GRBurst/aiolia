@@ -80,6 +80,8 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
     else copy(axiom = next).expand(autoId)
   }
 
+  def numElements = productions.values.map(g => g.vertices.size + g.edges.size).sum
+
   override def toString = s"Grammar(\n  Axiom: $axiom\n${
     productions.toList.sortBy(_._1).map{
       case (l, g) => s"  ${NonTerminal(l, g.connectors)} -> ${g.copy(connectors = Nil)}"
