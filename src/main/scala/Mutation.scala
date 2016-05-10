@@ -54,8 +54,8 @@ class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List
     3 -> MutateEdge ::
     1 -> RemoveEdge ::
 
-    1 -> ExtractNonTerminal ::
-    1 -> ReuseNonTerminalAcyclic ::
+    2 -> ExtractNonTerminal ::
+    4 -> ReuseNonTerminalAcyclic ::
     1 -> InlineNonTerminal ::
     //TODO? RemoveNonTerminal
 
