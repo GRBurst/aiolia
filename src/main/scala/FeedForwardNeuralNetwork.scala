@@ -56,16 +56,19 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
               q"$dotProduct + $nbias"
           }
       }
-      q"val ${TermName(s"v${n.label}")} = sigmoid($outData)"
+      q"val ${TermName(s"v${n.label}")}:Double = sigmoid($outData)"
     }
 
     val result = out map { v => q"${TermName(s"v${v.label}")}" }
 
-    val sigmoid = q"@inline def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1) "
-    val code = q"(data:IndexedSeq[Double]) => {$sigmoid;..$node_code;Array(..$result)}"
+    val sigmoid = q"final def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1) " //TODO: inline
+    val code = q"(data:IndexedSeq[Double]) => {$sigmoid;..$node_code;Array[Double](..$result)}"
     // println(showCode(code))
 
     Compiler[Function1[IndexedSeq[Double], Array[Double]]](code)
+  }
+  def compile() {
+    compiledFunction
   }
   def compute_compiled(data: IndexedSeq[Double]): Array[Double] = compiledFunction(data)
 
