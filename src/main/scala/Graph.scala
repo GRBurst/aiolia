@@ -85,6 +85,7 @@ case class Graph[+V, +E](
   def nonConnectors = vertices -- connectors
   def isolatedVertices = vertices.filter(degree(_) == 0)
   def allIsolatedVertices = vertices.filter(allDegree(_) == 0)
+  def numElements = vertices.size + edges.size
 
   def subGraphOf[V1 >: V, E1 >: E](superGraph: Graph[V1, E1]) = {
     (this.vertices subsetOf superGraph.vertices) &&
