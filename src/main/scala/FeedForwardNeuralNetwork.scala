@@ -1,6 +1,7 @@
 package aiolia
 
 import aiolia.graph._
+import aiolia.graph.types.Label
 
 import collection.mutable
 
@@ -55,30 +56,44 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
     compute_compiled = Some(Compiler[Function1[IndexedSeq[Double], Array[Double]]](code))
   }
 
+  private val computeOrder: Array[Label] = ((graph.topologicalSort intersect (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct) diff in).map(_.label).toArray
+  private val computeInputs: Array[Label] = in.map(_.label).toArray
+  private val computeOutputs: Array[Label] = out.map(_.label).toArray
+  private val computeBias: Array[Double] = {
+    val a = new Array[Double](neurons.size)
+    bias.foreach{ case (v, b) => a(v.label) = b }
+    a
+  }
+  private val computeIncomingEdges: Array[Array[(Double, Label)]] = {
+    val a = new Array[Array[(Double, Label)]](neurons.size)
+    for (n <- computeOrder) {
+      a(n) = graph.incomingEdges(Vertex(n)).map{ case e @ Edge(pre, _) => (weight(e), pre.label) }.toArray
+    }
+    a
+  }
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
   def compute(data: IndexedSeq[Double]): Array[Double] = {
     compute_compiled.foreach { compute => return compute(data) }
 
-    val cachedResults = mutable.HashMap[Vertex, Double]()
-    // println(s"compute: on $graph\nin: $in -> out:$out\ndata: $data")
-    def eval(neuron: Vertex): Double = {
-      cachedResults.get(neuron).foreach{ return _ }
+    val results = new Array[Double](neurons.size)
 
-      val outData = in.indexOf(neuron) match {
-        case i if i >= 0 => data(i) //TODO: send input data through sigmoid?
-        case -1 =>
-          val inputs = graph.incomingEdges(neuron).toList
-          inputs match {
-            case Nil => 0 //TODO: nodes without inputs = sigmoid(bias)?
-            case es =>
-              (es map { case e @ Edge(in, _) => eval(in) * weight(e) }).sum
-          }
-      }
-      val result = sigmoid(outData + bias.get(neuron).getOrElse(0.0)) //TODO: assert that all neurons have bias?
-      cachedResults(neuron) = result
-      result
+    // insert data
+    var i = 0
+    for (input <- computeInputs) {
+      results(input) = sigmoid(data(i) + computeBias(input))
+      i += 1
     }
 
-    (out map eval).toArray
+    // compute value for each neuron in topological order
+    for (n <- computeOrder) {
+      var tmp = 0.0
+      for ((weight, pre) <- computeIncomingEdges(n)) {
+        tmp += weight * results(pre)
+      }
+      results(n) = sigmoid(tmp + computeBias(n))
+    }
+
+    // return Array of results of output vertices
+    computeOutputs map results
   }
 }
