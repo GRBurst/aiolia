@@ -34,6 +34,18 @@ scalacOptions ++=
   // "-Yopt:_" :: // enables all optimizations
   Nil
 
+// scalaxy - rewrite collection code to while loops
+scalacOptions += "-Xplugin-require:scalaxy-streams"
+
+scalacOptions in Test ~= (_ filterNot (_ == "-Xplugin-require:scalaxy-streams"))
+
+scalacOptions in Test += "-Xplugin-disable:scalaxy-streams"
+
+autoCompilerPlugins := true
+
+addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.3.4")
+
+// make console life easier
 initialCommands in console := """
 import aiolia._
 import aiolia.graph._
