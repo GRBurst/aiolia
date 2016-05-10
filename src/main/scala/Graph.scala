@@ -273,7 +273,30 @@ case class Graph[+V, +E](
     )
   }
 
+  def topologicalSort: List[Vertex] = {
+    assert(!hasCycle)
+
+    var sorted: List[Vertex] = Nil
+    val unmarked = mutable.HashSet.empty[Vertex] ++ vertices
+    val tempMarked = mutable.HashSet.empty[Vertex]
+
+    while (unmarked.nonEmpty) visit(unmarked.head)
+
+    def visit(n: Vertex) {
+      if (unmarked(n)) {
+        tempMarked += n
+        for (m <- successors(n)) visit(m)
+        unmarked -= n
+        tempMarked -= n
+        sorted ::= n
+      }
+    }
+
+    sorted
+  }
+
   def depthFirstSearch(start: Vertex, continue: Vertex => Iterable[Vertex] = successors) = new Iterator[Vertex] {
+    //TODO: optimization use linear time algorithm
     assert(vertices contains start)
     val stack = mutable.Stack(start)
     val seen = mutable.Set[Vertex]()
@@ -312,6 +335,7 @@ case class Graph[+V, +E](
   def isConnected = isEmpty || depthFirstSearch(vertices.head, neighbours).size == vertices.size
 
   def hasCycle: Boolean = {
+    //TODO: optimization: use linear time algorithm
     val next = mutable.HashSet.empty ++ vertices
 
     while (next.nonEmpty) {

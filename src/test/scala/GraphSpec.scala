@@ -678,6 +678,15 @@ class GraphSpec extends org.specs2.mutable.Specification {
       }
     }
 
+    "topological sort" >> {
+      graph(V(), E()).topologicalSort mustEqual VL()
+      graph(V(1), E()).topologicalSort mustEqual VL(1)
+      graph(V(1, 2), E(1 -> 2)).topologicalSort mustEqual VL(1, 2)
+      graph(V(1, 2), E(1 -> 2, 2 -> 1)).topologicalSort must throwAn[AssertionError]
+      graph(V(1, 2, 3), E(2 -> 3, 1 -> 2)).topologicalSort mustEqual VL(1, 2, 3)
+      graph(V(1, 2, 3, 4, 5), E(1 -> 3, 2 -> 3, 3 -> 4, 3 -> 5)).topologicalSort mustEqual VL(1, 2, 3, 5, 4) //  (1,2) (3) (4,5)
+    }
+
     "connected components" >> {
       graph(V(0, 1, 2), E(0 -> 1, 1 -> 2)).connectedComponents mustEqual Set(V(0, 1, 2))
       graph(V(0, 1, 2), E(0 -> 1)).connectedComponents mustEqual Set(V(0, 1), V(2))

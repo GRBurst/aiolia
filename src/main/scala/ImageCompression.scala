@@ -51,14 +51,14 @@ object ImageCompression extends App {
     def generateImage(grammar: Grammar[Double, Double], w: Int = resizedTarget.w, h: Int = resizedTarget.h): Image = {
       val network = FeedForwardNeuralNetwork(VL(0, 1), VL(2, 3, 4), grammar.expand)
       val image = Image.create(w, h)
-      if(image.pixels < 1000)
+      if (image.pixels < 1000)
         image.fill{ (x, y) =>
-          val col = network.compute_recursive(Array(x, y))
+          val col = network.compute(Array(x, y))
           (col(0), col(1), col(2))
         }
       else
         image.fill{ (x, y) =>
-          val col = network.compute(Array(x, y))
+          val col = network.compute_compiled(Array(x, y))
           (col(0), col(1), col(2))
         }
     }
