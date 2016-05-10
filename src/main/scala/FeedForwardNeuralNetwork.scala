@@ -25,24 +25,11 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
   import graph.{vertexData => bias}
   import graph.{edgeData => weight}
 
-  def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
-  lazy val compiledFunction = {
+  private var compute_compiled: Option[Function1[IndexedSeq[Double], Array[Double]]] = None
+  def compile() {
     val universe: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
     import universe._
 
-    // def code(neuron: Vertex): universe.Tree = {
-    //   val outData = in.indexOf(neuron) match {
-    //     case i if i >= 0 => q"data($i)"
-    //     case -1 =>
-    //       val inputs = graph.incomingEdges(neuron).toList
-    //       inputs match {
-    //         case Nil => q"0"
-    //         case es =>
-    //           (es map { case e @ Edge(in, _) => q"${code(in)} * ${weight(e)}" }).reduce((a, b) => q"$a + $b")
-    //       }
-    //   }
-    //   q"sigmoid($outData + ${bias.get(neuron).getOrElse(0.0)})"
-    // }
     val nodes = graph.topologicalSort intersect (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct
     val node_code = nodes map { n =>
       val nbias = bias.get(n).getOrElse(0.0)
@@ -65,14 +52,13 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
     val code = q"(data:IndexedSeq[Double]) => {$sigmoid;..$node_code;Array[Double](..$result)}"
     // println(showCode(code))
 
-    Compiler[Function1[IndexedSeq[Double], Array[Double]]](code)
+    compute_compiled = Some(Compiler[Function1[IndexedSeq[Double], Array[Double]]](code))
   }
-  def compile() {
-    compiledFunction
-  }
-  def compute_compiled(data: IndexedSeq[Double]): Array[Double] = compiledFunction(data)
 
+  def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
   def compute(data: IndexedSeq[Double]): Array[Double] = {
+    compute_compiled.foreach { compute => return compute(data) }
+
     val cachedResults = mutable.HashMap[Vertex, Double]()
     // println(s"compute: on $graph\nin: $in -> out:$out\ndata: $data")
     def eval(neuron: Vertex): Double = {
