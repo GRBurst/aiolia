@@ -9,46 +9,53 @@ import aiolia.export.DOTExport
 object ImageCompression extends App {
   for (seed <- 0 to 0) {
     val originalTarget = Image.read("apple.jpg")
-    var resizeLevel = 1
+    var resizeLevel = 64
     var target = originalTarget.resized(resizeLevel)
     target.write("/tmp/currentresized.png")
     // val seed = 1
-    def mutationStrength(elements: Int): Int = (Math.log(elements) / Math.log(10)).ceil.toInt
+    def mutationStrength(elements: Int): Int = 2 + (elements * 0.1).ceil.toInt //(Math.log(elements) / Math.log(2)).ceil.toInt
     val populationSize = 300
-    val fitnessResizeThreshold = -0.1
+    val similarityResizeThreshold = 0.2
     val compilePixelThreshold = 200000
-    val tournamentSize = 3
+    val tournamentSize = 4
 
     val random = Random(seed)
     val ANNAxiom = Graph(V(0, 1, 2, 3, 4), nonTerminals = List(nt(1, (0, 1, 2, 3, 4))))
     val ANNGrammar = Grammar(ANNAxiom, Map(1 -> Graph(V(0, 1, 2, 3, 4), connectors = C(0, 1, 2, 3, 4))))
     val mut = new FeedForwardNetworkMutation(seed, feedForwardInputs = VL(0, 1), feedForwardOutputs = VL(2, 3, 4))
 
+    def mutatePopulation(population: Population) = {
+      population.map(g => Mutation.mutate(g, mut, mutationStrength(g.numElements)))
+    }
+
     // println("preparing initial population...")
     type Genotype = Grammar[Double, Double]
     type Population = List[Genotype]
-    var population = List.fill(populationSize)(Mutation.mutate(ANNGrammar, mut, 1))
-    for (gen <- 0 until 100000) {
+    var population: Population = mutatePopulation(List.fill(populationSize)(ANNGrammar))
+
+    for (gen <- 0 until 10000000) {
       val fitness = calculateAllFitnesses(population)
       val best = population.maxBy(fitness)
 
-      print("\rgenerating previews...     ")
+      print("\rpreviews...     ")
       generateImage(best).write(s"/tmp/current.png")
       File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs = VL(0, 1), feedForwardOutputs = VL(2, 3, 4)))
       File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
 
-      checkResizeTarget(fitness, best)
+      val bestSimilarity = pictureSimilarity(best, "")
+      checkResizeTarget(bestSimilarity)
 
       print("\rselection...            ")
       population = selectNextPopulation(population, fitness)
-      print("\rmutation...             ")
-      population = mutatePopulation(population)
 
-      println(s"\rgen: $gen, width: $resizeLevel (${target.pixels}px), fit: ${fitness(best)}, elements: ${best.numElements}, compression: ${"%4.2f" format (1 - best.compressionRatio)}, isolatedV: ${best.expand.isolatedVertices.size}")
+      print("\rmutation...             ")
+      population = population.head :: mutatePopulation(population.tail) // don't mutate best
+
+      println(s"\rgen: $gen, width: $resizeLevel (${target.pixels}px), sim: ${"%6.4f" format bestSimilarity}, fit: ${"%6.4f" format fitness(best)}, el: ${best.numElements}, comp: ${"%4.2f" format (best.compressionRatio)}, components: ${best.expand.connectedComponents.size}")
     }
 
-    def checkResizeTarget(fitness: Map[Genotype, Double], best: Genotype) {
-      if (fitness(best) >= fitnessResizeThreshold) {
+    def checkResizeTarget(similarity: Double) {
+      if (similarity < similarityResizeThreshold) {
         resizeLevel *= 2
         println(s"\rresize to width: $resizeLevel      ")
         target = originalTarget.resized(resizeLevel)
@@ -59,10 +66,6 @@ object ImageCompression extends App {
     def selectNextPopulation(population: Population, fitness: Map[Genotype, Double]): Population = {
       val best = population.maxBy(fitness)
       best :: List.fill(populationSize - 1)(tournamentSelection(population, fitness, tournamentSize))
-    }
-
-    def mutatePopulation(population: Population) = {
-      population.map(g => Mutation.mutate(g, mut, mutationStrength(g.numElements)))
     }
 
     def calculateAllFitnesses(population: Population): Map[Genotype, Double] = {
@@ -88,16 +91,25 @@ object ImageCompression extends App {
         network.compile()
       }
 
-      if (prefix.nonEmpty) print(s"$prefix evaluating...      ")
+      if (prefix.nonEmpty) print(s"$prefix fitness...      ")
       image.fill{ (x, y) =>
         val Array(r, g, b) = network.compute(Array(x, y))
         (r, g, b)
       }
     }
 
+    def pictureSimilarity(grammar: Genotype, prefix: String) = {
+      val im = generateImage(grammar, prefix = prefix)
+      if (prefix.nonEmpty) print(s"$prefix similarity...      ")
+      im.similarity(target)
+    }
+
     def calculateFitness(grammar: Genotype, prefix: String): Double = {
-      val r = -generateImage(grammar, prefix = prefix).similarity(target)
-      r
+      var sum = 0.0
+      sum -= pictureSimilarity(grammar, prefix)
+      sum -= grammar.numElements.toDouble * 0.0001
+      sum -= grammar.expand.connectedComponents.size.toDouble * 0.1
+      sum
     }
   }
 

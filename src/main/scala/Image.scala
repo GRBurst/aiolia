@@ -55,8 +55,6 @@ class Image(im: BufferedImage) {
   }
 
   def resized(_newW: Int, _newH: Int = -1): Image = {
-
-
     val newW = _newW.max(1)
     val newH = (if (_newH == -1) ((h.toDouble / w.toDouble) * newW).toInt else _newH).max(1)
 

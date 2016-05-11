@@ -81,7 +81,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   }
 
   def numElements = productions.values.map(g => g.numElements).sum
-  def compressionRatio = numElements.toDouble / expand.numElements
+  def compressionRatio = expand.numElements.toDouble / numElements
 
   override def toString = s"Grammar(\n  Axiom: $axiom\n${
     productions.toList.sortBy(_._1).map{
