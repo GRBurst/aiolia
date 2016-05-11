@@ -46,17 +46,17 @@ class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] 
 
 class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List[Vertex], override val feedForwardOutputs: List[Vertex]) extends MutationConfig[Double, Double] {
   val operators = (
-    2 -> AddVertex ::
-    4 -> MutateVertex ::
-    1 -> RemoveVertex ::
+    3 -> AddVertex ::
+    3 -> MutateVertex ::
+    3 -> RemoveVertex ::
 
-    2 -> AddAcyclicEdge ::
-    4 -> MutateEdge ::
-    1 -> RemoveEdge ::
+    3 -> AddAcyclicEdge ::
+    3 -> MutateEdge ::
+    3 -> RemoveEdge ::
 
-    2 -> ExtractNonTerminal ::
-    4 -> ReuseNonTerminalAcyclic ::
-    1 -> InlineNonTerminal ::
+    1 -> ExtractNonTerminal ::
+    3 -> ReuseNonTerminalAcyclic ::
+    3 -> InlineNonTerminal ::
     //TODO? RemoveNonTerminal
 
     Nil

@@ -9,12 +9,12 @@ import aiolia.export.DOTExport
 object ImageCompression extends App {
   for (seed <- 0 to 0) {
     val originalTarget = Image.read("apple.jpg")
-    var resizeLevel = 64
+    var resizeLevel = 16
     var target = originalTarget.resized(resizeLevel)
     target.write("/tmp/currentresized.png")
     // val seed = 1
-    def mutationStrength(elements: Int): Int = 2 + (elements * 0.1).ceil.toInt //(Math.log(elements) / Math.log(2)).ceil.toInt
-    val populationSize = 300
+    def mutationStrength(elements: Int): Int = 5 + (elements * 0.01).ceil.toInt //(Math.log(elements) / Math.log(2)).ceil.toInt
+    val populationSize = 200
     val similarityResizeThreshold = 0.2
     val compilePixelThreshold = 200000
     val tournamentSize = 4
@@ -51,7 +51,7 @@ object ImageCompression extends App {
       print("\rmutation...             ")
       population = population.head :: mutatePopulation(population.tail) // don't mutate best
 
-      println(s"\rgen: $gen, width: $resizeLevel (${target.pixels}px), sim: ${"%6.4f" format bestSimilarity}, fit: ${"%6.4f" format fitness(best)}, el: ${best.numElements}, comp: ${"%4.2f" format (best.compressionRatio)}, components: ${best.expand.connectedComponents.size}")
+      println(s"\rgen: $gen, width: $resizeLevel (${target.pixels}px), sim: ${"%6.4f" format bestSimilarity}, fit: ${"%6.4f" format fitness(best)}, el: ${best.numElements}, comp: ${"%4.2f" format (best.compressionRatio)}, rules: ${best.productions.size}, components: ${best.expand.connectedComponents.size}")
     }
 
     def checkResizeTarget(similarity: Double) {
@@ -106,9 +106,10 @@ object ImageCompression extends App {
 
     def calculateFitness(grammar: Genotype, prefix: String): Double = {
       var sum = 0.0
-      sum -= pictureSimilarity(grammar, prefix)
-      sum -= grammar.numElements.toDouble * 0.0001
-      sum -= grammar.expand.connectedComponents.size.toDouble * 0.1
+      sum -= Math.pow(1 + pictureSimilarity(grammar, prefix), 3) * 20
+      sum -= Math.log(grammar.numElements.toDouble) * 0.001
+      sum += Math.log(1 + Math.log(1 + grammar.compressionRatio)) * 0.1
+      sum -= grammar.expand.connectedComponents.size
       sum
     }
   }
