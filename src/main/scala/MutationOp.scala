@@ -207,7 +207,7 @@ object ExtractNonTerminal extends MutationOp {
     val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
     random.selectOpt(candidates).map {
       case (srcLabel, source) =>
-        val subVertices = random.selectMinOne(source.vertices).toSet
+        val subVertices = random.selectMinOne(source.vertices).take(Math.max(1, source.vertices.size / 2)).toSet // TODO: random from 0 to n/2
         val newLabel = grammar.productions.keys.max + 1
         val (newSource, extracted) = extract(source, subVertices, newLabel)
 
