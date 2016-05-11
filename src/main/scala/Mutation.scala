@@ -111,10 +111,22 @@ object Mutation {
     if (n == 0) grammar.cleanup
     else {
       val operator = random.select(operators)
-      // println(s"mutation $n: ${operator.getClass.getName}")
-      operator(grammar, config) match {
-        case None => mutate(grammar, config, n)
-        case Some(mutatedGrammar) =>
+      val tries = new Iterator[Option[Grammar[V, E]]] {
+        def hasNext = true
+        def next = {
+          // println(s"  mutation $n: ${operator.getClass.getName}")
+          operator(grammar, config)
+        }
+      }
+
+      // println("start trying...")
+      val maxTries = 5
+      val result = tries.take(maxTries).flatten.take(1).toList
+      // println("done")
+
+      result match {
+        case Nil => mutate(grammar, config, n)
+        case List(mutatedGrammar) =>
           assert(invariant(mutatedGrammar), s"\nbefore ${operator.getClass.getName}:\n$grammar\nexpanded: ${grammar.expand}\nafter ${operator.getClass.getName}: $invariantError\n${mutatedGrammar}\nexpanded: ${mutatedGrammar.expand}")
           mutate(mutatedGrammar, config, n - 1)
       }
