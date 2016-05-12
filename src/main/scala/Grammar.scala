@@ -9,6 +9,10 @@ import annotation.tailrec
 
 object Grammar {
   def minimal[V, E] = Grammar[V, E](Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))
+  def feedForward(in: List[Vertex], out: List[Vertex]) = {
+    val axiom = Graph(Set.empty ++ in ++ out, nonTerminals = List(NonTerminal(1, in ++ out)))
+    Grammar(axiom, Map(1 -> Graph(axiom.vertices, connectors = in ++ out)))
+  }
 }
 
 case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, E]] = Map.empty[Label, Graph[V, E]]) {
