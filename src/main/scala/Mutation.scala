@@ -46,17 +46,17 @@ class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] 
 
 class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List[Vertex], override val feedForwardOutputs: List[Vertex]) extends MutationConfig[Double, Double] {
   val operators = (
-    3 -> AddVertex ::
-    3 -> MutateVertex ::
-    3 -> RemoveVertex ::
+    1 -> AddConnectedVertex ::
+    1 -> MutateVertex ::
+    1 -> RemoveVertex ::
 
     3 -> AddAcyclicEdge ::
-    3 -> MutateEdge ::
-    3 -> RemoveEdge ::
+    1 -> MutateEdge ::
+    1 -> RemoveEdge ::
 
-    1 -> ExtractNonTerminal ::
-    3 -> ReuseNonTerminalAcyclic ::
-    3 -> InlineNonTerminal ::
+    0 -> ExtractNonTerminal ::
+    0 -> ReuseNonTerminalAcyclic ::
+    0 -> InlineNonTerminal ::
     //TODO? RemoveNonTerminal
 
     Nil
@@ -70,8 +70,8 @@ class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List
   )
   override def initVertexData() = Some(random.r.nextGaussian)
   override def initEdgeData() = Some(random.r.nextGaussian)
-  override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.1
-  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * 0.1
+  override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.01
+  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * 0.01
 }
 
 trait MutationOpConfig[V, E] {
@@ -87,6 +87,7 @@ trait MutationOpConfig[V, E] {
 }
 
 trait MutationConfig[V, E] extends MutationOpConfig[V, E] {
+  // TODO: post processing of grammar, eg: clean up isolated vertices
   val operators: List[MutationOp]
   def invariant(grammar: Grammar[V, E]): Boolean = true
   def invariantError: String = ""

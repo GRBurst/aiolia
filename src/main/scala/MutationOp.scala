@@ -22,25 +22,40 @@ object AddVertex extends MutationOp {
     val (label, graph) = random.select(grammar.productions)
     val vertex = Vertex(nextLabel(graph.vertices))
     val newVertices = graph.vertices + vertex
-    val newVertexData = initVertexData().map(i => graph.vertexData + (vertex -> i)).getOrElse(graph.vertexData)
+    val newVertexData = graph.vertexData ++ initVertexData().map(d => vertex -> d)
     val newGraph = graph.copy(vertices = newVertices, vertexData = newVertexData)
     Some(grammar.updateProduction(label -> newGraph))
   }
 }
 
+//TODO: this is feedforward specific
 object AddConnectedVertex extends MutationOp {
   def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config._
     val (label, graph) = random.select(grammar.productions)
-    if (graph.isEmpty)
-      Some(grammar.updateProduction(label -> (graph + Vertex(0))))
+    if (graph.isEmpty) {
+      val vertex = Vertex(0)
+      val newVertices = Set(vertex)
+      val newVertexData: Map[Vertex, V] = Map.empty ++ initVertexData().map(d => vertex -> d)
+      val newGraph = graph.copy(vertices = newVertices, vertexData = newVertexData)
+      Some(grammar.updateProduction(label -> newGraph))
+    }
     else {
       val existingVertex = random.select(graph.vertices)
+
       val newVertex = Vertex(nextLabel(graph.vertices))
+      val newVertices = graph.vertices + newVertex
+      val newVertexData = graph.vertexData ++ initVertexData().map(d => newVertex -> d)
+
       val newEdge = if (random.r.nextBoolean) Edge(newVertex, existingVertex) else Edge(existingVertex, newVertex)
-      val result = grammar.updateProduction(label -> (graph + newVertex + newEdge))
-      assert(result.expand.isConnected)
-      Some(result)
+      // val newEdge = Edge(newVertex, existingVertex)
+      val newEdges = graph.edges + newEdge
+      val newEdgeData = graph.edgeData ++ initEdgeData().map(d => newEdge -> d)
+
+      val newGraph = graph.copy(vertices = newVertices, edges = newEdges, vertexData = newVertexData, edgeData = newEdgeData)
+      val result = grammar.updateProduction(label -> newGraph)
+      if (feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
+        feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
     }
   }
 }
@@ -88,7 +103,7 @@ object AddAcyclicEdge extends MutationOp {
             val result = grammar.updateProduction(label -> newGraph)
             // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
             // TODO: prevent creating cycles in the first place
-            if (result.expand.hasCycle ||
+            if (newGraph.hasCycle || result.expand.hasCycle ||
               feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
               feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
           }
@@ -205,15 +220,17 @@ object ExtractNonTerminal extends MutationOp {
   override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config._
     val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
-    random.selectOpt(candidates).map {
+    random.selectOpt(candidates).flatMap {
       case (srcLabel, source) =>
-        val subVertices = random.selectMinOne(source.vertices).take(Math.max(1, source.vertices.size / 2)).toSet // TODO: random from 0 to n/2
+        val subVertices = random.selectMinOne(source.vertices).toSet
         val newLabel = grammar.productions.keys.max + 1
         val (newSource, extracted) = extract(source, subVertices, newLabel)
 
-        val result = grammar.addProduction(newLabel -> extracted).updateProduction(srcLabel -> newSource)
-        // assert(result.expand isIsomorphicTo grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nsource: [$srcLabel] -> $source\nSubVertices: $subVertices\nExtract: $extracted\nafter:$result\nexpanded:${result.expand}\n")
-        result
+        if (extracted.vertices.size < 2 || extracted.nonConnectors.isEmpty) None else {
+          val result = grammar.addProduction(newLabel -> extracted).updateProduction(srcLabel -> newSource)
+          // assert(result.expand isIsomorphicTo grammar.expand, s"Extract should not affect expanded graph.\nbefore:$grammar\nexpanded:${grammar.expand}\nsource: [$srcLabel] -> $source\nSubVertices: $subVertices\nExtract: $extracted\nafter:$result\nexpanded:${result.expand}\n")
+          Some(result)
+        }
     }
   }
 }

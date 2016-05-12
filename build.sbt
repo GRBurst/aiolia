@@ -26,12 +26,13 @@ scalacOptions ++=
   "-deprecation" ::
   "-explaintypes" ::
   "-feature" ::
-  //"-Yinline", "-Yinline-warnings" ::
   "-language:_" ::
   "-Xlint:_" ::
   "-Ywarn-unused" ::
   // "-Xdisable-assertions" ::
-  // "-Yopt:_" :: // enables all optimizations
+  // "-optimize" ::
+  // "-Yopt:_" :: // enables all 2.12 optimizations
+  // "-Yinline" :: "-Yinline-warnings" ::
   Nil
 
 // scalaxy - rewrite collection code to while loops

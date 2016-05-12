@@ -12,6 +12,7 @@ case class Random(seed: Any) {
     r.shuffle(it).take(n)
   }
 
+  def selectMinOne[T](it: Iterable[T], max: Int): Iterable[T] = select(it, n = nextInt(1, max))
   def selectMinOne[T](it: Iterable[T]): Iterable[T] = select(it, n = nextInt(1, it.size + 1))
   def selectOpt[T](it: Iterable[T]): Option[T] = if (it.isEmpty) None else Some(select(it))
   def selectOpt[T](it: Iterable[T], n: Int): Option[Iterable[T]] = if (it.size < n) None else Some(select(it, n))

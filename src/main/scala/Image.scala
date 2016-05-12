@@ -27,9 +27,9 @@ class Image(im: BufferedImage) {
     setPixel(x, y, (r << 16) | (g << 8) | b)
   }
 
-  def fill(f: (Double, Double) => (Double, Double, Double)) = {
+  def fill(f: Array[Double] => Array[Double]) = {
     for (y <- 0 until h; x <- 0 until w) {
-      val (r, g, b) = f(x.toDouble * 2 / w - 1, y.toDouble * 2 / h - 1) // 0..w/h => range -1..1
+      val Array(r, g, b) = f(Array(x.toDouble * 2 / w - 1, y.toDouble * 2 / h - 1)) // 0..w/h => range -1..1
       def t(c: Double) = ((c * 128).toInt + 128).max(0).min(255) // range -1..1 => 0..255
       setPixelRGB(x, y, t(r), t(g), t(b))
     }
@@ -41,17 +41,21 @@ class Image(im: BufferedImage) {
     this
   }
 
-  def similarity(that: Image): Double = {
+  def distance(that: Image): Double = {
     assert(this.w == that.w && this.h == that.h)
     var error = 0.0
     for (y <- 0 until h; x <- 0 until w) {
       val (r1, g1, b1) = this.getPixelRGB(x, y)
       val (r2, g2, b2) = that.getPixelRGB(x, y)
-      error += (r1 - r2) * (r1 - r2)
-      error += (g1 - g2) * (g1 - g2)
-      error += (b1 - b2) * (b1 - b2)
+      val colorDistance = Math.sqrt((
+        (r1 - r2) * (r1 - r2) +
+        (g1 - g2) * (g1 - g2) +
+        (b1 - b2) * (b1 - b2)
+      ))
+      val normalized = colorDistance / Math.sqrt(3) / 255
+      error += normalized
     }
-    Math.sqrt(error / pixels / 255 / 255)
+    error / pixels
   }
 
   def resized(_newW: Int, _newH: Int = -1): Image = {

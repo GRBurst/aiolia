@@ -72,7 +72,7 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
     a
   }
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
-  def compute(data: IndexedSeq[Double]): Array[Double] = {
+  def compute(data: Array[Double]): Array[Double] = {
     compute_compiled.foreach { compute => return compute(data) }
 
     val results = new Array[Double](neurons.size)
