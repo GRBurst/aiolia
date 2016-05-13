@@ -44,7 +44,14 @@ scalacOptions in Test += "-Xplugin-disable:scalaxy-streams"
 
 autoCompilerPlugins := true
 
-addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.3.4")
+resolvers += Resolver.sonatypeRepo("snapshots")
+
+// addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.3.4")
+addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.4-SNAPSHOT")
+
+initialize ~= { _ =>
+  System.setProperty("scalaxy.streams.quiet", "true")
+}
 
 // make console life easier
 initialCommands in console := """
