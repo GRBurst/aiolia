@@ -26,6 +26,59 @@ case class AddVertex[V, E](config: DataGraphGrammarOpConfig[V, E]) extends Mutat
   }
 }
 
+case class SplitEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
+    import config._
+    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists{ case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) } }
+    random.selectOpt(candidates).map {
+      case (label, graph) =>
+        val edge = random.select(graph.edges.filter{ case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) })
+        // (In) -edge-> (Out)
+        // (In) -e1-> (n) -e2-> (Out)
+        val middleNode = Vertex(nextLabel(graph.vertices))
+        val e1 = Edge(edge.in, middleNode)
+        val e2 = Edge(middleNode, edge.out)
+        val newVertexData: Map[Vertex, Double] = graph.vertexData + (middleNode -> 0.0)
+        val newEdgeData: Map[Edge, Double] = graph.edgeData + (e1 -> 1.0) + (e2 -> graph.edgeData(edge)) - edge
+        val newGraph = graph.copy(
+          vertices = graph.vertices + middleNode,
+          edges = graph.edges + e1 + e2 - edge,
+          vertexData = newVertexData,
+          edgeData = newEdgeData
+        )
+        grammar.updateProduction(label -> newGraph)
+    }
+  }
+}
+
+case class Shrink(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
+    import config._
+    val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
+    random.selectOpt(candidates).map {
+      case (label, graph) =>
+        val vertex = random.select(graph.nonConnectors)
+        // (In) -e1-> (n) -e2-> (Out)
+        // (In) -edge-> (Out)
+        val predecessors = graph.predecessors(vertex)
+        val successors = graph.successors(vertex)
+        val edgeCount = predecessors.size max successors.size
+        val ins = random.r.shuffle(Stream.continually(predecessors).flatten.take(edgeCount))
+        val ous = random.r.shuffle(Stream.continually(successors).flatten.take(edgeCount))
+        val newEdges = (ins zip ous) map { case (in, out) => Edge(in, out) }
+        //TODO: edgedata from previous data
+
+        val newGraph: Graph[Double, Double] = graph.copy(
+          vertices = graph.vertices - vertex,
+          edges = graph.edges ++ newEdges -- graph.incidentEdges(vertex),
+          vertexData = graph.vertexData - vertex,
+          edgeData = graph.edgeData -- graph.incidentEdges(vertex) ++ newEdges.map(e => e -> initEdgeData().get) //TODO: gät?
+        )
+        grammar.updateProduction(label -> newGraph)
+    }
+  }
+}
+
 case class AddConnectedVertex(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
