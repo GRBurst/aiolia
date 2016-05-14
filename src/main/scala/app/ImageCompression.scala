@@ -1,60 +1,18 @@
-package aiolia
+package aiolia.app
 
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.helpers._
+import aiolia.util._
 import aiolia.graph.dsl._
-import aiolia.export.DOTExport
+import aiolia.util.DOTExport
+import aiolia.grammar._
+import aiolia.geneticAlgorithm._
+import aiolia.neuralNetwork._
 import scala.concurrent.duration._
-import aiolia.mutations._
 
 object ImageCompression extends App {
   val ga = GeneticAlgorithm(ImageCompressionConfig)
   ga.runFor(5 minutes)
-}
-
-trait DataGraphGrammarOpConfig[V, E] extends MutationOpConfig[Grammar[V, E]] {
-  def initVertexData(): Option[V] = None
-  def initEdgeData(): Option[E] = None
-  def mutateVertexData(d: V): V = d
-  def mutateEdgeData(d: E): E = d
-}
-
-trait FeedForwardGrammarOpConfig extends DataGraphGrammarOpConfig[Double, Double] {
-  val feedForwardInputs: List[Vertex]
-  val feedForwardOutputs: List[Vertex]
-}
-
-trait GeneticAlgorithmFeedForwardConfig extends GeneticAlgorithmConfig[Grammar[Double, Double]] with FeedForwardGrammarOpConfig { config =>
-
-  val mutationOperators = (
-    1 -> AddConnectedVertex(config) ::
-    1 -> MutateVertex(config) ::
-    1 -> RemoveVertex(config) ::
-
-    3 -> AddAcyclicEdge(config) ::
-    1 -> MutateEdge(config) ::
-    1 -> RemoveEdge(config) ::
-
-    0 -> ExtractNonTerminal(config) ::
-    0 -> ReuseNonTerminalAcyclic(config) ::
-    0 -> InlineNonTerminal(config) ::
-    //TODO? RemoveNonTerminal
-
-    Nil
-  ).flatMap{ case (n, op) => List.fill(n)(op) }
-
-  override def afterMutationOp(g: Grammar[Double, Double]) = g.cleanup
-
-  override def initVertexData() = Some(random.r.nextGaussian)
-  override def initEdgeData() = Some(random.r.nextGaussian)
-  override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.01
-  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * 0.01
-  override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = (
-    !grammar.expand.hasCycle &&
-    feedForwardInputs.forall(grammar.expand.inDegree(_) == 0) &&
-    feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0)
-  )
 }
 
 object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig { config =>

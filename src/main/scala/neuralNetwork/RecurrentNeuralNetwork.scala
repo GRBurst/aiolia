@@ -1,4 +1,4 @@
-package aiolia
+package aiolia.neuralNetwork
 
 import aiolia.graph._
 

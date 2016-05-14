@@ -4,7 +4,7 @@ import aiolia.graph._
 import aiolia.graph.dsl._
 
 import Helpers._
-import aiolia.helpers.AutoId
+import aiolia.util.AutoId
 
 class GraphSpec extends org.specs2.mutable.Specification {
   "dsl" >> {

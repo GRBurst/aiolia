@@ -1,6 +1,6 @@
 package aiolia.test
 
-import aiolia.FeedForwardNeuralNetwork
+import aiolia.neuralNetwork.FeedForwardNeuralNetwork
 import aiolia.graph._
 import aiolia.graph.dsl._
 

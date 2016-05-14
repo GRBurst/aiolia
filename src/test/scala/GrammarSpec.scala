@@ -1,6 +1,6 @@
 package aiolia.test
 
-import aiolia.Grammar
+import aiolia.grammar.Grammar
 import aiolia.graph._
 import aiolia.graph.dsl._
 

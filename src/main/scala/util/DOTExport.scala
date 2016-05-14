@@ -1,6 +1,6 @@
-package aiolia.export
+package aiolia.util
 
-import aiolia.Grammar
+import aiolia.grammar.Grammar
 import aiolia.graph._
 import collection.mutable
 

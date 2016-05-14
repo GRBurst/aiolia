@@ -1,6 +1,6 @@
 package aiolia.test
 
-import aiolia.RecurrentNeuralNetwork
+import aiolia.neuralNetwork.RecurrentNeuralNetwork
 import aiolia.graph._
 import aiolia.graph.dsl._
 

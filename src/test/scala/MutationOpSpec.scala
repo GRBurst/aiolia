@@ -1,11 +1,11 @@
 package aiolia.test
 
-import aiolia.{Grammar, DataGraphGrammarOpConfig}
+import aiolia.grammar.{Grammar, DataGraphGrammarOpConfig}
 import aiolia.graph._
 import aiolia.graph.dsl._
 import aiolia.graph.types._
-import aiolia.helpers.Random
-import aiolia.mutations._
+import aiolia.util.Random
+import aiolia.grammar._
 
 import Helpers._
 

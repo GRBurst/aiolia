@@ -1,4 +1,4 @@
-package aiolia.helpers
+package aiolia.util
 
 case class Random(seed: Any) {
   val r = new util.Random(seed.hashCode)

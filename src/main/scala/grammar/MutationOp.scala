@@ -1,10 +1,11 @@
-package aiolia.mutations
+package aiolia.grammar
 
 import aiolia._
+import aiolia.geneticAlgorithm._
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.helpers.{Random, AutoId}
-import util.Try
+import aiolia.util.{Random, AutoId}
+import scala.util.Try
 
 object Helper {
   def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)

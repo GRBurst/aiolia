@@ -1,6 +1,6 @@
 package aiolia.graph
 
-import aiolia.helpers.AutoId
+import aiolia.util.AutoId
 
 object types {
   type Label = Int

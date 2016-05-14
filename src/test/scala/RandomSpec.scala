@@ -1,6 +1,6 @@
 package aiolia.test
 
-import aiolia.helpers.Random
+import aiolia.util.Random
 
 class RandomSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
   def randMock = {

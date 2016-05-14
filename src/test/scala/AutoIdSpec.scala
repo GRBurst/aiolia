@@ -1,6 +1,6 @@
 package aiolia.test
 
-import aiolia.helpers.AutoId
+import aiolia.util.AutoId
 
 class AutoIdSpec extends org.specs2.mutable.Specification {
   "increment" >> {

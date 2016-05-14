@@ -1,4 +1,4 @@
-package aiolia
+package aiolia.util
 
 object File {
   def write(filename: String, content: String) {

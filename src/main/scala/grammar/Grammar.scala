@@ -1,6 +1,6 @@
-package aiolia
+package aiolia.grammar
 
-import aiolia.helpers._
+import aiolia.util._
 import aiolia.graph._
 import aiolia.graph.types._
 

@@ -1,4 +1,4 @@
-package aiolia.helpers
+package aiolia.util
 
 object AutoId {
   def apply(start: Int = 0) = new AutoId(start)

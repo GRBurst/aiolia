@@ -1,9 +1,8 @@
-package aiolia
+package aiolia.app
 
-import aiolia.export.DOTExport
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.helpers._
+import aiolia.util._
 import aiolia.graph.dsl._
 
 object Main extends App {

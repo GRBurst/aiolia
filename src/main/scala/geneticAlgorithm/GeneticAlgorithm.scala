@@ -1,6 +1,6 @@
-package aiolia
+package aiolia.geneticAlgorithm
 
-import helpers.Random
+import aiolia.util.Random
 import scala.concurrent.duration._
 import annotation.tailrec
 

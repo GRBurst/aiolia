@@ -1,4 +1,4 @@
-package aiolia
+package aiolia.util
 
 import scala.reflect.runtime.currentMirror
 import scala.tools.reflect.ToolBox

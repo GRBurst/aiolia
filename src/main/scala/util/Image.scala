@@ -1,4 +1,4 @@
-package aiolia
+package aiolia.util
 
 import java.awt.image.BufferedImage
 import java.awt.Dimension

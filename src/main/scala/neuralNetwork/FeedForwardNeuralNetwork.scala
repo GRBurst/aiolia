@@ -1,7 +1,8 @@
-package aiolia
+package aiolia.neuralNetwork
 
 import aiolia.graph._
 import aiolia.graph.types.Label
+import aiolia.util.Compiler
 
 import collection.mutable
 
