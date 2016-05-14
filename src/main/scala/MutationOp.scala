@@ -1,23 +1,21 @@
 package aiolia.mutations
 
-import aiolia.{Grammar, MutationOpConfig}
+import aiolia._
 import aiolia.graph._
 import aiolia.graph.types._
 import aiolia.helpers.{Random, AutoId}
 import util.Try
 
+object Helper {
+  def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
+}
+import Helper._
+
 // TODO: Mutate is still not perfectly deterministic!
 // This can happen when iterating over HashSets, MashMaps ...
 
-trait MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]): Option[Grammar[V, E]]
-
-  // helpers
-  def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
-}
-
-object AddVertex extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class AddVertex[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val (label, graph) = random.select(grammar.productions)
     val vertex = Vertex(nextLabel(graph.vertices))
@@ -28,15 +26,14 @@ object AddVertex extends MutationOp {
   }
 }
 
-//TODO: this is feedforward specific
-object AddConnectedVertex extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class AddConnectedVertex(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val (label, graph) = random.select(grammar.productions)
     if (graph.isEmpty) {
       val vertex = Vertex(0)
       val newVertices = Set(vertex)
-      val newVertexData: Map[Vertex, V] = Map.empty ++ initVertexData().map(d => vertex -> d)
+      val newVertexData: Map[Vertex, Double] = Map.empty ++ initVertexData().map(d => vertex -> d)
       val newGraph = graph.copy(vertices = newVertices, vertexData = newVertexData)
       Some(grammar.updateProduction(label -> newGraph))
     }
@@ -60,8 +57,8 @@ object AddConnectedVertex extends MutationOp {
   }
 }
 
-object MutateVertex extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class MutateVertex[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.vertexData.nonEmpty)
     random.selectOpt(candidates).map {
@@ -72,8 +69,8 @@ object MutateVertex extends MutationOp {
   }
 }
 
-object RemoveVertex extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class RemoveVertex[V, E](config: MutationOpConfig[Grammar[V, E]]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
     random.selectOpt(candidates).map {
@@ -84,12 +81,13 @@ object RemoveVertex extends MutationOp {
   }
 }
 
-object AddAcyclicEdge extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class AddAcyclicEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
-    val candidates = grammar.productions.filter { case (_, g) =>
-      g.vertices.exists(v => (g.outDegree(v) < g.vertices.size - 1) && (g.vertices - v -- g.successors(v) -- g.depthFirstSearch(v, g.predecessors)).nonEmpty)
-    } // TODO: filter feedForward inputs/outputs
+    val candidates = grammar.productions.filter {
+      case (_, g) =>
+        g.vertices.exists(v => (g.outDegree(v) < g.vertices.size - 1) && (g.vertices - v -- g.successors(v) -- g.depthFirstSearch(v, g.predecessors)).nonEmpty)
+    }
     random.selectOpt(candidates).flatMap {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)
@@ -104,7 +102,7 @@ object AddAcyclicEdge extends MutationOp {
         }
         val result = grammar.updateProduction(label -> newGraph)
         // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
-        // TODO: prevent creating cycles in the first place
+        // TODO: prevent creating cycles in the first place -> in/out connectors?
         if (newGraph.hasCycle || result.expand.hasCycle ||
           feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
           feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
@@ -112,8 +110,8 @@ object AddAcyclicEdge extends MutationOp {
   }
 }
 
-object AddEdge extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class AddEdge[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter { !_._2.isComplete }
     random.selectOpt(candidates).map {
@@ -133,8 +131,8 @@ object AddEdge extends MutationOp {
   }
 }
 
-object MutateEdge extends MutationOp {
-  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class MutateEdge[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.edgeData.nonEmpty)
     random.selectOpt(candidates).map {
@@ -146,8 +144,8 @@ object MutateEdge extends MutationOp {
   }
 }
 
-object RemoveEdge extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class RemoveEdge[V, E](config: MutationOpConfig[Grammar[V, E]]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.edges.nonEmpty)
     random.selectOpt(candidates).map {
@@ -158,13 +156,13 @@ object RemoveEdge extends MutationOp {
   }
 }
 
-object InlineNonTerminal extends MutationOp {
-  def inline[V, E](graph: Graph[V, E], nonTerminal: NonTerminal, grammar: Grammar[V, E]): Graph[V, E] = {
+case class InlineNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+  def inline(graph: Graph[V, E], nonTerminal: NonTerminal, grammar: Grammar[V, E]): Graph[V, E] = {
     val autoId = AutoId(nextLabel(graph.vertices)) // TODO: avoid maxBy in default AutoId?
     graph.replaceOne(nonTerminal, grammar.productions(nonTerminal.label), autoId)
   }
 
-  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.nonTerminals.nonEmpty)
     random.selectOpt(candidates).map {
@@ -180,8 +178,8 @@ object InlineNonTerminal extends MutationOp {
   }
 }
 
-object ExtractNonTerminal extends MutationOp {
-  def extract[V, E](source: Graph[V, E], subV: Set[Vertex], newLabel: Label): (Graph[V, E], Graph[V, E]) = {
+case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+  def extract(source: Graph[V, E], subV: Set[Vertex], newLabel: Label): (Graph[V, E], Graph[V, E]) = {
     assert(subV.nonEmpty && (subV subsetOf source.vertices))
     // println(s"source: $source")
     // println(s"subV: $subV")
@@ -217,7 +215,7 @@ object ExtractNonTerminal extends MutationOp {
     (newSource, extracted)
   }
 
-  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
     random.selectOpt(candidates).flatMap {
@@ -236,8 +234,8 @@ object ExtractNonTerminal extends MutationOp {
 }
 
 // Apply rand production rule to another production rule's graph
-object ReuseNonTerminal extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class ReuseNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config.{random => rand, _}
     val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
@@ -255,8 +253,8 @@ object ReuseNonTerminal extends MutationOp {
   }
 }
 
-object ReuseNonTerminalAcyclic extends MutationOp {
-  override def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+case class ReuseNonTerminalAcyclic(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
     import config.{random => rand, _}
     val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size

@@ -18,8 +18,8 @@ object Main extends App {
     println(seed)
     // val digraph = new DirectedGraphMutation(seed)
     // println(Mutation.mutate(Grammar.minimal, digraph, 100))
-    val mut = new BugHunter(seed)
-    println(Mutation.mutate(Grammar.minimal, mut, 100))
+    // val mut = new BugHunter(seed)
+    // println(Mutation.mutate(Grammar.minimal, mut, 100))
   }
   catch {
     // case _@ IsotopicException =>
