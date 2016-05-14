@@ -13,7 +13,7 @@ trait MutationOpConfig[G] {
   val random: Random
 }
 
-trait GeneticAlgorithmConfig[Genotype] extends MutationOpConfig[Genotype] {
+trait Config[Genotype] extends MutationOpConfig[Genotype] {
   type Population = List[Genotype]
 
   val seed: Any
@@ -36,10 +36,10 @@ trait GeneticAlgorithmConfig[Genotype] extends MutationOpConfig[Genotype] {
 }
 
 object GeneticAlgorithm {
-  def apply[Genotype](config: GeneticAlgorithmConfig[Genotype]) = new GeneticAlgorithm[Genotype, GeneticAlgorithmConfig[Genotype]](config)
+  def apply[Genotype](config: Config[Genotype]) = new GeneticAlgorithm[Genotype, Config[Genotype]](config)
 }
 
-class GeneticAlgorithm[Genotype, Config <: GeneticAlgorithmConfig[Genotype]](config: Config) {
+class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   type Population = List[Genotype]
   import config._
 

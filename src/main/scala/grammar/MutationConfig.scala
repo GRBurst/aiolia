@@ -15,7 +15,7 @@ trait FeedForwardGrammarOpConfig extends DataGraphGrammarOpConfig[Double, Double
   val feedForwardOutputs: List[Vertex]
 }
 
-trait GeneticAlgorithmFeedForwardConfig extends GeneticAlgorithmConfig[Grammar[Double, Double]] with FeedForwardGrammarOpConfig { config =>
+trait GeneticAlgorithmFeedForwardConfig extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig { config =>
 
   val mutationOperators = (
     1 -> AddConnectedVertex(config) ::

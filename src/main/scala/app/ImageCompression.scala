@@ -2,9 +2,9 @@ package aiolia.app
 
 import aiolia.geneticAlgorithm._
 import aiolia.grammar._
-import aiolia.graph.dsl._
 import aiolia.neuralNetwork._
 import aiolia.util.{DOTExport, _}
+import aiolia.graph.DSL._
 
 import scala.concurrent.duration._
 
@@ -13,7 +13,8 @@ object ImageCompression extends App {
   ga.runFor(5 minutes)
 }
 
-object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig { config =>
+object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
+  config =>
   type Genotype = Grammar[Double, Double]
   type Phenotype = Image
 
@@ -23,7 +24,9 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig { config
   override val mutationCount = 4
 
   val target = Image.read("apple.jpg").resized(128)
+
   def log2(x: Double) = Math.log(x) / Math.log(2)
+
   val steps = log2(target.w).ceil.toInt
   val resizedTargets = (0 to steps).map(1 << _).map(target.resized(_))
   target.write("/tmp/currentresized.png")
@@ -45,7 +48,7 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig { config
   def imageDistance(g: Genotype, target: Image, prefix: String = ""): Double = generateImage(g, target.w, target.h, prefix) distance target
 
   def generateImage(g: Genotype, w: Int, h: Int, prefix: String = "") = {
-    val network = FeedForwardNeuralNetwork(feedForwardInputs, feedForwardOutputs, g.expand)
+    val network = FeedForward(feedForwardInputs, feedForwardOutputs, g.expand)
     val image = Image.create(w, h)
 
     if (image.pixels >= compilePixelThreshold) {

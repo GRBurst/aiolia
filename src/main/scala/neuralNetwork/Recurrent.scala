@@ -2,14 +2,14 @@ package aiolia.neuralNetwork
 
 import aiolia.graph._
 
-object RecurrentNeuralNetwork {
+object Recurrent {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) = {
     //TODO: cleanup parts of the network which are not reachable from the output vertices
-    new RecurrentNeuralNetwork(in, out, graph)
+    new Recurrent(in, out, graph)
   }
 }
 
-class RecurrentNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) {
+class Recurrent(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) {
 
   assert(
     (0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)),

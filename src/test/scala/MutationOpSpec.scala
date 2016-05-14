@@ -1,9 +1,8 @@
 package aiolia.test
 
 import aiolia.grammar.{DataGraphGrammarOpConfig, Grammar, _}
+import aiolia.graph.DSL._
 import aiolia.graph._
-import aiolia.graph.dsl._
-import aiolia.graph.types._
 import aiolia.test.Helpers._
 import aiolia.util.Random
 

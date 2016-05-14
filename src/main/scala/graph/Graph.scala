@@ -2,63 +2,7 @@ package aiolia.graph
 
 import aiolia.util.AutoId
 
-object types {
-  type Label = Int
-}
-
-object dsl {
-  import types._
-  //TODO: graph dsl: LinkedHashSet for predictable vertex/edge traversal in tests
-  //TODO: graph dsl: G as alias for Graph
-  //TODO: implicits for accessors: V,E,NT,C, ....
-
-  // Graph construction
-  def v(label: Label) = Vertex(label)
-  def V(labels: Range) = labels.map(Vertex(_)).toSet
-  def V(labels: Label*) = labels.map(Vertex(_)).toSet
-  def VL(labels: Label*) = labels.map(Vertex(_)).toList
-  def e(edge: (Label, Label)) = edge match { case (in, out) => Edge(Vertex(in), Vertex(out)) }
-  def E(es: (Label, Label)*) = es.map{ case (in, out) => Edge(Vertex(in), Vertex(out)) }.toSet
-  def C(labels: Label*) = labels.map(Vertex(_)).toList // connectors
-
-  def vData[V](data: (Int, V)*) = data.map { case (label, datum) => Vertex(label) -> datum }.toMap
-  def eData[E](data: ((Int, Int), E)*) = data.map { case ((a, b), datum) => e(a -> b) -> datum }.toMap
-
-  // NonTerminal
-  def nt(l: Label, c: Product = None) = {
-    assert(!c.isInstanceOf[List[_]], s"don't put Lists in NT($l, $c). Use a Tuple instead: NT($l, ${c.asInstanceOf[List[_]].mkString("(", ",", ")")})")
-    NonTerminal(l, c.productIterator.toList.asInstanceOf[List[Int]].map(Vertex(_)))
-  }
-}
-
-case object IsotopicException extends Exception
-
-import aiolia.graph.types._
-
 import scala.collection.mutable
-
-//TODO: make Vertex a value class? (problems with mockito)
-// case class Vertex(label: Label) extends AnyVal {
-case class Vertex(label: Label) {
-  override def toString = s"$label"
-  def map(vm: Label => Label) = Vertex(vm(label))
-}
-
-case class Edge(in: Vertex, out: Vertex) {
-  assert(in != out, "Self loops are not allowed")
-  def contains(v: Vertex) = in == v || out == v
-  override def toString = s"${in.label} -> ${out.label}"
-  def toSet = Set(in, out)
-  def map(vm: Label => Label) = Edge(in map vm, out map vm)
-}
-
-case class NonTerminal(label: Label, connectors: List[Vertex] = Nil) {
-  assert(connectors == connectors.distinct, "connectors in graph need to be distinct")
-
-  def contains(v: Vertex) = connectors contains v
-  override def toString = s"[$label${if (connectors.nonEmpty) s":${connectors.mkString("-")}" else ""}]"
-  def map(vm: Label => Label) = NonTerminal(label, connectors map (_ map vm))
-}
 
 object Graph {
   val empty = Graph()

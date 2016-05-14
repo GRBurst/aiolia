@@ -1,9 +1,9 @@
 package aiolia.test
 
 import aiolia.graph._
-import aiolia.graph.dsl._
 import aiolia.test.Helpers._
 import aiolia.util.AutoId
+import aiolia.graph.DSL._
 
 class GraphSpec extends org.specs2.mutable.Specification {
   "dsl" >> {

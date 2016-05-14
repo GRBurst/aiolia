@@ -1,18 +1,17 @@
 package aiolia.neuralNetwork
 
 import aiolia.graph._
-import aiolia.graph.types.Label
 import aiolia.util.Compiler
 
-object FeedForwardNeuralNetwork {
+object FeedForward {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) = {
     // val badEdges = graph.edges.filter{ case Edge(i, o) => (in contains o) || (out contains i) }
     // val cleanedGraph = graph.copy(edges = graph.edges -- badEdges, edgeData = graph.edgeData -- badEdges)
-    new FeedForwardNeuralNetwork(in, out, graph)
+    new FeedForward(in, out, graph)
   }
 }
 
-class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) {
+class FeedForward(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) {
   // Important for data indexing in neural network
   assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
 

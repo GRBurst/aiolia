@@ -1,7 +1,6 @@
 package aiolia.grammar
 
 import aiolia.graph._
-import aiolia.graph.types._
 import aiolia.util._
 
 import scala.annotation.tailrec
