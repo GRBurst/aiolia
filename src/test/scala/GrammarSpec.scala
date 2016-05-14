@@ -109,7 +109,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
         1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), ed = eData((2 -> 1) -> "Worst"))
       )
 
-      g.expand mustEqual graph(V(0 to 3), E(1 -> 2, 0 -> 3, 3 -> 1), ed = eData(((1 -> 2) -> "Wurst"), (3 -> 1) -> "Worst"))
+      g.expand mustEqual graph(V(0 to 3), E(1 -> 2, 0 -> 3, 3 -> 1), ed = eData((1 -> 2) -> "Wurst", (3 -> 1) -> "Worst"))
     }
 
     "redundant vertex data" >> {
@@ -135,7 +135,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
         1 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1), ed = eData((2 -> 1) -> "Worst"))
       )
 
-      g.expand mustEqual graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), ed = eData(((2 -> 1) -> "Worst"), (3 -> 1) -> "Worst"))
+      g.expand mustEqual graph(V(0 to 3), E(0 -> 2, 2 -> 1, 0 -> 3, 3 -> 1), ed = eData((2 -> 1) -> "Worst", (3 -> 1) -> "Worst"))
     }
 
     "grammar can only have rhs nonterminals that have a corresponding lhs" >> {

@@ -5,7 +5,7 @@ import aiolia.util.Random
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 
-trait MutationOp[G] extends Function1[G, Option[G]] {
+trait MutationOp[G] extends ((G) => Option[G]) {
   type Genotype = G
 }
 
@@ -47,7 +47,7 @@ class GeneticAlgorithm[Genotype, Config <: GeneticAlgorithmConfig[Genotype]](con
     val elite :: others = population
     var done = 0
     val mutatedOthers = others.par.map{ g =>
-      val prefix = s"\r${done} / ${populationSize - 1}:"
+      val prefix = s"\r$done / ${populationSize - 1}:"
       val mutated = mutate(g, mutationCount, prefix)
       done += 1
       mutated
@@ -95,10 +95,10 @@ class GeneticAlgorithm[Genotype, Config <: GeneticAlgorithmConfig[Genotype]](con
   def calculateAllFitnesses(population: Population): Map[Genotype, Double] = {
     var done = 0
     population.par.map{ g =>
-      val prefix = s"\r${done} / $populationSize:"
+      val prefix = s"\r$done / $populationSize:"
       val f = calculateFitness(g, prefix)
       done += 1
-      (g -> f)
+      g -> f
     }.toMap.seq
   }
 

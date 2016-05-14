@@ -23,14 +23,14 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
 
   import graph.{edgeData => weight, vertexData => bias, vertices => neurons}
 
-  private var compute_compiled: Option[Function1[IndexedSeq[Double], Array[Double]]] = None
+  private var compute_compiled: Option[(IndexedSeq[Double]) => Array[Double]] = None
   def compile() {
     val universe: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
     import universe._
 
     val nodes = graph.topologicalSort intersect (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct
     val node_code = nodes map { n =>
-      val nbias = bias.get(n).getOrElse(0.0)
+      val nbias = bias.getOrElse(n, 0.0)
       val outData = in.indexOf(n) match {
         case i if i >= 0 => q"data($i) + $nbias"
         case -1 =>
@@ -50,7 +50,7 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
     val code = q"(data:IndexedSeq[Double]) => {$sigmoid;..$node_code;Array[Double](..$result)}"
     // println(showCode(code))
 
-    compute_compiled = Some(Compiler[Function1[IndexedSeq[Double], Array[Double]]](code))
+    compute_compiled = Some(Compiler[(IndexedSeq[Double]) => Array[Double]](code))
   }
 
   private val computeOrder: Array[Label] = ((graph.topologicalSort intersect (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct) diff in).map(_.label).toArray

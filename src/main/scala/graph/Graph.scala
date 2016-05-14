@@ -169,14 +169,14 @@ case class Graph[+V, +E](
   def neighboursOverNonTerminals(v: Vertex): Set[Vertex] = {
     assert(vertices contains v)
     nonTerminals.flatMap{
-      case NonTerminal(_, connectors) if (connectors contains v) => connectors
+      case NonTerminal(_, connectors) if connectors contains v => connectors
       case _ => Nil
     }.toSet - v
   }
 
   def neighboursOverNonTerminals(vs: Iterable[Vertex]): Set[Vertex] = {
     assert(vs.toSet subsetOf vertices)
-    vs.map(neighboursOverNonTerminals).flatten.toSet -- vs
+    vs.flatMap(neighboursOverNonTerminals).toSet -- vs
   }
 
   def allNeighbours(v: Vertex) = neighbours(v) ++ neighboursOverNonTerminals(v)
@@ -312,7 +312,7 @@ case class Graph[+V, +E](
     }
   }
 
-  def isEmpty = vertices.size == 0
+  def isEmpty = vertices.isEmpty
 
   //TODO: rename? undirected case with n*(n-1)/2?
   def isComplete = {
@@ -352,7 +352,7 @@ case class Graph[+V, +E](
       successors(v).exists(cycleAt(_, visited + v))
     }
 
-    return false
+    false
   }
 
   def map(m: Label => Label): Graph[V, E] = {

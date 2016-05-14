@@ -40,10 +40,8 @@ trait GeneticAlgorithmFeedForwardConfig extends GeneticAlgorithmConfig[Grammar[D
   override def initEdgeData() = Some(random.r.nextGaussian)
   override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.01
   override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * 0.01
-  override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = (
-    !grammar.expand.hasCycle &&
+  override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle &&
     feedForwardInputs.forall(grammar.expand.inDegree(_) == 0) &&
     feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0)
-  )
 }
 

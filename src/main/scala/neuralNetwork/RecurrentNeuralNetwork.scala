@@ -30,7 +30,7 @@ class RecurrentNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[F
   def setInputData(data: Iterable[Float]) {
     assert(in.size == data.size, "Need to set all input data")
 
-    for ((neuron, datum) <- (in zip data)) {
+    for ((neuron, datum) <- in zip data) {
       prevState(neuron.label) = datum
       state(neuron.label) = datum
     }

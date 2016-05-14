@@ -27,7 +27,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
-        c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((2 -> rhsA2))
+        c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some(2 -> rhsA2)
         c.random.select(V(1)) returns v(1)
 
         RemoveVertex(c)(g) mustEqual Some(grammar(
@@ -49,7 +49,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
         val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
-        c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((1 -> rhsA1))
+        c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some(1 -> rhsA1)
         c.random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
 
         RemoveEdge(c)(g) mustEqual Some(grammar(
@@ -92,7 +92,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         )
 
         val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
-        c.random.selectOpt(Map(1 -> rhs1)) returns Some((1 -> rhs1))
+        c.random.selectOpt(Map(1 -> rhs1)) returns Some(1 -> rhs1)
         c.random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
 
         InlineNonTerminal(c)(g) mustEqual Some(grammar(
@@ -213,7 +213,7 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val g = grammar(axiom, 1 -> rhs1, 2 -> rhs2)
 
         val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
-        c.random.selectOpt(List(List((1 -> rhs1), (2 -> rhs2)), List((2 -> rhs2), (1 -> rhs1)))) returns Some(List((1 -> rhs1), (2 -> rhs2)))
+        c.random.selectOpt(List(List(1 -> rhs1, 2 -> rhs2), List(2 -> rhs2, 1 -> rhs1))) returns Some(List(1 -> rhs1, 2 -> rhs2))
         c.random.select(V(0, 2), 2) returns V(0, 2)
 
         ReuseNonTerminal(c)(g) mustEqual Some(grammar(

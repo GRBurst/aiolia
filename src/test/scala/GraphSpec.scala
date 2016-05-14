@@ -138,7 +138,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         graph(V(1), nts = List(nt(1, (1, 2, 3)))) must throwAn[AssertionError]
       }
       "nonTerminals with same label must have the same number of connectors" >> {
-        graph(V(1, 2), nts = List(nt(1, (1, 2)), nt(1, (1)))) must throwAn[AssertionError]
+        graph(V(1, 2), nts = List(nt(1, (1, 2)), nt(1, 1))) must throwAn[AssertionError]
       }
       "connectors in graph need to be distinct" >> {
         graph(V(1), c = VL(1, 1)) must throwAn[AssertionError]
@@ -182,7 +182,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         E(1 -> 0, 1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3),
         vData(2 -> "a", 1 -> "b", 3 -> "c"),
         eData((2 -> 3) -> "x", (1 -> 2) -> "y", (1 -> 0) -> "z"),
-        List(nt(1), nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))),
+        List(nt(1), nt(2, 1), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))),
         C(5)
       )
       "successors" >> {
@@ -322,7 +322,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
       "incident nonterminals" >> {
         "singe vertex" >> {
           g.incidentNonTerminals(v(0)) mustEqual List()
-          g.incidentNonTerminals(v(1)) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)))
+          g.incidentNonTerminals(v(1)) mustEqual List(nt(2, 1), nt(3, (1, 5)), nt(3, (1, 5)))
           g.incidentNonTerminals(v(2)) mustEqual List(nt(4, (2, 3, 5)))
           g.incidentNonTerminals(v(3)) mustEqual List(nt(4, (2, 3, 5)))
           g.incidentNonTerminals(v(4)) mustEqual List()
@@ -332,7 +332,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
         "multiple vertices" >> {
           g.incidentNonTerminals(V(0)) mustEqual List()
-          g.incidentNonTerminals(V(1)) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)))
+          g.incidentNonTerminals(V(1)) mustEqual List(nt(2, 1), nt(3, (1, 5)), nt(3, (1, 5)))
           g.incidentNonTerminals(V(2)) mustEqual List(nt(4, (2, 3, 5)))
           g.incidentNonTerminals(V(3)) mustEqual List(nt(4, (2, 3, 5)))
           g.incidentNonTerminals(V(4)) mustEqual List()
@@ -342,8 +342,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
 
           g.incidentNonTerminals(V()) mustEqual E()
           g.incidentNonTerminals(V(2, 3)) mustEqual List(nt(4, (2, 3, 5)))
-          g.incidentNonTerminals(V(0, 1)) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)))
-          g.incidentNonTerminals(g.vertices) mustEqual List(nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))) // without NT(1)
+          g.incidentNonTerminals(V(0, 1)) mustEqual List(nt(2, 1), nt(3, (1, 5)), nt(3, (1, 5)))
+          g.incidentNonTerminals(g.vertices) mustEqual List(nt(2, 1), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))) // without NT(1)
         }
       }
 
@@ -367,7 +367,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         }
         "nonterminals" >> {
           g.inducedNonTerminals(V(0)) must containTheSameElementsAs(List(nt(1)))
-          g.inducedNonTerminals(V(1)) must containTheSameElementsAs(List(nt(1), nt(2, (1))))
+          g.inducedNonTerminals(V(1)) must containTheSameElementsAs(List(nt(1), nt(2, 1)))
           g.inducedNonTerminals(V(2)) must containTheSameElementsAs(List(nt(1)))
           g.inducedNonTerminals(V(3)) must containTheSameElementsAs(List(nt(1)))
           g.inducedNonTerminals(V(4)) must containTheSameElementsAs(List(nt(1)))
@@ -377,9 +377,9 @@ class GraphSpec extends org.specs2.mutable.Specification {
 
           g.inducedNonTerminals(V()) must containTheSameElementsAs(List(nt(1)))
           g.inducedNonTerminals(V(2, 3)) must containTheSameElementsAs(List(nt(1)))
-          g.inducedNonTerminals(V(0, 1)) must containTheSameElementsAs(List(nt(1), nt(2, (1))))
-          g.inducedNonTerminals(V(1, 5)) must containTheSameElementsAs(List(nt(1), nt(2, (1)), nt (3, (1, 5)), nt(3, (1, 5))))
-          g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(nt(1), nt(2, (1)), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))))
+          g.inducedNonTerminals(V(0, 1)) must containTheSameElementsAs(List(nt(1), nt(2, 1)))
+          g.inducedNonTerminals(V(1, 5)) must containTheSameElementsAs(List(nt(1), nt(2, 1), nt (3, (1, 5)), nt(3, (1, 5))))
+          g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(nt(1), nt(2, 1), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))))
           g.inducedNonTerminals(g.vertices) must containTheSameElementsAs(g.nonTerminals)
         }
         "subgraph assert" >> {
@@ -709,7 +709,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
     "replace nonTerminal by graph with connectors" >> {
       "assert: must replace existing nonTerminal" >> {
         graph(V(), nts = List(nt(1))).replaceOne(nt(2), graph(), AutoId(0)) must throwAn[AssertionError]
-        graph(V(1), nts = List(nt(1, (1)))).replaceOne(nt(1, (1)), graph(V(1), c = C()), AutoId(0)) must throwAn[AssertionError]
+        graph(V(1), nts = List(nt(1, 1))).replaceOne(nt(1, 1), graph(V(1), c = C()), AutoId(0)) must throwAn[AssertionError]
       }
 
       "plain" >> {

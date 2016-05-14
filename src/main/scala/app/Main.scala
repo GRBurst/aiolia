@@ -17,10 +17,9 @@ object Main extends App {
   }
   catch {
     // case _@ IsotopicException =>
-    case e: AssertionError => {
+    case e: AssertionError =>
       println("\n\nASSERTION\n" + e.getMessage + "\n" + e.getStackTrace.mkString("\n"))
       Thread.sleep(2000)
-    }
   }
 
 }

@@ -67,18 +67,18 @@ digraph G {
           else {
             used ++= conn
             s"""
-    subgraph cluster${graphId}_nt${label}_${i} {
+    subgraph cluster${graphId}_nt${label}_$i {
       style = filled
       color = "$color"
       fillcolor = "$fillColor"
-      label = "${label}"
+      label = "$label"
       ${conn.mkString(", ")}
     }"""
           }
       }.mkString("\n\n    ")
     }
 
-    val graphs = ("Axiom" -> g.axiom) :: g.productions.toList.sortBy(_._1).map{ case (label, graph) => (s"$label" -> graph) }
+    val graphs = ("Axiom" -> g.axiom) :: g.productions.toList.sortBy(_._1).map{ case (label, graph) => s"$label" -> graph }
     s"""
 digraph Grammar {
   ${graphs.map{ case (label, gr) => graph(label, gr) }.mkString("\n")}

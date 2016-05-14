@@ -37,7 +37,7 @@ class Image(im: BufferedImage) {
   }
 
   def write(filename: String) = {
-    ImageIO.write(im, "png", new java.io.File(filename));
+    ImageIO.write(im, "png", new java.io.File(filename))
     this
   }
 
@@ -47,11 +47,9 @@ class Image(im: BufferedImage) {
     for (y <- 0 until h; x <- 0 until w) {
       val (r1, g1, b1) = this.getPixelRGB(x, y)
       val (r2, g2, b2) = that.getPixelRGB(x, y)
-      val colorDistance = Math.sqrt((
-        (r1 - r2) * (r1 - r2) +
+      val colorDistance = Math.sqrt((r1 - r2) * (r1 - r2) +
         (g1 - g2) * (g1 - g2) +
-        (b1 - b2) * (b1 - b2)
-      ))
+        (b1 - b2) * (b1 - b2))
       val normalized = colorDistance / Math.sqrt(3) / 255
       error += normalized
     }
@@ -63,7 +61,7 @@ class Image(im: BufferedImage) {
     val newH = (if (_newH == -1) ((h.toDouble / w.toDouble) * newW).toInt else _newH).max(1)
 
     val resizer = DefaultResizerFactory.getInstance().getResizer(new Dimension(w, h), new Dimension(newW, newH))
-    val scaledImage = new FixedSizeThumbnailMaker(newW, newH, false, true).resizer(resizer).make(im);
+    val scaledImage = new FixedSizeThumbnailMaker(newW, newH, false, true).resizer(resizer).make(im)
 
     new Image(scaledImage)
   }
