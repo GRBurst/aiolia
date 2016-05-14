@@ -1,8 +1,8 @@
 package aiolia.test
 
+import aiolia.graph.DSL._
 import aiolia.neuralNetwork.FeedForward
 import aiolia.test.Helpers._
-import aiolia.graph.DSL._
 
 class FeedForwardNeuralNetworkSpec extends org.specs2.mutable.Specification {
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
