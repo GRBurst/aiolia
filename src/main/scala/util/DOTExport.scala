@@ -22,8 +22,8 @@ digraph G {
   rankdir = "LR"
   ${edges.map(e => s"""$e [color = "${edgeColor(e)}"]""").mkString("\n  ")}
   ${(vertices -- feedForwardInputs -- feedForwardOutputs).map(v => s"$v [shape = circle]").mkString("\n  ")}
-  ${feedForwardInputs.map(v => s"""$v [shape = circle, rank = "source"]""").mkString("\n  ")}
-  ${feedForwardOutputs.map(v => s"""$v [shape = circle, rank = "sink"]""").mkString("\n  ")}
+  ${feedForwardInputs.map(v => s"""$v [shape = circle, rank = "source", style = filled, fillcolor = "#FFAB38"]""").mkString("\n  ")}
+  ${feedForwardOutputs.map(v => s"""$v [shape = circle, rank = "sink", style = filled, fillcolor = "#02E8D5"]""").mkString("\n  ")}
 }
 """
   }
