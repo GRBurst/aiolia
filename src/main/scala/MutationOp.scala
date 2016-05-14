@@ -16,6 +16,26 @@ trait MutationOp {
   def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
 }
 
+case class MutationAnd(ops: List[MutationOp]) extends MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    val opt: Option[Grammar[V,E]] = Some(grammar)
+    ops.foldLeft(opt) ((gOpt, op) => gOpt.flatMap(g => op(g, config)))
+  }
+}
+object MutationAnd {
+  def fill(ops: List[(Int, MutationOp)]): MutationAnd = MutationAnd(ops.flatMap { case (n, op) => List.fill(n)(op) })
+}
+
+case class MutationOr(ops: List[MutationOp]) extends MutationOp {
+  def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
+    val op = config.random.select(ops)
+    op(grammar, config)
+  }
+}
+object MutationOr {
+  def fill(ops: List[(Int, MutationOp)]): MutationOr = MutationOr(ops.flatMap { case (n, op) => List.fill(n)(op) })
+}
+
 object AddVertex extends MutationOp {
   def apply[V, E](grammar: Grammar[V, E], config: MutationOpConfig[V, E]) = {
     import config._

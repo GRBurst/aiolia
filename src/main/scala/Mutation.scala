@@ -8,7 +8,7 @@ import util.Try
 import annotation.tailrec
 
 class BugHunter(seed: Any) extends MutationConfig[Double, String] {
-  val operators = (
+  val operator = MutationOr(
     AddVertex ::
     RemoveVertex ::
     AddEdge ::
@@ -26,7 +26,7 @@ class BugHunter(seed: Any) extends MutationConfig[Double, String] {
 }
 
 class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] {
-  val operators = (
+  val operator = MutationOr(
     AddVertex ::
     // RemoveVertex ::
 
@@ -45,7 +45,7 @@ class DirectedGraphMutation(seed: Any) extends MutationConfig[Nothing, Nothing] 
 }
 
 class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List[Vertex], override val feedForwardOutputs: List[Vertex]) extends MutationConfig[Double, Double] {
-  val operators = (
+  val operator = MutationOr.fill(
     1 -> AddConnectedVertex ::
     1 -> MutateVertex ::
     1 -> RemoveVertex ::
@@ -60,7 +60,7 @@ class FeedForwardNetworkMutation(seed: Any, override val feedForwardInputs: List
     //TODO? RemoveNonTerminal
 
     Nil
-  ).flatMap{ case (n, op) => List.fill(n)(op) }
+  )
 
   override val random = Random(seed)
   override def invariant(grammar: Grammar[Double, Double]): Boolean = (
@@ -88,7 +88,7 @@ trait MutationOpConfig[V, E] {
 
 trait MutationConfig[V, E] extends MutationOpConfig[V, E] {
   // TODO: post processing of grammar, eg: clean up isolated vertices
-  val operators: List[MutationOp]
+  val operator: MutationOp
   def invariant(grammar: Grammar[V, E]): Boolean = true
   def invariantError: String = ""
 }
@@ -111,7 +111,6 @@ object Mutation {
 
     if (n == 0) grammar.cleanup
     else {
-      val operator = random.select(operators)
       val tries = new Iterator[Option[Grammar[V, E]]] {
         def hasNext = true
         def next = {
