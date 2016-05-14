@@ -7,8 +7,8 @@ val scalaV = "2.11.8"
 scalaVersion := scalaV
 
 libraryDependencies ++=
-  "org.specs2" % "specs2-core_2.11" % "3.7.2" % "test" ::
-  "org.specs2" % "specs2-mock_2.11" % "3.7.2" % "test" ::
+  "org.specs2" % "specs2-core_2.11" % "3.8.2" % "test" ::
+  "org.specs2" % "specs2-mock_2.11" % "3.8.2" % "test" ::
   "org.scala-lang" % "scala-reflect" % scalaV ::
   "org.scala-lang" % "scala-compiler" % scalaV ::
   "net.coobird" % "thumbnailator" % "0.4.8" ::
