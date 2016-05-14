@@ -1,10 +1,5 @@
 package aiolia.app
 
-import aiolia.graph._
-import aiolia.graph.types._
-import aiolia.util._
-import aiolia.graph.dsl._
-
 object Main extends App {
   println("Good Bye Aiolia")
 

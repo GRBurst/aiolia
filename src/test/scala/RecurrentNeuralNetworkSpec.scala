@@ -1,10 +1,8 @@
 package aiolia.test
 
-import aiolia.neuralNetwork.RecurrentNeuralNetwork
 import aiolia.graph._
 import aiolia.graph.dsl._
-
-import Helpers._
+import aiolia.neuralNetwork.RecurrentNeuralNetwork
 
 class RecurrentNeuralNetworkSpec extends org.specs2.mutable.Specification {
   "neuronal network" >> {

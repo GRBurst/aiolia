@@ -1,11 +1,10 @@
 package aiolia.grammar
 
-import aiolia.util._
 import aiolia.graph._
 import aiolia.graph.types._
+import aiolia.util._
 
-import collection.mutable
-import annotation.tailrec
+import scala.annotation.tailrec
 
 object Grammar {
   def minimal[V, E] = Grammar[V, E](Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))

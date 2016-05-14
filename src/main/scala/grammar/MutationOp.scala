@@ -1,16 +1,16 @@
 package aiolia.grammar
 
-import aiolia._
 import aiolia.geneticAlgorithm._
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.util.{Random, AutoId}
+import aiolia.util.AutoId
+
 import scala.util.Try
 
 object Helper {
   def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
 }
-import Helper._
+import aiolia.grammar.Helper._
 
 // TODO: Mutate is still not perfectly deterministic!
 // This can happen when iterating over HashSets, MashMaps ...
@@ -239,7 +239,7 @@ case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) exte
 // Apply rand production rule to another production rule's graph
 case class ReuseNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
-    import config.{random => rand, _}
+    import config.{random => rand}
     val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize

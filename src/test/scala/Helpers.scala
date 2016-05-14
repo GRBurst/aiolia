@@ -3,7 +3,6 @@ package aiolia.test
 import aiolia.grammar.Grammar
 import aiolia.graph._
 import aiolia.graph.types._
-import aiolia.graph.dsl._
 import org.mockito.ArgumentMatcher
 import org.mockito.Matchers.argThat
 

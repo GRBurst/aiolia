@@ -4,8 +4,6 @@ import aiolia.graph._
 import aiolia.graph.types.Label
 import aiolia.util.Compiler
 
-import collection.mutable
-
 object FeedForwardNeuralNetwork {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) = {
     // val badEdges = graph.edges.filter{ case Edge(i, o) => (in contains o) || (out contains i) }
@@ -23,9 +21,7 @@ class FeedForwardNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph
 
   assert(!graph.hasCycle)
 
-  import graph.{vertices => neurons}
-  import graph.{vertexData => bias}
-  import graph.{edgeData => weight}
+  import graph.{edgeData => weight, vertexData => bias, vertices => neurons}
 
   private var compute_compiled: Option[Function1[IndexedSeq[Double], Array[Double]]] = None
   def compile() {

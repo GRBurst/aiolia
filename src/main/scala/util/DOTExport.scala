@@ -2,7 +2,8 @@ package aiolia.util
 
 import aiolia.grammar.Grammar
 import aiolia.graph._
-import collection.mutable
+
+import scala.collection.mutable
 
 object DOTExport {
   def toDOT[V, E](graph: Graph[V, E], feedForwardInputs: List[Vertex] = Nil, feedForwardOutputs: List[Vertex] = Nil) = {

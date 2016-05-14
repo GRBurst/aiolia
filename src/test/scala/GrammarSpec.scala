@@ -1,10 +1,8 @@
 package aiolia.test
 
 import aiolia.grammar.Grammar
-import aiolia.graph._
 import aiolia.graph.dsl._
-
-import Helpers._
+import aiolia.test.Helpers._
 
 class GrammarSpec extends org.specs2.mutable.Specification {
   "graph grammar" >> {

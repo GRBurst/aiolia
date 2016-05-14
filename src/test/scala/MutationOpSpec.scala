@@ -1,13 +1,11 @@
 package aiolia.test
 
-import aiolia.grammar.{Grammar, DataGraphGrammarOpConfig}
+import aiolia.grammar.{DataGraphGrammarOpConfig, Grammar, _}
 import aiolia.graph._
 import aiolia.graph.dsl._
 import aiolia.graph.types._
+import aiolia.test.Helpers._
 import aiolia.util.Random
-import aiolia.grammar._
-
-import Helpers._
 
 class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mock.Mockito {
   args.report(failtrace = true) // prints more stacktrace information when grouping matchers in helper functions

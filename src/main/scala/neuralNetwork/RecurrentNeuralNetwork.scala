@@ -2,8 +2,6 @@ package aiolia.neuralNetwork
 
 import aiolia.graph._
 
-import collection.mutable
-
 object RecurrentNeuralNetwork {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Float, Float]) = {
     //TODO: cleanup parts of the network which are not reachable from the output vertices
@@ -21,9 +19,7 @@ class RecurrentNeuralNetwork(in: List[Vertex], out: List[Vertex], graph: Graph[F
   assert(in.forall(graph.incomingEdges(_).isEmpty), "Input neurons should not have incoming edges")
   assert(out.forall(graph.outgoingEdges(_).isEmpty), "Output neurons should not have outgoing edges")
 
-  import graph.{vertices => neurons}
-  import graph.{vertexData => bias}
-  import graph.{edgeData => weight}
+  import graph.{edgeData => weight, vertexData => bias, vertices => neurons}
 
   private var currentState = 0
   private val stateArray = Array(Array.fill[Float](graph.vertices.size)(0), Array.fill[Float](graph.vertices.size)(0))

@@ -1,9 +1,9 @@
 package aiolia.util
 
-import java.awt.image.BufferedImage
 import java.awt.Dimension
+import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
-import net.coobird.thumbnailator.Thumbnailator
+
 import net.coobird.thumbnailator.makers.FixedSizeThumbnailMaker
 import net.coobird.thumbnailator.resizers.DefaultResizerFactory
 

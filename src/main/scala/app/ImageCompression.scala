@@ -1,13 +1,11 @@
 package aiolia.app
 
-import aiolia.graph._
-import aiolia.graph.types._
-import aiolia.util._
-import aiolia.graph.dsl._
-import aiolia.util.DOTExport
-import aiolia.grammar._
 import aiolia.geneticAlgorithm._
+import aiolia.grammar._
+import aiolia.graph.dsl._
 import aiolia.neuralNetwork._
+import aiolia.util.{DOTExport, _}
+
 import scala.concurrent.duration._
 
 object ImageCompression extends App {

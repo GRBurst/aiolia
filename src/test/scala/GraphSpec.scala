@@ -2,8 +2,7 @@ package aiolia.test
 
 import aiolia.graph._
 import aiolia.graph.dsl._
-
-import Helpers._
+import aiolia.test.Helpers._
 import aiolia.util.AutoId
 
 class GraphSpec extends org.specs2.mutable.Specification {

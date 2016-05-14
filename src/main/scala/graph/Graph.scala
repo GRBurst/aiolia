@@ -33,8 +33,9 @@ object dsl {
 
 case object IsotopicException extends Exception
 
-import types._
-import collection.mutable
+import aiolia.graph.types._
+
+import scala.collection.mutable
 
 //TODO: make Vertex a value class? (problems with mockito)
 // case class Vertex(label: Label) extends AnyVal {

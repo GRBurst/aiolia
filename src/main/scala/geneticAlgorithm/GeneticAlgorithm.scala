@@ -1,8 +1,9 @@
 package aiolia.geneticAlgorithm
 
 import aiolia.util.Random
+
+import scala.annotation.tailrec
 import scala.concurrent.duration._
-import annotation.tailrec
 
 trait MutationOp[G] extends Function1[G, Option[G]] {
   type Genotype = G
