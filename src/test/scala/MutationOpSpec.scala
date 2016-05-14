@@ -1,6 +1,6 @@
 package aiolia.test
 
-import aiolia.{Grammar, MutationOpConfig}
+import aiolia.{Grammar, DataGraphGrammarOpConfig}
 import aiolia.graph._
 import aiolia.graph.dsl._
 import aiolia.graph.types._
@@ -14,9 +14,9 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
   "mutation operator" >> {
     "remove random vertex" >> {
       "from minimal grammar" >> {
-        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
         c.random.selectOpt(Map.empty) returns None
-        RemoveVertex(Grammar.minimal, c) mustEqual None
+        RemoveVertex(c)(Grammar.minimal) mustEqual None
       }
 
       "from grammar" >> {
@@ -28,11 +28,11 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
-        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
         c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((2 -> rhsA2))
         c.random.select(V(1)) returns v(1)
 
-        RemoveVertex(g, c) mustEqual Some(grammar(
+        RemoveVertex(c)(g) mustEqual Some(grammar(
           axiom,
           1 -> rhsA1,
           2 -> cgraph(C(0, 2), V(0, 2))
@@ -50,11 +50,11 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
         val rhsA2 = cgraph(C(0, 2), V(0 to 2), E(0 -> 1, 1 -> 2))
         val g = grammar(axiom, 1 -> rhsA1, 2 -> rhsA2)
 
-        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
         c.random.selectOpt(Map(1 -> rhsA1, 2 -> rhsA2)) returns Some((1 -> rhsA1))
         c.random.select(E(2 -> 4, 2 -> 3, 4 -> 1, 0 -> 2, 3 -> 4)) returns e(2 -> 4) // this edge will be removed from the graph in rhsA1
 
-        RemoveEdge(g, c) mustEqual Some(grammar(
+        RemoveEdge(c)(g) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 4 -> 1), nts = List(nt(2, (0, 2)))),
           2 -> rhsA2
@@ -62,18 +62,18 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
       }
 
       "from minimal grammar" >> {
-        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
         c.random.selectOpt(Map.empty) returns None
-        RemoveEdge(Grammar.minimal, c) mustEqual None
+        RemoveEdge(c)(Grammar.minimal) mustEqual None
       }
 
     }
 
     "inline random nonterminal" >> {
       "on minimal grammar" >> {
-        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
         c.random.selectOpt(Map.empty) returns None
-        InlineNonTerminal(Grammar.minimal, c) mustEqual None
+        InlineNonTerminal(c)(Grammar.minimal) mustEqual None
       }
 
       "on grammar" >> {
@@ -93,11 +93,11 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
           2 -> rhs2
         )
 
-        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
+        val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
         c.random.selectOpt(Map(1 -> rhs1)) returns Some((1 -> rhs1))
         c.random.select(List(nt(2, (0, 2)))) returns nt(2, (0, 2)) // inline this nonTerminal
 
-        InlineNonTerminal(g, c) mustEqual Some(grammar(
+        InlineNonTerminal(c)(g) mustEqual Some(grammar(
           axiom,
           1 -> cgraph(C(0, 1, 2), V(0 to 5), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1, 0 -> 5, 5 -> 2)),
           2 -> rhs2
@@ -214,11 +214,11 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
 
         val g = grammar(axiom, 1 -> rhs1, 2 -> rhs2)
 
-        val c = new MutationOpConfig[String, String] { val random = mock[Random] }
-        c.random.selectOpt(List(List((1 -> rhs1), (2 -> rhs2)), List((2 -> rhs2), (1 -> rhs1)) )) returns Some(List((1 -> rhs1), (2 -> rhs2)))
+        val c = new DataGraphGrammarOpConfig[String, String] { val random = mock[Random] }
+        c.random.selectOpt(List(List((1 -> rhs1), (2 -> rhs2)), List((2 -> rhs2), (1 -> rhs1)))) returns Some(List((1 -> rhs1), (2 -> rhs2)))
         c.random.select(V(0, 2), 2) returns V(0, 2)
 
-        ReuseNonTerminal(g, c) mustEqual Some(grammar(
+        ReuseNonTerminal(c)(g) mustEqual Some(grammar(
           axiom,
           1 -> rhs1,
           2 -> cgraph(C(0, 2), V(0, 2), E(0 -> 2), nts = List(nt(1, (0, 2))))

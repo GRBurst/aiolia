@@ -178,8 +178,8 @@ case class InlineNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) exten
   }
 }
 
-case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
-  def extract(source: Graph[V, E], subV: Set[Vertex], newLabel: Label): (Graph[V, E], Graph[V, E]) = {
+object ExtractNonTerminal {
+  def extract[V, E](source: Graph[V, E], subV: Set[Vertex], newLabel: Label): (Graph[V, E], Graph[V, E]) = {
     assert(subV.nonEmpty && (subV subsetOf source.vertices))
     // println(s"source: $source")
     // println(s"subV: $subV")
@@ -214,7 +214,9 @@ case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) exte
 
     (newSource, extracted)
   }
+}
 
+case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
@@ -222,7 +224,7 @@ case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) exte
       case (srcLabel, source) =>
         val subVertices = random.selectMinOne(source.vertices).toSet
         val newLabel = grammar.productions.keys.max + 1
-        val (newSource, extracted) = extract(source, subVertices, newLabel)
+        val (newSource, extracted) = ExtractNonTerminal.extract(source, subVertices, newLabel)
 
         if (extracted.vertices.size < 2 || extracted.nonConnectors.isEmpty) None else {
           val result = grammar.addProduction(newLabel -> extracted).updateProduction(srcLabel -> newSource)
