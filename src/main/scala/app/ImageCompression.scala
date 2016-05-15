@@ -143,7 +143,7 @@ case class ImageCompressionConfig(
       // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
       // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
       // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
-      drawPopulation(population.sortBy(fitness), "/tmp/population.png")
+      drawPopulation(population.sortBy(fitness).reverse, "/tmp/population.png")
     }
   }
 

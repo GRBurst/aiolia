@@ -125,10 +125,10 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   def nextGeneration() {
     val fitness = calculateAllFitnesses(population)
     val best = population.maxBy(fitness)
+    afterFitness(population, fitness)
 
     if (log) print("\rselection...            ")
     population = selection(population, best, fitness)
-    afterFitness(population, fitness)
 
     if (log) print("\rmutation...             ")
     population = mutation(population)
