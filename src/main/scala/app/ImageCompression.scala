@@ -60,7 +60,8 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
     }
 
     if (prefix.nonEmpty) print(s"$prefix fitness...      ")
-    image fill network.compute
+    val f = (x: Double, y: Double) => network.compute(Array(x, y))
+    image fill f
   }
 
   override def stats(best: Genotype) = s"width: ${target.w} (${target.pixels}px), dst: ${"%6.4f" format imageDistance(best, target)}, el: ${best.numElements}, comp: ${"%4.2f" format best.compressionRatio}, rules: ${best.productions.size}, components: ${best.expand.connectedComponents.size}"

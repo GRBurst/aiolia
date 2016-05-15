@@ -27,9 +27,12 @@ class Image(im: BufferedImage) {
     setPixel(x, y, (r << 16) | (g << 8) | b)
   }
 
-  def fill(f: Array[Double] => Array[Double]) = {
+  def fill(f: (Double, Double) => Array[Double]) = {
     for (y <- 0 until h; x <- 0 until w) {
-      val Array(r, g, b) = f(Array(x.toDouble * 2 / w - 1, y.toDouble * 2 / h - 1)) // 0..w/h => range -1..1
+      val a = f(x.toDouble * 2 / w - 1, y.toDouble * 2 / h - 1) // 0..w/h => range -1..1
+      val r = a(0)
+      val g = a(1)
+      val b = a(2)
       def t(c: Double) = ((c * 128).toInt + 128).max(0).min(255) // range -1..1 => 0..255
       setPixelRGB(x, y, t(r), t(g), t(b))
     }
