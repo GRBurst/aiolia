@@ -10,17 +10,17 @@ import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ImageCompression extends App {
+object ImageCompressionMeta extends App {
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
     val seed = 0
     def r = random.r
     override val parallel = false
-    override val populationSize: Int = 6
+    override val populationSize: Int = 10
     override val tournamentSize = 2
     override def mutationCount(g: G) = 1
-    val baseGenotype = ImageCompressionConfig()
-    def calculateFitness(g: G, prefix: String) = g.calculateFitness(GeneticAlgorithm(g).runFor(15 seconds), prefix)
+    val baseGenotype = ImageCompressionConfig(log = false)
+    def calculateFitness(g: G, prefix: String) = g.calculateFitness(GeneticAlgorithm(g).runFor(2 minutes), prefix)
     override val mutationOperators = (
       ((icc: G) => Some(icc.copy(populationSize = 2.max((icc.populationSize * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
       ((icc: G) => Some(icc.copy(mutationCountPerElement = icc.mutationCountPerElement * (r.nextDouble * 1.5 + 0.5)))) ::
@@ -36,30 +36,30 @@ object ImageCompression extends App {
       ((icc: G) => Some(icc.copy(mutateEdgeFreq = 0.max((icc.mutateEdgeFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
       Nil
     )
-    override def afterFitness(population: Population) {
-      println(population.head)
-    }
+    override def stats(g: G) = g.toString
   }
-
   println(GeneticAlgorithm(metaConfig).runFor(Duration.Inf))
+}
 
-  // val ga = GeneticAlgorithm(ImageCompressionConfig())
-  // ga.runFor(15 seconds)
+object ImageCompression extends App {
+  val ga = GeneticAlgorithm(ImageCompressionConfig())
+  ga.runFor(15 seconds)
 }
 
 case class ImageCompressionConfig(
-    override val populationSize:  Int    = 128,
-    mutationCountPerElement:      Double = 0.01,
-    vertexMutationStrength:       Double = 0.08,
-    edgeMutationStrength:         Double = 0.05,
-    elementCountPenalty:          Double = 5.3E-7,
-    addAcyclicEdgeFreq:           Int    = 1,
-    removeInterconnectedEdgeFreq: Int    = 1,
-    splitEdgeFreq:                Int    = 1,
-    reconnectEdgeFreq:            Int    = 1,
-    shrinkFreq:                   Int    = 1,
-    mutateVertexFreq:             Int    = 1,
-    mutateEdgeFreq:               Int    = 1
+    override val populationSize:  Int     = 128,
+    mutationCountPerElement:      Double  = 0.01,
+    vertexMutationStrength:       Double  = 0.08,
+    edgeMutationStrength:         Double  = 0.05,
+    elementCountPenalty:          Double  = 5.3E-7,
+    addAcyclicEdgeFreq:           Int     = 1,
+    removeInterconnectedEdgeFreq: Int     = 1,
+    splitEdgeFreq:                Int     = 1,
+    reconnectEdgeFreq:            Int     = 1,
+    shrinkFreq:                   Int     = 1,
+    mutateVertexFreq:             Int     = 1,
+    mutateEdgeFreq:               Int     = 1,
+    override val log:             Boolean = true
 ) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
   config =>
   type Genotype = Grammar[Double, Double]

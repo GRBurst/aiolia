@@ -19,6 +19,7 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
   val seed: Any
   val random = Random(seed)
   val parallel = true
+  val log = true
   val baseGenotype: Genotype
   def calculateFitness(g: Genotype, prefix: String): Double
 
@@ -125,14 +126,14 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
     val fitness = calculateAllFitnesses(population)
     val best = population.maxBy(fitness)
 
-    print("\rselection...            ")
+    if (log) print("\rselection...            ")
     population = selection(population, best, fitness)
     afterFitness(population)
 
-    print("\rmutation...             ")
+    if (log) print("\rmutation...             ")
     population = mutation(population)
 
-    println(s"\rgen: $generation, fit: ${"%6.4f" format fitness(best)} ${stats(best)}")
+    if (log) println(s"\rgen: $generation, fit: ${"%6.4f" format fitness(best)} ${stats(best)}")
     generation += 1
   }
 
