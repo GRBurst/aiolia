@@ -57,22 +57,24 @@ case class Shrink(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar
     val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
     random.selectOpt(candidates).map {
       case (label, graph) =>
-        val vertex = random.select(graph.nonConnectors)
+        import graph._
+        val vertex = random.select(nonConnectors)
         // (In) -e1-> (n) -e2-> (Out)
         // (In) -edge-> (Out)
-        val predecessors = graph.predecessors(vertex)
-        val successors = graph.successors(vertex)
-        val edgeCount = predecessors.size max successors.size
-        val ins = random.r.shuffle(Stream.continually(predecessors).flatten.take(edgeCount))
-        val ous = random.r.shuffle(Stream.continually(successors).flatten.take(edgeCount))
-        val newEdges = (ins zip ous) map { case (in, out) => Edge(in, out) }
-        //TODO: edgedata from previous data
+        val removedEdges = incidentEdges(vertex)
+        val incoming = incomingEdges(vertex)
+        val outgoing = outgoingEdges(vertex)
+        val edgeCount = incoming.size max outgoing.size
+        val ins = random.r.shuffle(Stream.continually(incoming).flatten.take(edgeCount))
+        val outs = random.r.shuffle(Stream.continually(outgoing).flatten.take(edgeCount))
+        val newEdgeData = (ins zip outs).map { case (in: Edge, out: Edge) => Edge(in.in, out.out) -> (edgeData(in) + edgeData(out)) / 2 }.toMap
+        val newEdges = newEdgeData.keys
 
         val newGraph: Graph[Double, Double] = graph.copy(
-          vertices = graph.vertices - vertex,
-          edges = graph.edges ++ newEdges -- graph.incidentEdges(vertex),
-          vertexData = graph.vertexData - vertex,
-          edgeData = graph.edgeData -- graph.incidentEdges(vertex) ++ newEdges.map(e => e -> initEdgeData().get) //TODO: gät?
+          vertices = vertices - vertex,
+          edges = edges ++ newEdges -- removedEdges,
+          vertexData = vertexData - vertex,
+          edgeData = edgeData -- removedEdges ++ newEdgeData
         )
         grammar.updateProduction(label -> newGraph)
     }
