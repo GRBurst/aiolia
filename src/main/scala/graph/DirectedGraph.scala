@@ -80,16 +80,25 @@ trait DirectedGraphLike {
   }
 
   def depthFirstSearch(start: Vertex, continue: Vertex => Iterable[Vertex] = successors) = new Iterator[Vertex] {
-    //TODO: optimization use linear time algorithm
     assert(vertices contains start)
+
     val stack = mutable.Stack(start)
+    val onStack = mutable.Set[Vertex]()
     val seen = mutable.Set[Vertex]()
 
     override def hasNext: Boolean = stack.nonEmpty
     override def next: Vertex = {
       val current = stack.pop
+      onStack -= current
       seen += current
-      stack pushAll (continue(current).toSeq diff (seen ++ stack).toSeq)
+
+      for (candidate <- continue(current)) {
+        if (!seen(candidate) && !onStack(candidate)) {
+          stack push candidate
+          onStack += candidate
+        }
+      }
+
       current
     }
   }
