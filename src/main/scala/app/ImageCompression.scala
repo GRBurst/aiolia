@@ -136,13 +136,25 @@ case class ImageCompressionConfig(
 
   override def stats(best: Genotype) = s"width: ${target.w} (${target.pixels}px), dst: ${"%6.4f" format imageDistance(best, target)}, el: ${best.numElements}, comp: ${"%4.2f" format best.compressionRatio}, rules: ${best.productions.size}, components: ${best.expand.connectedComponents.size}"
 
-  override def afterFitness(population: Population) {
+  override def afterFitness(population: Population, fitness: (Genotype) => Double) {
     val best = population.head
     print("\rpreviews...     ")
     Future {
       // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
       // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
       // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
+      drawPopulation(population.sortBy(fitness), "/tmp/population.png")
     }
+  }
+
+  def drawPopulation(population: Population, filename: String) {
+    val size = Math.sqrt(populationSize).ceil.toInt
+    val im = Image.create(size * target.w, size * target.h)
+    for ((g, i) <- population.zipWithIndex) {
+      val x = i % size
+      val y = i / size
+      im.insert(generateImage(g, target.w, target.h), x * target.w, y * target.h)
+    }
+    im.write(filename)
   }
 }

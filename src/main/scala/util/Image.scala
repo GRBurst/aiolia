@@ -12,7 +12,7 @@ object Image {
   def read(filename: String) = new Image(ImageIO.read(new java.io.File(filename)))
 }
 
-class Image(im: BufferedImage) {
+class Image(val im: BufferedImage) {
   def w = im.getWidth
   def h = im.getHeight
   def pixels = w * h
@@ -67,5 +67,12 @@ class Image(im: BufferedImage) {
     val scaledImage = new FixedSizeThumbnailMaker(newW, newH, false, true).resizer(resizer).make(im)
 
     new Image(scaledImage)
+  }
+
+  def insert(other: Image, x: Int, y: Int) = {
+    val g2d = im.createGraphics()
+    g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1));
+    g2d.drawImage(other.im, x, y, null);
+    g2d.dispose();
   }
 }

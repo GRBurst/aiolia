@@ -33,7 +33,7 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
   def mutationCount(g: Genotype) = 1
 
   def stats(g: Genotype): String = ""
-  def afterFitness(population: Population) {}
+  def afterFitness(population: Population, fitness: (Genotype) => Double) {}
   def afterMutationOp(g: Genotype): Genotype = g
 }
 
@@ -128,7 +128,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
 
     if (log) print("\rselection...            ")
     population = selection(population, best, fitness)
-    afterFitness(population)
+    afterFitness(population, fitness)
 
     if (log) print("\rmutation...             ")
     population = mutation(population)
