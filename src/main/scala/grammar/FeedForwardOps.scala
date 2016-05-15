@@ -22,10 +22,10 @@ trait GeneticAlgorithmFeedForwardConfig extends Config[Grammar[Double, Double]] 
 
   override def afterMutationOp(g: Grammar[Double, Double]) = g.cleanup
 
-  override def initVertexData() = Some(random.r.nextGaussian)
-  override def initEdgeData() = Some(random.r.nextGaussian)
-  override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.01
-  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * 0.01
+  override def initVertexData() = Some(random.r.nextDouble * 2 - 1)
+  override def initEdgeData() = Some(random.r.nextDouble * 2 - 1)
+  override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.05
+  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * 0.05
   override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle &&
     feedForwardInputs.forall(grammar.expand.inDegree(_) == 0) &&
     feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0)
