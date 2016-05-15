@@ -24,7 +24,7 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
   // TODO: post processing of genotype, eg: clean up isolated vertices
   val mutationOperators: List[MutationOp[Genotype]]
   def genotypeInvariant(g: Genotype): Boolean = true
-  def genotypeInvariantError: String = ""
+  def genotypeInvariantError: String = "Genotype invariant violated."
 
   val populationSize: Int = 30
   val tournamentSize = 4
@@ -78,7 +78,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
       result match {
         case Nil => mutate(genotype, n, prefix)
         case List(mutatedGenotype) =>
-          assert(genotypeInvariant(mutatedGenotype)) //, s"\nbefore ${operator.getClass.getName}:\n$genotype\nexpanded: ${genotype.expand}\nafter ${operator.getClass.getName}: $genotypeInvariantError\n${mutatedGenotype}\nexpanded: ${mutatedGenotype.expand}") //TODO: move to invariantError
+          assert(genotypeInvariant(mutatedGenotype), s"$genotypeInvariantError\nbefore ${operator.getClass.getName}:\n$genotype\nafter ${operator.getClass.getName}:\n${mutatedGenotype}")
           mutate(mutatedGenotype, n - 1, prefix)
       }
     }
