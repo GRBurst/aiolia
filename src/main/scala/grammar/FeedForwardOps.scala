@@ -12,7 +12,9 @@ trait GeneticAlgorithmFeedForwardConfig extends Config[Grammar[Double, Double]] 
 
   val mutationOperators = (
     1 -> AddAcyclicEdge(config) ::
+    1 -> RemoveInterconnectedEdge(config) ::
     1 -> SplitEdge(config) ::
+    1 -> ReconnectEdge(config) ::
     1 -> Shrink(config) ::
     1 -> MutateVertex(config) ::
     1 -> MutateEdge(config) ::

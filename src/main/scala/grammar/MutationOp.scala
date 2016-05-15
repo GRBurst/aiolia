@@ -53,6 +53,33 @@ case class SplitEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Gram
   }
 }
 
+case class ReconnectEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
+    import config._
+    val requirement = (graph: Graph[Double, Double], edge: Edge) => edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
+    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists(requirement(graph, _)) }
+    random.selectOpt(candidates).flatMap {
+      case (label, graph) =>
+        import graph._
+        val edge = random.select(edges.filter(requirement(graph, _)))
+        def newOut = random.select(vertices -- depthFirstSearch(edge.in, predecessors)) //TODO: selectOpt
+        def newIn = random.select(vertices -- depthFirstSearch(edge.in, successors)) //TODO: selectOpt
+        val newEdge = if (random.r.nextBoolean) Edge(edge.in, newOut) else Edge(newIn, edge.out)
+        val newGraph = graph.copy(
+          vertices = vertices,
+          edges = edges - edge + newEdge,
+          edgeData = edgeData - edge + (newEdge -> edgeData(edge))
+        )
+        //TODO: choose non-violating vertices in the first place
+        val result = grammar.updateProduction(label -> newGraph)
+        if (newGraph.hasCycle || result.expand.hasCycle ||
+          feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
+          feedForwardOutputs.exists(result.expand.outDegree(_) > 0) ||
+          (result.expand.vertices -- feedForwardInputs -- feedForwardOutputs).exists(v => result.expand.inDegree(v) == 0 || result.expand.outDegree(v) == 0)) None else Some(result)
+    }
+  }
+}
+
 case class Shrink(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
@@ -209,6 +236,18 @@ case class RemoveEdge[V, E](config: MutationOpConfig[Grammar[V, E]]) extends Mut
     random.selectOpt(candidates).map {
       case (label, graph) =>
         val edge = random.select(graph.edges)
+        grammar.updateProduction(label -> (graph - edge))
+    }
+  }
+}
+
+case class RemoveInterconnectedEdge[V, E](config: MutationOpConfig[Grammar[V, E]]) extends MutationOp[Grammar[V, E]] {
+  def apply(grammar: Genotype): Option[Genotype] = {
+    import config._
+    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists{ case Edge(in, out) => graph.outDegree(in) > 1 && graph.inDegree(out) > 1 } }
+    random.selectOpt(candidates).map {
+      case (label, graph) =>
+        val edge = random.select(graph.edges.filter{ case Edge(in, out) => graph.outDegree(in) > 1 && graph.inDegree(out) > 1 })
         grammar.updateProduction(label -> (graph - edge))
     }
   }
