@@ -683,7 +683,8 @@ class GraphSpec extends org.specs2.mutable.Specification {
       graph(V(1, 2), E(1 -> 2)).topologicalSort mustEqual VL(1, 2)
       graph(V(1, 2), E(1 -> 2, 2 -> 1)).topologicalSort must throwAn[AssertionError]
       graph(V(1, 2, 3), E(2 -> 3, 1 -> 2)).topologicalSort mustEqual VL(1, 2, 3)
-      graph(V(1, 2, 3, 4, 5), E(1 -> 3, 2 -> 3, 3 -> 4, 3 -> 5)).topologicalSort mustEqual VL(1, 2, 3, 5, 4) //  (1,2) (3) (4,5)
+      val s = graph(V(1, 2, 3, 4, 5), E(1 -> 3, 2 -> 3, 3 -> 4, 3 -> 5)).topologicalSort
+      List(s.slice(0, 2).toSet, s(2), s.slice(3, 5).toSet) mustEqual List(V(1, 2), v(3), V(4, 5))
     }
 
     "connected components" >> {
@@ -716,7 +717,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
         val g = graph(V(1 to 6), E(1 -> 2, 3 -> 1, 4 -> 5, 5 -> 6), nts = List(nt(2, (2, 3, 4, 5))))
         val r = cgraph(C(1, 2, 3, 4), V(1 to 6), E(1 -> 6, 6 -> 2, 2 -> 5, 5 -> 6, 6 -> 3, 5 -> 3, 6 -> 4))
         val result = graph(V(1 to 8), E(1 -> 2, 2 -> 7, 3 -> 1, 3 -> 8, 4 -> 5, 5 -> 6, 7 -> 3, 7 -> 4, 7 -> 5, 8 -> 4, 8 -> 7))
-        g.replaceOne(nt(2, (2, 3, 4, 5)), r, AutoId(7)) mustEqual result
+        (g.replaceOne(nt(2, (2, 3, 4, 5)), r, AutoId(7)) isIsomorphicTo result) must beTrue
       }
 
       "with data, nonterminals and connectors" >> {

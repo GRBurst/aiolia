@@ -27,7 +27,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
         1 -> cgraph(C(0, 1, 2), V(0 to 4), E(0 -> 2, 2 -> 3, 3 -> 4, 2 -> 4, 4 -> 1))
       )
 
-      g.expand mustEqual graph(V(0 to 6), E(2 -> 4, 2 -> 3, 1 -> 5, 4 -> 3, 1 -> 6, 6 -> 5, 0 -> 1, 5 -> 2, 0 -> 2, 3 -> 1))
+      (g.expand isIsomorphicTo graph(V(0 to 6), E(2 -> 4, 2 -> 3, 1 -> 5, 4 -> 3, 1 -> 6, 6 -> 5, 0 -> 1, 5 -> 2, 0 -> 2, 3 -> 1))) must beTrue
     }
 
     "expand nonterminals" >> {
