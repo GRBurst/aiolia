@@ -19,16 +19,16 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
   val seed: Any
   val random = Random(seed)
   val baseGenotype: Genotype
-  def calculateFitness(p: Genotype, prefix: String): Double
+  def calculateFitness(g: Genotype, prefix: String): Double
 
   // TODO: post processing of genotype, eg: clean up isolated vertices
-  val mutationOperators: List[MutationOp[Genotype]]
+  val mutationOperators: List[(Genotype) => Option[Genotype]]
   def genotypeInvariant(g: Genotype): Boolean = true
   def genotypeInvariantError: String = "Genotype invariant violated."
 
   val populationSize: Int = 30
   val tournamentSize = 4
-  val mutationCount = 4
+  val mutationCount = 1
 
   def stats(g: Genotype): String = ""
   def afterFitness(population: Population) {}
@@ -42,6 +42,8 @@ object GeneticAlgorithm {
 class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   type Population = List[Genotype]
   import config._
+
+  assert(populationSize >= tournamentSize)
 
   def mutation(population: Population): Population = {
     val elite :: others = population
@@ -59,7 +61,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
     assert(n >= 0)
     assert(genotypeInvariant(genotype), genotypeInvariantError)
 
-    if (n == 0) afterMutationOp(genotype) //TODO: on every mutation op, or after all mutation ops?
+    if (n == 0 || mutationOperators.isEmpty) afterMutationOp(genotype) //TODO: on every mutation op, or after all mutation ops?
     else {
       val operator = random.select(mutationOperators)
       val tries = new Iterator[Option[Genotype]] {
@@ -108,10 +110,10 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   def nextGeneration() {
     val fitness = calculateAllFitnesses(population)
     val best = population.maxBy(fitness)
-    afterFitness(population)
 
     print("\rselection...            ")
     population = selection(population, best, fitness)
+    afterFitness(population)
 
     print("\rmutation...             ")
     population = mutation(population)

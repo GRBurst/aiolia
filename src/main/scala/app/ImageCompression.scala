@@ -11,27 +11,94 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object ImageCompression extends App {
-  val ga = GeneticAlgorithm(ImageCompressionConfig)
-  ga.runFor(5 minutes)
+  val r = util.Random
+  val metaConfig = new Config[ImageCompressionConfig] {
+    type G = ImageCompressionConfig
+    val seed = 0
+    override val populationSize: Int = 3 * Runtime.getRuntime().availableProcessors()
+    override val tournamentSize = 2
+    override val mutationCount = 1
+    val baseGenotype = ImageCompressionConfig()
+    def calculateFitness(g: G, prefix: String) = g.calculateFitness(GeneticAlgorithm(g).runFor(15 seconds), prefix)
+    override val mutationOperators = (
+      ((icc: G) => Some(icc.copy(populationSize = 2.max((icc.populationSize * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(mutationCount = 1.max((icc.mutationCount * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(vertexMutationStrength = icc.vertexMutationStrength * (r.nextDouble * 1.5 + 0.5)))) ::
+      ((icc: G) => Some(icc.copy(edgeMutationStrength = icc.edgeMutationStrength * (r.nextDouble * 1.5 + 0.5)))) ::
+      ((icc: G) => Some(icc.copy(elementCountPenalty = icc.elementCountPenalty * (r.nextDouble * 1.5 + 0.5)))) ::
+      ((icc: G) => Some(icc.copy(addAcyclicEdgeFreq = 0.max((icc.addAcyclicEdgeFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(removeInterconnectedEdgeFreq = 0.max((icc.removeInterconnectedEdgeFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(splitEdgeFreq = 0.max((icc.splitEdgeFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(reconnectEdgeFreq = 0.max((icc.reconnectEdgeFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(shrinkFreq = 0.max((icc.shrinkFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(mutateVertexFreq = 0.max((icc.mutateVertexFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(mutateEdgeFreq = 0.max((icc.mutateEdgeFreq * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      Nil
+    )
+    override def afterFitness(population: Population) {
+      println(population.head)
+    }
+  }
+
+  println(GeneticAlgorithm(metaConfig).runFor(Duration.Inf))
+
+  // val ga = GeneticAlgorithm(ImageCompressionConfig())
+  // ga.runFor(15 seconds)
 }
 
-object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
+case class ImageCompressionConfig(
+    override val populationSize:  Int    = 128,
+    override val mutationCount:   Int    = 1,
+    vertexMutationStrength:       Double = 0.08,
+    edgeMutationStrength:         Double = 0.05,
+    elementCountPenalty:          Double = 5.3E-7,
+    addAcyclicEdgeFreq:           Int    = 1,
+    removeInterconnectedEdgeFreq: Int    = 1,
+    splitEdgeFreq:                Int    = 1,
+    reconnectEdgeFreq:            Int    = 1,
+    shrinkFreq:                   Int    = 1,
+    mutateVertexFreq:             Int    = 1,
+    mutateEdgeFreq:               Int    = 1
+) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
   config =>
   type Genotype = Grammar[Double, Double]
   type Phenotype = Image
 
-  val seed = 0
-  override val populationSize = 200
-  val compilePixelThreshold = 200000
-  override val mutationCount = 2
+  val mutationOperators = (
+    addAcyclicEdgeFreq -> AddAcyclicEdge(config) ::
+    removeInterconnectedEdgeFreq -> RemoveInterconnectedEdge(config) ::
+    splitEdgeFreq -> SplitEdge(config) ::
+    reconnectEdgeFreq -> ReconnectEdge(config) ::
+    shrinkFreq -> Shrink(config) ::
+    mutateVertexFreq -> MutateVertex(config) ::
+    mutateEdgeFreq -> MutateEdge(config) ::
+    // 1 -> ExtractNonTerminal(config) ::
+    // 1 -> ReuseNonTerminalAcyclic(config) ::
+    // 1 -> InlineNonTerminal(config) ::
+    Nil
+  ).flatMap{ case (n, op) => List.fill(n)(op) }
 
-  val target = Image.read("apple.jpg").resized(32)
+  override def afterMutationOp(g: Grammar[Double, Double]) = g.cleanup
+
+  override def initVertexData() = Some(random.r.nextDouble * 2 - 1)
+  override def initEdgeData() = Some(random.r.nextDouble * 2 - 1)
+  override def mutateVertexData(d: Double) = d + random.r.nextGaussian * vertexMutationStrength
+  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * edgeMutationStrength
+  override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle &&
+    feedForwardInputs.forall(grammar.expand.inDegree(_) == 0) &&
+    feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0) &&
+    (grammar.expand.vertices -- feedForwardInputs -- feedForwardOutputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
+
+  val seed = 0
+  val compilePixelThreshold = 200000
+
+  val target = Image.read("apple2.jpg").resized(64)
 
   def log2(x: Double) = Math.log(x) / Math.log(2)
 
   val steps = log2(target.w).ceil.toInt
   val resizedTargets = (0 to steps).map(1 << _).map(target.resized(_))
-  target.write("/tmp/currentresized.png")
+  // target.write("/tmp/currentresized.png")
 
   val feedForwardInputs = VL(0, 1)
   val feedForwardOutputs = VL(2, 3, 4)
@@ -41,7 +108,7 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
     var sum = 0.0
     sum -= imageDistance(g, target, prefix)
     // sum -= resizedTargets.map(t => imageDistance(g, t, prefix)).zipWithIndex.map{ case (d, i) => d * (1 << i) }.sum
-    sum -= g.expand.numElements.toDouble * 0.000001
+    sum -= g.expand.numElements.toDouble * elementCountPenalty
     // sum += Math.log(1 + Math.log(1 + g.compressionRatio)) * 0.1
     // sum -= (g.expand.vertices -- V(2)).count(g.expand.outDegree(_) > 0) * 0.001
     // sum -= g.expand.connectedComponents.size * 0.01
@@ -70,7 +137,7 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
     val best = population.head
     print("\rpreviews...     ")
     Future {
-      generateImage(best, target.w, target.h).write(s"/tmp/current.png")
+      // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
       // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
       // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
     }
