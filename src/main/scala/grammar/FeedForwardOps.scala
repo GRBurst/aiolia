@@ -11,11 +11,11 @@ trait FeedForwardGrammarOpConfig extends DataGraphGrammarOpConfig[Double, Double
 trait GeneticAlgorithmFeedForwardConfig extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig { config =>
 
   val mutationOperators = (
-    2 -> AddAcyclicEdge(config) ::
+    1 -> AddAcyclicEdge(config) ::
     1 -> SplitEdge(config) ::
     1 -> Shrink(config) ::
-    2 -> MutateVertex(config) ::
-    2 -> MutateEdge(config) ::
+    1 -> MutateVertex(config) ::
+    1 -> MutateEdge(config) ::
 
     Nil
   ).flatMap{ case (n, op) => List.fill(n)(op) }
