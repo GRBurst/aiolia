@@ -7,7 +7,8 @@ import aiolia.util.AutoId
 import scala.util.Try
 
 object Helper {
-  def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
+  // def nextLabel(it: Iterable[{ val label: Label }]) = Try(it.maxBy(_.label).label + 1).getOrElse(0) // does not work when Vertex is a value class
+  def nextLabel(it: Iterable[Vertex]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
 }
 import aiolia.grammar.Helper._
 
