@@ -64,7 +64,8 @@ case class Shrink(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar
         val removedEdges = incidentEdges(vertex)
         val incoming = incomingEdges(vertex)
         val outgoing = outgoingEdges(vertex)
-        val edgeCount = incoming.size max outgoing.size
+        // val edgeCount = incoming.size max outgoing.size
+        val edgeCount = removedEdges.size
         val ins = random.r.shuffle(Stream.continually(incoming).flatten.take(edgeCount))
         val outs = random.r.shuffle(Stream.continually(outgoing).flatten.take(edgeCount))
         val newEdgeData = (ins zip outs).map { case (in: Edge, out: Edge) => Edge(in.in, out.out) -> (edgeData(in) + edgeData(out)) / 2 }.toMap
