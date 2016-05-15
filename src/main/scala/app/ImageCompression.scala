@@ -18,12 +18,12 @@ object ImageCompression extends App {
     override val parallel = false
     override val populationSize: Int = 6
     override val tournamentSize = 2
-    override val mutationCount = 1
+    override def mutationCount(g: G) = 1
     val baseGenotype = ImageCompressionConfig()
     def calculateFitness(g: G, prefix: String) = g.calculateFitness(GeneticAlgorithm(g).runFor(15 seconds), prefix)
     override val mutationOperators = (
       ((icc: G) => Some(icc.copy(populationSize = 2.max((icc.populationSize * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
-      ((icc: G) => Some(icc.copy(mutationCount = 1.max((icc.mutationCount * (r.nextDouble * 1.5 + 0.5)).toInt)))) ::
+      ((icc: G) => Some(icc.copy(mutationCountPerElement = icc.mutationCountPerElement * (r.nextDouble * 1.5 + 0.5)))) ::
       ((icc: G) => Some(icc.copy(vertexMutationStrength = icc.vertexMutationStrength * (r.nextDouble * 1.5 + 0.5)))) ::
       ((icc: G) => Some(icc.copy(edgeMutationStrength = icc.edgeMutationStrength * (r.nextDouble * 1.5 + 0.5)))) ::
       ((icc: G) => Some(icc.copy(elementCountPenalty = icc.elementCountPenalty * (r.nextDouble * 1.5 + 0.5)))) ::
@@ -49,7 +49,7 @@ object ImageCompression extends App {
 
 case class ImageCompressionConfig(
     override val populationSize:  Int    = 128,
-    override val mutationCount:   Int    = 1,
+    mutationCountPerElement:      Double = 0.01,
     vertexMutationStrength:       Double = 0.08,
     edgeMutationStrength:         Double = 0.05,
     elementCountPenalty:          Double = 5.3E-7,
@@ -64,6 +64,8 @@ case class ImageCompressionConfig(
   config =>
   type Genotype = Grammar[Double, Double]
   type Phenotype = Image
+
+  override def mutationCount(g: Genotype): Int = 1.max((g.numElements * mutationCountPerElement).toInt)
 
   val mutationOperators = (
     addAcyclicEdgeFreq -> AddAcyclicEdge(config) ::

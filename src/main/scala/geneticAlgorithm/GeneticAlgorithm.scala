@@ -29,7 +29,7 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
 
   val populationSize: Int = 30
   val tournamentSize = 4
-  val mutationCount = 1
+  def mutationCount(g: Genotype) = 1
 
   def stats(g: Genotype): String = ""
   def afterFitness(population: Population) {}
@@ -51,13 +51,13 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
     var done = 0
     val mutatedOthers = if (parallel) others.par.map{ g =>
       val prefix = s"\r$done / ${populationSize - 1}:"
-      val mutated = mutate(g, mutationCount, prefix)
+      val mutated = mutate(g, mutationCount(g), prefix)
       done += 1
       mutated
     }.seq.toList
     else others.map{ g =>
       val prefix = s"\r$done / ${populationSize - 1}:"
-      val mutated = mutate(g, mutationCount, prefix)
+      val mutated = mutate(g, mutationCount(g), prefix)
       done += 1
       mutated
     }
