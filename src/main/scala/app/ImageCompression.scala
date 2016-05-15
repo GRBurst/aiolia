@@ -11,10 +11,10 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object ImageCompression extends App {
-  val r = util.Random
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
     val seed = 0
+    def r = random.r
     override val parallel = false
     override val populationSize: Int = 6
     override val tournamentSize = 2
