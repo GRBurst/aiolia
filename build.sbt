@@ -46,8 +46,8 @@ autoCompilerPlugins := true
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
-// addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.3.4")
-addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.4-SNAPSHOT")
+addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.3.4")
+// addCompilerPlugin("com.nativelibs4java" %% "scalaxy-streams" % "0.4-SNAPSHOT")
 
 initialize ~= { _ =>
   System.setProperty("scalaxy.streams.quiet", "true")
