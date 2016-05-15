@@ -18,6 +18,7 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
 
   val seed: Any
   val random = Random(seed)
+  val parallel = true
   val baseGenotype: Genotype
   def calculateFitness(g: Genotype, prefix: String): Double
 
@@ -48,12 +49,18 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   def mutation(population: Population): Population = {
     val elite :: others = population
     var done = 0
-    val mutatedOthers = others.par.map{ g =>
+    val mutatedOthers = if (parallel) others.par.map{ g =>
       val prefix = s"\r$done / ${populationSize - 1}:"
       val mutated = mutate(g, mutationCount, prefix)
       done += 1
       mutated
     }.seq.toList
+    else others.map{ g =>
+      val prefix = s"\r$done / ${populationSize - 1}:"
+      val mutated = mutate(g, mutationCount, prefix)
+      done += 1
+      mutated
+    }
     elite :: mutatedOthers
   }
 
@@ -96,12 +103,19 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
 
   def calculateAllFitnesses(population: Population): Map[Genotype, Double] = {
     var done = 0
-    population.par.map{ g =>
+    if (parallel)
+      population.par.map{ g =>
+        val prefix = s"\r$done / $populationSize:"
+        val f = calculateFitness(g, prefix)
+        done += 1
+        g -> f
+      }.toMap.seq
+    else population.map{ g =>
       val prefix = s"\r$done / $populationSize:"
       val f = calculateFitness(g, prefix)
       done += 1
       g -> f
-    }.toMap.seq
+    }.toMap
   }
 
   var population: Population = mutation(List.fill(populationSize)(baseGenotype))

@@ -15,7 +15,8 @@ object ImageCompression extends App {
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
     val seed = 0
-    override val populationSize: Int = 3 * Runtime.getRuntime().availableProcessors()
+    override val parallel = false
+    override val populationSize: Int = 6
     override val tournamentSize = 2
     override val mutationCount = 1
     val baseGenotype = ImageCompressionConfig()
