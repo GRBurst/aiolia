@@ -29,10 +29,11 @@ case class AddVertex[V, E](config: DataGraphGrammarOpConfig[V, E]) extends Mutat
 case class SplitEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
-    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists{ case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) } }
+    val requirement = (graph: Graph[Double, Double], edge: Edge) => edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
+    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists(requirement(graph, _)) }
     random.selectOpt(candidates).map {
       case (label, graph) =>
-        val edge = random.select(graph.edges.filter{ case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) })
+        val edge = random.select(graph.edges.filter(requirement(graph, _)))
         // (In) -edge-> (Out)
         // (In) -e1-> (n) -e2-> (Out)
         val middleNode = Vertex(nextLabel(graph.vertices))
