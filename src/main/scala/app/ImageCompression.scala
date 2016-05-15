@@ -7,6 +7,8 @@ import aiolia.util.{DOTExport, _}
 import aiolia.graph.DSL._
 
 import scala.concurrent.duration._
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ImageCompression extends App {
   val ga = GeneticAlgorithm(ImageCompressionConfig)
@@ -66,8 +68,10 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
   override def afterFitness(population: Population) {
     val best = population.head
     print("\rpreviews...     ")
-    generateImage(best, target.w, target.h).write(s"/tmp/current.png")
-    File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
-    File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
+    Future {
+      generateImage(best, target.w, target.h).write(s"/tmp/current.png")
+      // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
+      // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
+    }
   }
 }
