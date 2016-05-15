@@ -21,9 +21,9 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
   type Phenotype = Image
 
   val seed = 0
-  override val populationSize = 60
+  override val populationSize = 200
   val compilePixelThreshold = 200000
-  override val mutationCount = 1
+  override val mutationCount = 2
 
   val target = Image.read("apple.jpg").resized(32)
 
@@ -41,7 +41,7 @@ object ImageCompressionConfig extends GeneticAlgorithmFeedForwardConfig {
     var sum = 0.0
     sum -= imageDistance(g, target, prefix)
     // sum -= resizedTargets.map(t => imageDistance(g, t, prefix)).zipWithIndex.map{ case (d, i) => d * (1 << i) }.sum
-    // sum -= g.expand.numElements.toDouble * 0.00001
+    sum -= g.expand.numElements.toDouble * 0.000001
     // sum += Math.log(1 + Math.log(1 + g.compressionRatio)) * 0.1
     // sum -= (g.expand.vertices -- V(2)).count(g.expand.outDegree(_) > 0) * 0.001
     // sum -= g.expand.connectedComponents.size * 0.01
