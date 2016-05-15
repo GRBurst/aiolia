@@ -120,11 +120,12 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
     generation += 1
   }
 
-  def runFor(generations: Int) {
+  def runFor(generations: Int): Genotype = {
     for (_ <- 0 until generations) nextGeneration()
+    population.head
   }
 
-  def runFor(duration: Duration) {
+  def runFor(duration: Duration): Genotype = {
     duration match {
       case duration: FiniteDuration =>
         val deadline = duration.fromNow
@@ -132,9 +133,11 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
       case _: Duration.Infinite =>
         while (true) nextGeneration()
     }
+    population.head
   }
 
-  def runUntil(condition: (Genotype) => Boolean) {
+  def runUntil(condition: (Genotype) => Boolean): Genotype = {
     while (!condition(population.head)) nextGeneration()
+    population.head
   }
 }
