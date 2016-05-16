@@ -20,7 +20,7 @@ object ImageCompressionMeta extends App {
       val ga = GeneticAlgorithm(g.copy(prefix = prefix))
       val best = ga.runFor(runDuration)
       println()
-      g.imageDistance(best, g.target, "")
+      -g.imageDistance(best, g.target, "")
     }
     val r = random.r
     def m(x: Double): Double = x * (r.nextDouble * 1.5 + 0.5)
