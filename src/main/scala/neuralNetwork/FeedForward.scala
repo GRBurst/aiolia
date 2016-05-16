@@ -69,7 +69,7 @@ class FeedForward(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Doub
   }
   def sigmoid(x: Double): Double = Math.tanh(x)
   def compute(data: Array[Double]): Array[Double] = {
-    compute_compiled.foreach { compute => return compute(data) }
+    compute_compiled.foreach { computeFunc => return computeFunc(data) }
 
     val results = new Array[Double](neurons.size)
 
