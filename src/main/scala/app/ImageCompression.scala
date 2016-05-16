@@ -136,14 +136,18 @@ case class ImageCompressionConfig(
 
   override def stats(best: Genotype) = s"width: ${target.w} (${target.pixels}px), dst: ${"%6.4f" format imageDistance(best, target)}, el: ${best.numElements}, comp: ${"%4.2f" format best.compressionRatio}, rules: ${best.productions.size}, components: ${best.expand.connectedComponents.size}"
 
-  override def afterFitness(population: Population, fitness: (Genotype) => Double) {
-    val best = population.head
-    print("\rpreviews...     ")
-    Future {
-      // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
-      // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
-      // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
-      drawPopulation(population.sortBy(fitness).reverse, "/tmp/population.png")
+  var nextDraw = Duration.Zero.fromNow
+  override def afterFitness(_population: Population, fitness: (Genotype) => Double) {
+    if (nextDraw.timeLeft <= Duration.Zero) {
+      nextDraw = 1 seconds fromNow
+      Future {
+        val population = _population.sortBy(fitness).reverse
+        val best = population.head
+        // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
+        // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
+        // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
+        drawPopulation(population, "/tmp/population.png")
+      }
     }
   }
 
