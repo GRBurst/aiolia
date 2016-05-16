@@ -85,12 +85,13 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
       val result = tries.take(maxTries).flatten.take(1).toList
       // println(s"$prefix done")
 
-      result match {
-        case Nil => mutate(genotype, n, prefix)
+      val nextGenotype = result match {
+        case Nil => genotype
         case List(mutatedGenotype) =>
           assert(genotypeInvariant(mutatedGenotype), s"$genotypeInvariantError\nbefore ${operator.getClass.getName}:\n$genotype\nafter ${operator.getClass.getName}:\n${mutatedGenotype}")
-          mutate(mutatedGenotype, n - 1, prefix)
+          mutatedGenotype
       }
+      mutate(nextGenotype, n - 1, prefix)
     }
   }
 
