@@ -152,12 +152,15 @@ case class ImageCompressionConfig(
   }
 
   def drawPopulation(population: Population, filename: String) {
-    val size = Math.sqrt(populationSize).ceil.toInt
-    val im = Image.create(size * target.w, size * target.h)
-    for ((g, i) <- population.zipWithIndex) {
+    val size = Math.sqrt(1 + populationSize).ceil.toInt
+    val scale = 512.0 / (size * target.w)
+    val w = (target.w * scale).toInt
+    val h = (target.h * scale).toInt
+    val im = Image.create(size * w, size * h)
+    for ((gim, i) <- (target.resized(w) :: population.map(g => generateImage(g, w, h))).zipWithIndex) {
       val x = i % size
       val y = i / size
-      im.insert(generateImage(g, target.w, target.h), x * target.w, y * target.h)
+      im.insert(gim, x * w, y * h)
     }
     im.write(filename)
   }
