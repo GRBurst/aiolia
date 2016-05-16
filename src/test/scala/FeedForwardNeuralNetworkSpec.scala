@@ -5,7 +5,7 @@ import aiolia.neuralNetwork.FeedForward
 import aiolia.test.Helpers._
 
 class FeedForwardNeuralNetworkSpec extends org.specs2.mutable.Specification {
-  def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
+  def sigmoid(x: Double): Double = Math.tanh(x)
   "single neuron" >> {
     val n = FeedForward(VL(0), VL(0), graph(V(0), E(), vData(0 -> 0.8)))
     n.compute(Array(0.2)) mustEqual Array(sigmoid(0.2 + 0.8))

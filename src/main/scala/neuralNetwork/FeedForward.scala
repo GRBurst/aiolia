@@ -45,7 +45,7 @@ class FeedForward(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Doub
 
     val result = out map { v => q"${TermName(s"v${v.label}")}" }
 
-    val sigmoid = q"final def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1) " //TODO: inline
+    val sigmoid = q"final def sigmoid(x: Double): Double = Math.tanh(x) " //TODO: inline
     val code = q"(data:IndexedSeq[Double]) => {$sigmoid;..$node_code;Array[Double](..$result)}"
     // println(showCode(code))
 
@@ -67,7 +67,7 @@ class FeedForward(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Doub
     }
     a
   }
-  def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1)
+  def sigmoid(x: Double): Double = Math.tanh(x)
   def compute(data: Array[Double]): Array[Double] = {
     compute_compiled.foreach { compute => return compute(data) }
 
