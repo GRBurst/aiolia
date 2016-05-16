@@ -51,6 +51,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   type Population = List[Genotype]
   import config._
 
+  assert(populationSize >= 2)
   var population: Population = List.fill(populationSize)(baseGenotype)
   var fitness: Map[Genotype, Double] = Map.empty
   var generation = 0

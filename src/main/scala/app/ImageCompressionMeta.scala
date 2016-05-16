@@ -5,7 +5,8 @@ import scala.concurrent.duration._
 
 object ImageCompressionMeta extends App {
   val runDuration = 1 minute
-  val metaPopulationSize = 5
+  val metaPopulationSize = 10
+  val metaMutationCount = 1
   val metaDuration = Duration.Inf
 
   val metaConfig = new Config[ImageCompressionConfig] {
@@ -14,7 +15,7 @@ object ImageCompressionMeta extends App {
     override val parallel = false
     override val populationSize = metaPopulationSize
     override val tournamentSize = 2
-    override def mutationCount(g: G) = 1
+    override def mutationCount(g: G) = metaMutationCount
     val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true)
     def calculateFitness(g: G, prefix: String) = {
       val ga = GeneticAlgorithm(g.copy(prefix = prefix))
