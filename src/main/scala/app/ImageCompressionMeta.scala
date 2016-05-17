@@ -27,7 +27,7 @@ object ImageCompressionMeta extends App {
     }
     val r = random.r
     def m(x: Double): Double = x * (r.nextDouble * 1.5 + 0.5)
-    def m(x: Int): Int = (x * (r.nextDouble * 1.5 + 0.5)).round.toInt
+    def m(x: Int): Int = { val res = (x * (r.nextDouble * 1.5 + 0.5)).round.toInt; if (res == x) x + 1 else res }
     override val mutationOperators = (
       ((icc: G) => Some(icc.copy(populationSize = 2.max(m(icc.populationSize))))) ::
       ((icc: G) => Some(icc.copy(tournamentSize = 2.max(m(icc.tournamentSize))))) ::
