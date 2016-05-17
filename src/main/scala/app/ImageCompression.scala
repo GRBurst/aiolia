@@ -67,7 +67,7 @@ case class ImageCompressionConfig(
   val seed = 0
   val compilePixelThreshold = 1000000
 
-  val target = Image.read("apple2.jpg").resized(64)
+  val target = Image.readResource("/fruits.jpg").resized(32)
 
   def log2(x: Double) = Math.log(x) / Math.log(2)
 

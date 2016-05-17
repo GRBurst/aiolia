@@ -40,6 +40,7 @@ final case class RGB24(rgb: Int) {
 object Image {
   def create(w: Int, h: Int) = new Image(new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB))
   def read(filename: String) = new Image(ImageIO.read(new java.io.File(filename)))
+  def readResource(filename: String) = new Image(ImageIO.read(getClass.getResource(filename)))
 }
 
 class Image(val im: BufferedImage) {
