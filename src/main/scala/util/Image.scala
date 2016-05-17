@@ -94,13 +94,14 @@ class Image(val im: BufferedImage) {
         x2 <- 0.max(x - radius).min(w - 1) to 0.max(x + radius).min(w - 1);
         if (x - x2) * (x - x2) + (y - y2) * (y - y2) < radiusSq
       ) yield {
-        val colorDistanceSq = ref distanceNormalized this.getPixelRGB(x2, y2)
+        val colorDistance = (ref distance this.getPixelRGB(x2, y2)).toDouble / (255.0 * 255.0)
         val spatialDistance = Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2)) / radius
-        (1 + colorDistanceSq) * (1 + spatialDistance) / 4
+        // println(s"col: $colorDistance, spat: $spatialDistance")
+        colorDistance + spatialDistance
       }).min
       error += minDistance
     }
-    error / pixels
+    Math.sqrt(error / pixels)
   }
 
   def resized(_newW: Int, _newH: Int = -1): Image = {
