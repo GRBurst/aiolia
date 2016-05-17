@@ -71,12 +71,33 @@ class Image(val im: BufferedImage) {
     this
   }
 
-  def distance(that: Image): Double = {
+  def pixelColorDistance(that: Image): Double = {
     assert(this.w == that.w && this.h == that.h)
     var error = 0.0
     for (y <- 0 until h; x <- 0 until w) {
       val colorDistance = this.getPixelRGB(x, y) distanceNormalized that.getPixelRGB(x, y)
       error += colorDistance
+    }
+    error / pixels
+  }
+
+  val radius: Int = w / 4
+  val radiusSq = radius * radius
+  def fuzzyDistance(that: Image): Double = {
+    assert(this.w == that.w && this.h == that.h)
+    var error = 0.0
+    for (y <- 0 until h; x <- 0 until w) {
+      val ref = that.getPixelRGB(x, y)
+      val minDistance = (for ( //TODO: restrict to circle with disc rasterization algorithm
+        y2 <- 0.max(y - radius).min(h - 1) to 0.max(y + radius).min(h - 1);
+        x2 <- 0.max(x - radius).min(w - 1) to 0.max(x + radius).min(w - 1);
+        if (x - x2) * (x - x2) + (y - y2) * (y - y2) < radiusSq
+      ) yield {
+        val colorDistanceSq = ref distanceNormalized this.getPixelRGB(x2, y2)
+        val spatialDistance = Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2)) / radius
+        (1 + colorDistanceSq) * (1 + spatialDistance) / 4
+      }).min
+      error += minDistance
     }
     error / pixels
   }

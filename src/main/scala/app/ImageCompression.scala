@@ -90,7 +90,7 @@ case class ImageCompressionConfig(
     sum
   }
 
-  def imageDistance(g: Genotype, target: Image, prefix: String = ""): Double = generateImage(g, target.w, target.h, prefix) distance target
+  def imageDistance(g: Genotype, target: Image, prefix: String = ""): Double = generateImage(g, target.w, target.h, prefix) fuzzyDistance target
 
   def generateImage(g: Genotype, w: Int, h: Int, prefix: String = "") = {
     val network = FeedForward(feedForwardInputs, feedForwardOutputs, g.expand)
