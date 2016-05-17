@@ -4,10 +4,11 @@ import aiolia.geneticAlgorithm._
 import scala.concurrent.duration._
 
 object ImageCompressionMeta extends App {
-  val runDuration = 1 minute
-  val metaPopulationSize = 10
-  val metaMutationCount = 1
-  val metaDuration = Duration.Inf
+  val fitnessComputations = 10000
+  val metaPopulationSize  = 24
+  val metaGenerations     = 1000
+  val metaMutationCount   = 1
+  println(s"Total fitness computations: ${fitnessComputations * metaPopulationSize * metaGenerations}")
 
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
@@ -19,8 +20,8 @@ object ImageCompressionMeta extends App {
     val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true)
     def calculateFitness(g: G, prefix: String) = {
       val ga = GeneticAlgorithm(g.copy(prefix = prefix))
-      val best = ga.runFor(runDuration)
       println()
+      val best = ga.runForFitnessComputations(fitnessComputations)
       -g.imageDistance(best, g.target, "")
     }
     val r = random.r
@@ -45,5 +46,5 @@ object ImageCompressionMeta extends App {
     override def stats(g: G) = g.toString
   }
 
-  GeneticAlgorithm(metaConfig).runFor(metaDuration)
+  GeneticAlgorithm(metaConfig).runFor(metaGenerations)
 }

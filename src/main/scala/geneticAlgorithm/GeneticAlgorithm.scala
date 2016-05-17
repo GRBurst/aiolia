@@ -155,6 +155,10 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
     population.head
   }
 
+  def runForFitnessComputations(numbers: Int): Genotype = {
+    runFor( numbers / populationSize )
+  }
+
   def runUntil(condition: (Genotype) => Boolean): Genotype = {
     while (!condition(population.head)) nextGeneration()
     population.head
