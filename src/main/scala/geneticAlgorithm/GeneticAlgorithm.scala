@@ -23,8 +23,8 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
   protected var lastLogSize = 0
   val prefix = ""
   val nested = false
-  def log(msg: String) { print(s"\r$prefix$msg".padTo(lastLogSize + 1, " ").mkString); lastLogSize = prefix.size + msg.size; System.out.flush() }
-  def logln(msg: String) { if (nested) { log(msg); return }; println(s"\r$prefix$msg".padTo(lastLogSize + 1, " ").mkString); lastLogSize = 0 }
+  def log(msg: String) { if (msg.nonEmpty) { println(s"$prefix$msg".padTo(lastLogSize + 1, " ").mkString); lastLogSize = prefix.size + msg.size; System.out.flush() } }
+  def logln(msg: String) { if (msg.nonEmpty) { if (nested) { log(msg); return }; println(s"$prefix$msg".padTo(lastLogSize + 1, " ").mkString); lastLogSize = 0 } }
 
   val baseGenotype: Genotype
   def calculateFitness(g: Genotype, prefix: String): Double
@@ -64,7 +64,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
 
     afterFitness(population, fitness)
 
-    logln(s"$genPrefix fit: ${"%6.4f" format fitness(best)} ${stats(best)}")
+    if (!nested) logln(s"$genPrefix fit: ${"%6.4f" format fitness(best)} ${stats(best)}")
 
     population = selection(population, best, fitness)
 
@@ -72,12 +72,12 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   }
 
   def calculateAllFitnesses(population: Population, prefix: String): Map[Genotype, Double] = {
-    var current = 1
+    var current = 0
     def m(g: Genotype) = {
       val _prefix = s"$prefix$current / ${populationSize}: "
-      if (!nested) log(_prefix)
-      val f = calculateFitness(g, _prefix)
+      // if (!nested) log(_prefix)
       current += 1
+      val f = calculateFitness(g, _prefix)
       g -> f
     }
     if (parallel) population.par.map(m).toMap.seq
@@ -94,12 +94,12 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
 
   def mutation(population: Population, prefix: String): Population = {
     val elite :: others = population
-    var current = 1
+    var current = 0
     def m(g: Genotype) = {
       val _prefix = s"$prefix$current / ${populationSize - 1}: " // -1 because the first one is elite
-      if (!nested) log(_prefix)
-      val mutated = mutate(g, mutationCount(g), _prefix)
+      // if (!nested) log(_prefix)
       current += 1
+      val mutated = mutate(g, mutationCount(g), _prefix)
       mutated
     }
     if (parallel)

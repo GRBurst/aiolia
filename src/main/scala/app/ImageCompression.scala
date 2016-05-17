@@ -16,24 +16,26 @@ object ImageCompression extends App {
 }
 
 case class ImageCompressionConfig(
-    override val populationSize:  Int     = 10,
-    override val tournamentSize:  Int     = 3,
-    mutationCountPerElement:      Double  = 0.5,
-    vertexMutationStrength:       Double  = 0.5,
-    edgeMutationStrength:         Double  = 0.5,
-    elementCountPenalty:          Double  = 0.001,
-    addAcyclicEdgeFreq:           Int     = 1,
-    removeInterconnectedEdgeFreq: Int     = 1,
-    splitEdgeFreq:                Int     = 1,
-    reconnectEdgeFreq:            Int     = 1,
-    shrinkFreq:                   Int     = 1,
-    mutateVertexFreq:             Int     = 1,
-    mutateEdgeFreq:               Int     = 1,
-    override val parallel:        Boolean = true,
-    override val prefix:          String  = "",
-    override val nested:          Boolean = false
+    override val populationSize:  Int    = 10,
+    override val tournamentSize:  Int    = 3,
+    mutationCountPerElement:      Double = 0.5,
+    vertexMutationStrength:       Double = 0.5,
+    edgeMutationStrength:         Double = 0.5,
+    elementCountPenalty:          Double = 0.001,
+    addAcyclicEdgeFreq:           Int    = 1,
+    removeInterconnectedEdgeFreq: Int    = 1,
+    splitEdgeFreq:                Int    = 1,
+    reconnectEdgeFreq:            Int    = 1,
+    shrinkFreq:                   Int    = 1,
+    mutateVertexFreq:             Int    = 1,
+    mutateEdgeFreq:               Int    = 1,
+
+    override val parallel: Boolean = true,
+    override val prefix:   String  = "",
+    override val nested:   Boolean = false
 ) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
   config =>
+  override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%9.7f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
   type Genotype = Grammar[Double, Double]
   type Phenotype = Image
 
@@ -97,11 +99,11 @@ case class ImageCompressionConfig(
     val image = Image.create(w, h)
 
     if (image.pixels >= compilePixelThreshold) {
-      if (!nested && prefix.nonEmpty) log(s"$prefix compiling...")
+      // if (!nested && prefix.nonEmpty) log(s"$prefix compiling...")
       network.compile()
     }
 
-    if (!nested && prefix.nonEmpty) log(s"$prefix network.compute...")
+    // if (!nested && prefix.nonEmpty) log(s"$prefix network.compute...")
     val f = (x: Double, y: Double) => network.compute(Array(x, y))
     image fill f
   }
