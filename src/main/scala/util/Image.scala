@@ -9,7 +9,7 @@ import net.coobird.thumbnailator.resizers.DefaultResizerFactory
 
 object Constants {
   val sqrt3 = Math.sqrt(3.0)
-  val sqrt3_256 = sqrt3 * 256.0
+  val sqrt3_255 = sqrt3 * 255.0
 }
 
 import Constants._
@@ -34,7 +34,7 @@ final case class RGB24(rgb: Int) {
   }
 
   def distance(that: RGB24): Int = Math.sqrt(distanceSq(that)).toInt //TODO: optimize with integer square root algorithm
-  def distanceNormalized(that: RGB24): Double = distance(that).toDouble / sqrt3_256
+  def distanceNormalized(that: RGB24): Double = distance(that).toDouble / sqrt3_255
 }
 
 object Image {
@@ -94,14 +94,14 @@ class Image(val im: BufferedImage) {
         x2 <- 0.max(x - radius).min(w - 1) to 0.max(x + radius).min(w - 1);
         if (x - x2) * (x - x2) + (y - y2) * (y - y2) < radiusSq
       ) yield {
-        val colorDistance = (ref distance this.getPixelRGB(x2, y2)).toDouble / (255.0 * 255.0)
+        val colorDistance = ref distanceNormalized this.getPixelRGB(x2, y2)
         val spatialDistance = Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2)) / radius
         // println(s"col: $colorDistance, spat: $spatialDistance")
         colorDistance + spatialDistance
       }).min
       error += minDistance
     }
-    Math.sqrt(error / pixels)
+    error / pixels / 2
   }
 
   def resized(_newW: Int, _newH: Int = -1): Image = {
