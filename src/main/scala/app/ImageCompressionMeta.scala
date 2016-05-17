@@ -13,7 +13,7 @@ object ImageCompressionMeta extends App {
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
     val seed = 0
-    override val parallel = false
+    override val parallel = true
     override val populationSize = metaPopulationSize
     override val tournamentSize = 2
     override def mutationCount(g: G) = metaMutationCount
