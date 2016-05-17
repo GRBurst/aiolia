@@ -57,9 +57,9 @@ initialize ~= { _ =>
 initialCommands in console := """
 import aiolia._
 import aiolia.graph._
-import aiolia.graph.types._
-import aiolia.graph.dsl._
-import aiolia.helpers._
+import aiolia.graph._
+import aiolia.graph.DSL._
+import aiolia.util._
 
 val universe: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
 import universe._
