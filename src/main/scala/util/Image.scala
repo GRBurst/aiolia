@@ -97,11 +97,11 @@ class Image(val im: BufferedImage) {
         val colorDistance = ref distanceNormalized this.getPixelRGB(x2, y2)
         val spatialDistance = Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2)) / radius
         // println(s"col: $colorDistance, spat: $spatialDistance")
-        colorDistance + spatialDistance
+        colorDistance * colorDistance + spatialDistance
       }).min
       error += minDistance
     }
-    error / pixels / 2
+    error / pixels
   }
 
   def resized(_newW: Int, _newH: Int = -1): Image = {
