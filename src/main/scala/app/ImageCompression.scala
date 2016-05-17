@@ -18,10 +18,10 @@ object ImageCompression extends App {
 case class ImageCompressionConfig(
     override val populationSize:  Int    = 10,
     override val tournamentSize:  Int    = 3,
-    mutationCountPerElement:      Double = 0.5,
-    vertexMutationStrength:       Double = 0.5,
-    edgeMutationStrength:         Double = 0.5,
-    elementCountPenalty:          Double = 0.001,
+    mutationCountPerElement:      Double = 0.1,
+    vertexMutationStrength:       Double = 0.1,
+    edgeMutationStrength:         Double = 0.1,
+    elementCountPenalty:          Double = 0.0000001,
     addAcyclicEdgeFreq:           Int    = 1,
     removeInterconnectedEdgeFreq: Int    = 1,
     splitEdgeFreq:                Int    = 1,
@@ -32,7 +32,8 @@ case class ImageCompressionConfig(
 
     override val parallel: Boolean = true,
     override val prefix:   String  = "",
-    override val nested:   Boolean = false
+    override val nested:   Boolean = false,
+    preview:               Boolean = true
 ) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
   config =>
   override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%9.7f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
@@ -75,7 +76,7 @@ case class ImageCompressionConfig(
 
   val steps = log2(target.w).ceil.toInt
   lazy val resizedTargets = (0 to steps).map(1 << _).map(target.resized(_))
-  Future { target.write("/tmp/currentresized.png") }
+  // Future { target.write("/tmp/currentresized.png") }
 
   val feedForwardInputs = VL(0, 1)
   val feedForwardOutputs = VL(2, 3, 4)
@@ -112,16 +113,16 @@ case class ImageCompressionConfig(
 
   var nextDraw = Duration.Zero.fromNow
   override def afterFitness(_population: Population, fitness: (Genotype) => Double) {
-    if (nextDraw.timeLeft <= Duration.Zero) {
+    if (preview && nextDraw.timeLeft <= Duration.Zero) {
       nextDraw = 1 seconds fromNow
-      // Future {
-      //   val population = _population.sortBy(fitness).reverse
-      //   val best = population.head
-      //   // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
-      //   // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
-      //   // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
-      //   drawPopulation(population, "/tmp/population.png")
-      // }
+      Future {
+        val population = _population.sortBy(fitness).reverse
+        // val best = population.head
+        //   // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
+        //   // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
+        //   // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
+        drawPopulation(population, "/tmp/population.png")
+      }
     }
   }
 
