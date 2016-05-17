@@ -53,6 +53,10 @@ initialize ~= { _ =>
   System.setProperty("scalaxy.streams.quiet", "true")
 }
 
+mainClass in assembly := Some("aiolia.app.ImageCompressionMeta")
+
+test in assembly := {}
+
 // make console life easier
 initialCommands in console := """
 import aiolia._
