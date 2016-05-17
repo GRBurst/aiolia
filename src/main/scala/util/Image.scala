@@ -7,6 +7,36 @@ import javax.imageio.ImageIO
 import net.coobird.thumbnailator.makers.FixedSizeThumbnailMaker
 import net.coobird.thumbnailator.resizers.DefaultResizerFactory
 
+object Constants {
+  val sqrt3 = Math.sqrt(3.0)
+  val sqrt3_256 = sqrt3 * 256.0
+}
+
+import Constants._
+
+object RGB {
+  def unapply(rgb: RGB24): Option[(Int, Int, Int)] = Some((rgb.r, rgb.g, rgb.b))
+  def apply(rgb: Int) = RGB24(rgb)
+  def apply(r: Int, g: Int, b: Int) = new RGB24(r, g, b)
+}
+
+final case class RGB24(rgb: Int) {
+  def this(r: Int, g: Int, b: Int) = this((r << 16) | (g << 8) | b)
+  def r = rgb >> 16
+  def g = (rgb >> 8) & 0xFF
+  def b = rgb & 0xFF
+
+  def distanceSq(that: RGB24): Int = {
+    val dr = this.r - that.r
+    val dg = this.g - that.g
+    val db = this.b - that.b
+    dr * dr + dg * dg + db * db
+  }
+
+  def distance(that: RGB24): Int = Math.sqrt(distanceSq(that)).toInt //TODO: optimize with integer square root algorithm
+  def distanceNormalized(that: RGB24): Double = distance(that).toDouble / sqrt3_256
+}
+
 object Image {
   def create(w: Int, h: Int) = new Image(new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB))
   def read(filename: String) = new Image(ImageIO.read(new java.io.File(filename)))
@@ -17,14 +47,11 @@ class Image(val im: BufferedImage) {
   def h = im.getHeight
   def pixels = w * h
 
-  def getPixel(x: Int, y: Int): Int = im.getRGB(x, y)
-  def getPixelRGB(x: Int, y: Int): (Int, Int, Int) = {
-    val c = getPixel(x, y)
-    (c >> 16, (c >> 8) & 0xFF, c & 0xFF)
+  def getPixelRGB(x: Int, y: Int): RGB24 = {
+    RGB24(im.getRGB(x, y))
   }
-  def setPixel(x: Int, y: Int, rgb: Int) = { im.setRGB(x, y, rgb); this }
-  def setPixelRGB(x: Int, y: Int, r: Int, g: Int, b: Int) = {
-    setPixel(x, y, (r << 16) | (g << 8) | b)
+  def setPixelRGB(x: Int, y: Int, color: RGB24) = {
+    im.setRGB(x, y, color.rgb)
   }
 
   def fill(f: (Double, Double) => Array[Double]) = {
@@ -34,7 +61,7 @@ class Image(val im: BufferedImage) {
       val g = a(1)
       val b = a(2)
       def t(c: Double) = ((c * 128).toInt + 128).max(0).min(255) // range -1..1 => 0..255
-      setPixelRGB(x, y, t(r), t(g), t(b))
+      setPixelRGB(x, y, RGB(t(r), t(g), t(b)))
     }
     this
   }
@@ -48,13 +75,8 @@ class Image(val im: BufferedImage) {
     assert(this.w == that.w && this.h == that.h)
     var error = 0.0
     for (y <- 0 until h; x <- 0 until w) {
-      val (r1, g1, b1) = this.getPixelRGB(x, y)
-      val (r2, g2, b2) = that.getPixelRGB(x, y)
-      val colorDistance = Math.sqrt((r1 - r2) * (r1 - r2) +
-        (g1 - g2) * (g1 - g2) +
-        (b1 - b2) * (b1 - b2))
-      val normalized = colorDistance / Math.sqrt(3) / 255
-      error += normalized
+      val colorDistance = this.getPixelRGB(x, y) distanceNormalized that.getPixelRGB(x, y)
+      error += colorDistance
     }
     error / pixels
   }
