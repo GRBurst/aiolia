@@ -16,12 +16,12 @@ object ImageCompression extends App {
 }
 
 case class ImageCompressionConfig(
-    override val populationSize:  Int    = 10,
-    override val tournamentSize:  Int    = 3,
-    mutationCountPerElement:      Double = 0.1,
-    vertexMutationStrength:       Double = 0.1,
-    edgeMutationStrength:         Double = 0.1,
-    elementCountPenalty:          Double = 0.0000001,
+    override val populationSize:  Int    = 45,
+    override val tournamentSize:  Int    = 24,
+    mutationCountPerElement:      Double = 0.0299,
+    vertexMutationStrength:       Double = 0.1144,
+    edgeMutationStrength:         Double = 3.4066,
+    elementCountPenalty:          Double = 0.0000005,
     addAcyclicEdgeFreq:           Int    = 1,
     removeInterconnectedEdgeFreq: Int    = 1,
     splitEdgeFreq:                Int    = 1,

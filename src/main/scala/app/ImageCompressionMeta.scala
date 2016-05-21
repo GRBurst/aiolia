@@ -4,8 +4,9 @@ import aiolia.geneticAlgorithm._
 import scala.concurrent.duration._
 
 object ImageCompressionMeta extends App {
-  val fitnessComputations = 2000
-  val metaPopulationSize = 12
+  try { assert(false) } catch { case ae:AssertionError => println("assertions activated") }
+  val fitnessComputations = 8000
+  val metaPopulationSize = 8
   val metaGenerations = 1000
   val metaMutationCount = 1
   println(s"Total fitness computations: ${fitnessComputations * metaPopulationSize * metaGenerations}")
@@ -35,13 +36,13 @@ object ImageCompressionMeta extends App {
       ((icc: G) => Some(icc.copy(vertexMutationStrength = m(icc.vertexMutationStrength)))) ::
       ((icc: G) => Some(icc.copy(edgeMutationStrength = m(icc.edgeMutationStrength)))) ::
       ((icc: G) => Some(icc.copy(elementCountPenalty = m(icc.elementCountPenalty)))) ::
-      ((icc: G) => Some(icc.copy(addAcyclicEdgeFreq = 0.max(m(icc.addAcyclicEdgeFreq))))) ::
-      ((icc: G) => Some(icc.copy(removeInterconnectedEdgeFreq = 0.max(m(icc.removeInterconnectedEdgeFreq))))) ::
-      ((icc: G) => Some(icc.copy(splitEdgeFreq = 0.max(m(icc.splitEdgeFreq))))) ::
-      ((icc: G) => Some(icc.copy(reconnectEdgeFreq = 0.max(m(icc.reconnectEdgeFreq))))) ::
-      ((icc: G) => Some(icc.copy(shrinkFreq = 0.max(m(icc.shrinkFreq))))) ::
-      ((icc: G) => Some(icc.copy(mutateVertexFreq = 0.max(m(icc.mutateVertexFreq))))) ::
-      ((icc: G) => Some(icc.copy(mutateEdgeFreq = 0.max(m(icc.mutateEdgeFreq))))) ::
+      // ((icc: G) => Some(icc.copy(addAcyclicEdgeFreq = 0.max(m(icc.addAcyclicEdgeFreq))))) ::
+      // ((icc: G) => Some(icc.copy(removeInterconnectedEdgeFreq = 0.max(m(icc.removeInterconnectedEdgeFreq))))) ::
+      // ((icc: G) => Some(icc.copy(splitEdgeFreq = 0.max(m(icc.splitEdgeFreq))))) ::
+      // ((icc: G) => Some(icc.copy(reconnectEdgeFreq = 0.max(m(icc.reconnectEdgeFreq))))) ::
+      // ((icc: G) => Some(icc.copy(shrinkFreq = 0.max(m(icc.shrinkFreq))))) ::
+      // ((icc: G) => Some(icc.copy(mutateVertexFreq = 0.max(m(icc.mutateVertexFreq))))) ::
+      // ((icc: G) => Some(icc.copy(mutateEdgeFreq = 0.max(m(icc.mutateEdgeFreq))))) ::
       Nil
     )
     override def stats(g: G) = s"    [${"%4d" format (fitnessComputations / g.populationSize)}] ${g.toString}\n"
