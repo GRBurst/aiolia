@@ -35,11 +35,12 @@ object ImageCompressionMeta extends App {
       fit
     }
     val r = random.r
-    def m(x: Double): Double = x * Math.exp(r.nextGaussian)
-    def m(x: Int): Int = { val res = (x * Math.exp(r.nextGaussian)).round.toInt; if (res == x) x + 1 else res }
+    def lognorm() = Math.exp(r.nextGaussian * 0.5) // 80% in range [0.5, 2]
+    def m(x: Double): Double = x * lognorm()
+    def m(x: Int): Int = (x * lognorm()).round.toInt
     override val mutationOperators = (
       ((icc: G) => { val p = 2.max(m(icc.populationSize)); Some(icc.copy(populationSize = p, tournamentSize = p min icc.tournamentSize)) }) ::
-      ((icc: G) => Some(icc.copy(tournamentSize = 2.max(m(icc.tournamentSize)).min(icc.populationSize)))) ::
+      ((icc: G) => Some(icc.copy(tournamentSize = 1.max(m(icc.tournamentSize)).min(icc.populationSize)))) ::
       ((icc: G) => Some(icc.copy(mutationCountPerElement = m(icc.mutationCountPerElement)))) ::
       ((icc: G) => Some(icc.copy(mutationGaussianScale = m(icc.mutationGaussianScale)))) ::
       ((icc: G) => Some(icc.copy(vertexMutationStrength = m(icc.vertexMutationStrength)))) ::
