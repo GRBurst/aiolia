@@ -31,6 +31,7 @@ case class ImageCompressionConfig(
     mutateVertexFreq:             Int    = 1,
     mutateEdgeFreq:               Int    = 1,
 
+    seed:                  Any     = 0,
     override val parallel: Boolean = true,
     override val prefix:   String  = "",
     override val nested:   Boolean = false,
@@ -70,7 +71,6 @@ case class ImageCompressionConfig(
     feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0) &&
     (grammar.expand.vertices -- feedForwardInputs -- feedForwardOutputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
 
-  val seed = 0
   val compilePixelThreshold = 1000000
 
   val target = Image.readResource("/" + picture).resized(pictureWidth)

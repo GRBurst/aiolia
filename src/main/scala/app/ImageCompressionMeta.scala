@@ -11,7 +11,9 @@ object ImageCompressionMeta extends App {
   val metaGenerations = 1000
   val metaMaxMutationCount = 2
   val pictures = List("fruits.jpg", "primitives.png")
-  println(s"fitness computations per meta generation: ${fitnessComputations * metaPopulationSize * pictures.size}")
+  val seeds = List[Any](0, 1, "penos")
+  val fitnessComputationsPerGen = fitnessComputations * metaPopulationSize * pictures.size * seeds.size
+  println(s"fitness computations per meta generation: ${fitnessComputationsPerGen}")
   // create space separated values from output:
   // cat aiolia.log | grep "fit:" | sed "s/[^ ]*://g" | sed 's/[,)(\[\]//g' | sed 's/\]//g' > aiolia.log.tsv
 
@@ -24,11 +26,11 @@ object ImageCompressionMeta extends App {
     override def mutationCount(g: G) = (random.r.nextGaussian.toInt + metaMaxMutationCount).max(1)
     val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true, preview = false, pictureWidth = pictureWidth)
     def calculateFitness(g: G, prefix: String) = {
-      val fit = pictures.par.map{ picture =>
-        val ga = GeneticAlgorithm(g.copy(prefix = prefix, picture = picture))
+      val fit = (for (picture <- pictures; seed <- seeds) yield {
+        val ga = GeneticAlgorithm(g.copy(prefix = prefix, seed = seed, picture = picture))
         val best = ga.runForFitnessComputations(fitnessComputations)
         -g.imageDistance(best, g.target, "")
-      }.sum / pictures.size
+      }).sum / (pictures.size * seeds.size)
       logln(s"$prefix${"%6.4f" format fit} ${g.toString}")
       fit
     }
