@@ -7,6 +7,7 @@ object ImageCompressionMeta extends App {
   try { assert(false) } catch { case ae: AssertionError => println("assertions activated") }
   val fitnessComputations = 8000
   val metaPopulationSize = 8
+  val pictureWidth = 32
   val metaGenerations = 1000
   val metaMaxMutationCount = 2
   val pictures = List("fruits.jpg", "primitives.png")
@@ -19,7 +20,7 @@ object ImageCompressionMeta extends App {
     override val populationSize = metaPopulationSize
     override val tournamentSize = 2
     override def mutationCount(g: G) = (random.r.nextGaussian.toInt + metaMaxMutationCount).max(1)
-    val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true, preview = false)
+    val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true, preview = false, pictureWidth = pictureWidth)
     def calculateFitness(g: G, prefix: String) = {
       val fit = pictures.par.map{ picture =>
         val ga = GeneticAlgorithm(g.copy(prefix = prefix, picture = picture))
