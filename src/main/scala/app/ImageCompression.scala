@@ -33,7 +33,8 @@ case class ImageCompressionConfig(
     override val parallel: Boolean = true,
     override val prefix:   String  = "",
     override val nested:   Boolean = false,
-    preview:               Boolean = true
+    preview:               Boolean = true,
+    picture:               String  = "primitives.png"
 ) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
   config =>
   override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%9.7f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
@@ -70,7 +71,7 @@ case class ImageCompressionConfig(
   val seed = 0
   val compilePixelThreshold = 1000000
 
-  val target = Image.readResource("/primitives.png").resized(32)
+  val target = Image.readResource("/" + picture).resized(32)
 
   def log2(x: Double) = Math.log(x) / Math.log(2)
 

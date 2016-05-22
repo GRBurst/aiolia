@@ -10,6 +10,7 @@ object ImageCompressionMeta extends App {
   val metaGenerations = 1000
   val metaMutationCount = 1
   println(s"Total fitness computations: ${fitnessComputations * metaPopulationSize * metaGenerations}")
+  val pictures = List("fruits.jpg", "primitives.png")
 
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
@@ -20,9 +21,11 @@ object ImageCompressionMeta extends App {
     override def mutationCount(g: G) = metaMutationCount
     val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true, preview = false)
     def calculateFitness(g: G, prefix: String) = {
-      val ga = GeneticAlgorithm(g.copy(prefix = prefix))
-      val best = ga.runForFitnessComputations(fitnessComputations)
-      val fit = -g.imageDistance(best, g.target, "")
+      val fit = pictures.par.map{ picture =>
+        val ga = GeneticAlgorithm(g.copy(prefix = prefix, picture = picture))
+        val best = ga.runForFitnessComputations(fitnessComputations)
+        -g.imageDistance(best, g.target, "")
+      }.sum / pictures.size
       logln(s"$prefix${"%6.4f" format fit} ${g.toString}")
       fit
     }
