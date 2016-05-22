@@ -12,6 +12,8 @@ object ImageCompressionMeta extends App {
   val metaMaxMutationCount = 2
   val pictures = List("fruits.jpg", "primitives.png")
   println(s"fitness computations per meta generation: ${fitnessComputations * metaPopulationSize * pictures.size}")
+  // create space separated values from output:
+  // cat aiolia.log | grep "fit:" | sed "s/[^ ]*://g" | sed 's/[,)(\[\]//g' | sed 's/\]//g' > aiolia.log.tsv
 
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
