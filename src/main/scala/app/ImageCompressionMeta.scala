@@ -34,8 +34,8 @@ object ImageCompressionMeta extends App {
     def m(x: Double): Double = x * Math.exp(r.nextGaussian)
     def m(x: Int): Int = { val res = (x * Math.exp(r.nextGaussian)).round.toInt; if (res == x) x + 1 else res }
     override val mutationOperators = (
-      ((icc: G) => Some(icc.copy(populationSize = 2.max(m(icc.populationSize))))) ::
-      ((icc: G) => Some(icc.copy(tournamentSize = 2.max(m(icc.tournamentSize))))) ::
+      ((icc: G) => { val p = 2.max(m(icc.populationSize)); Some(icc.copy(populationSize = p, tournamentSize = p min icc.tournamentSize)) }) ::
+      ((icc: G) => Some(icc.copy(tournamentSize = 2.max(m(icc.tournamentSize)).min(icc.populationSize)))) ::
       ((icc: G) => Some(icc.copy(mutationCountPerElement = m(icc.mutationCountPerElement)))) ::
       ((icc: G) => Some(icc.copy(mutationGaussianScale = m(icc.mutationGaussianScale)))) ::
       ((icc: G) => Some(icc.copy(vertexMutationStrength = m(icc.vertexMutationStrength)))) ::
