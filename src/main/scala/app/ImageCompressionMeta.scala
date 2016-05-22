@@ -4,13 +4,13 @@ import aiolia.geneticAlgorithm._
 import scala.concurrent.duration._
 
 object ImageCompressionMeta extends App {
-  try { assert(false) } catch { case ae:AssertionError => println("assertions activated") }
+  try { assert(false) } catch { case ae: AssertionError => println("assertions activated") }
   val fitnessComputations = 8000
   val metaPopulationSize = 8
   val metaGenerations = 1000
-  val metaMutationCount = 1
-  println(s"Total fitness computations: ${fitnessComputations * metaPopulationSize * metaGenerations}")
+  val metaMaxMutationCount = 2
   val pictures = List("fruits.jpg", "primitives.png")
+  println(s"fitness computations per meta generation: ${fitnessComputations * metaPopulationSize * pictures.size}")
 
   val metaConfig = new Config[ImageCompressionConfig] {
     type G = ImageCompressionConfig
@@ -18,7 +18,7 @@ object ImageCompressionMeta extends App {
     override val parallel = true
     override val populationSize = metaPopulationSize
     override val tournamentSize = 2
-    override def mutationCount(g: G) = metaMutationCount
+    override def mutationCount(g: G) = (random.r.nextGaussian.toInt + metaMaxMutationCount).max(1)
     val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true, preview = false)
     def calculateFitness(g: G, prefix: String) = {
       val fit = pictures.par.map{ picture =>
@@ -36,6 +36,7 @@ object ImageCompressionMeta extends App {
       ((icc: G) => Some(icc.copy(populationSize = 2.max(m(icc.populationSize))))) ::
       ((icc: G) => Some(icc.copy(tournamentSize = 2.max(m(icc.tournamentSize))))) ::
       ((icc: G) => Some(icc.copy(mutationCountPerElement = m(icc.mutationCountPerElement)))) ::
+      ((icc: G) => Some(icc.copy(mutationGaussianScale = m(icc.mutationGaussianScale)))) ::
       ((icc: G) => Some(icc.copy(vertexMutationStrength = m(icc.vertexMutationStrength)))) ::
       ((icc: G) => Some(icc.copy(edgeMutationStrength = m(icc.edgeMutationStrength)))) ::
       ((icc: G) => Some(icc.copy(elementCountPenalty = m(icc.elementCountPenalty)))) ::

@@ -22,4 +22,6 @@ case class Random(seed: Any) {
     assert(until > from)
     from + r.nextInt(until - from)
   }
+
+  def nextGaussian(scale: Double, shift: Double) = r.nextGaussian * scale + shift
 }

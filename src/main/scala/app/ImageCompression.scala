@@ -12,13 +12,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object ImageCompression extends App {
   val ga = GeneticAlgorithm(ImageCompressionConfig())
-  ga.runFor(5)
+  ga.runFor(Duration.Inf)
 }
 
 case class ImageCompressionConfig(
     override val populationSize:  Int    = 45,
     override val tournamentSize:  Int    = 24,
     mutationCountPerElement:      Double = 0.0299,
+    mutationGaussianScale:        Double = 0.5,
     vertexMutationStrength:       Double = 0.1144,
     edgeMutationStrength:         Double = 3.4066,
     elementCountPenalty:          Double = 0.0000005,
@@ -37,11 +38,11 @@ case class ImageCompressionConfig(
     picture:               String  = "primitives.png"
 ) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
   config =>
-  override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%9.7f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
+  override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutSc: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%10.8f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, mutationGaussianScale, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
   type Genotype = Grammar[Double, Double]
   type Phenotype = Image
 
-  override def mutationCount(g: Genotype): Int = (mutationCountPerElement * g.expand.vertices.size).toInt + 1
+  override def mutationCount(g: Genotype) = random.nextGaussian(mutationGaussianScale * mutationCountPerElement * g.expand.vertices.size, mutationCountPerElement * g.expand.vertices.size).toInt.max(1)
 
   val mutationOperators = (
     addAcyclicEdgeFreq -> AddAcyclicEdge(config) ::
