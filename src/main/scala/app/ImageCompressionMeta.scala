@@ -6,12 +6,14 @@ import scala.concurrent.duration._
 object ImageCompressionMeta extends App {
   try { assert(false) } catch { case ae: AssertionError => println("assertions activated") }
   val fitnessComputations = 8000
-  val metaPopulationSize = 8
+  val metaPopulationSize = 11
   val pictureWidth = 32
-  val metaGenerations = 1000
-  val metaMaxMutationCount = 2
   val pictures = List("fruits.jpg", "primitives.png")
   val seeds = List[Any](0, 1, "penos")
+
+  val metaGenerations = 1000
+  val metaMaxMutationCount = 1.0
+
   val fitnessComputationsPerGen = fitnessComputations * metaPopulationSize * pictures.size * seeds.size
   println(s"fitness computations per meta generation: ${fitnessComputationsPerGen}")
   // create space separated values from output:
@@ -23,7 +25,7 @@ object ImageCompressionMeta extends App {
     override val parallel = true
     override val populationSize = metaPopulationSize
     override val tournamentSize = 2
-    override def mutationCount(g: G) = (random.r.nextGaussian.toInt + metaMaxMutationCount).max(1)
+    override def mutationCount(g: G) = (metaMaxMutationCount + random.r.nextGaussian).toInt.max(1)
     val baseGenotype = new ImageCompressionConfig(parallel = true, nested = true, preview = false, pictureWidth = pictureWidth)
     def calculateFitness(g: G, prefix: String) = {
       val fit = (for (picture <- pictures; seed <- seeds) yield {
