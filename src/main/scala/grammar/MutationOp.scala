@@ -1,6 +1,5 @@
 package aiolia.grammar
 
-import aiolia.geneticAlgorithm._
 import aiolia.graph._
 import aiolia.util.AutoId
 
@@ -11,6 +10,10 @@ object Helper {
   def nextLabel(it: Iterable[Vertex]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
 }
 import aiolia.grammar.Helper._
+
+trait MutationOp[G] extends ((G) => Option[G]) {
+  type Genotype = G
+}
 
 // TODO: Mutate is still not perfectly deterministic!
 // This can happen when iterating over HashSets, MashMaps ...

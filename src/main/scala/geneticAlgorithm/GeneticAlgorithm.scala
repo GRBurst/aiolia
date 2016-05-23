@@ -1,17 +1,10 @@
 package aiolia.geneticAlgorithm
 
 import aiolia.util.Random
+import aiolia.grammar.MutationOpConfig
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
-
-trait MutationOp[G] extends ((G) => Option[G]) {
-  type Genotype = G
-}
-
-trait MutationOpConfig[G] {
-  val random: Random
-}
 
 trait Config[Genotype] extends MutationOpConfig[Genotype] {
   type Population = List[Genotype]

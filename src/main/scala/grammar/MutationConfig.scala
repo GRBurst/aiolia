@@ -1,7 +1,11 @@
 package aiolia.grammar
 
-import aiolia.geneticAlgorithm._
 import aiolia.graph._
+import aiolia.util.Random
+
+trait MutationOpConfig[G] {
+  val random: Random
+}
 
 trait DataGraphGrammarOpConfig[V, E] extends MutationOpConfig[Grammar[V, E]] {
   def initVertexData(): Option[V] = None
