@@ -7,8 +7,13 @@ import scala.annotation.tailrec
 
 object Grammar {
   def minimal[V, E] = Grammar[V, E](Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))
-  def feedForward(in: List[Vertex], out: List[Vertex]) = {
+  def inOut(in: List[Vertex], out: List[Vertex]) = {
     val axiom = Graph(Set.empty ++ in ++ out, nonTerminals = List(NonTerminal(1, in ++ out)))
+    Grammar(axiom, Map(1 -> Graph(axiom.vertices, connectors = in ++ out)))
+  }
+  def inOutWithData[T](in: List[Vertex], out: List[Vertex], dataFunc: () => Option[T]) = {
+    val vertexData = (in ++ out).flatMap(v => dataFunc().map(v -> _)).toMap
+    val axiom = Graph(Set.empty ++ in ++ out, nonTerminals = List(NonTerminal(1, in ++ out)), vertexData = vertexData)
     Grammar(axiom, Map(1 -> Graph(axiom.vertices, connectors = in ++ out)))
   }
 }
@@ -18,12 +23,12 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
   assert((productions.values.flatMap(_.nonTerminals) ++ axiom.nonTerminals).forall { nonTerminal =>
     val rhs = productions.get(nonTerminal.label)
     rhs.isDefined && (nonTerminal.connectors.size == rhs.get.connectors.size)
-  }, s"All existing nonterminals need to have an equivalent on the lhs: ${
-    (productions.values.flatMap(_.nonTerminals) ++ axiom.nonTerminals).find { nonTerminal =>
-      val rhs = productions.get(nonTerminal.label)
-      rhs.isEmpty || (nonTerminal.connectors.size != rhs.get.connectors.size)
-    }.get
-  }\n$this")
+    }, s"All existing nonterminals need to have an equivalent on the lhs: ${
+      (productions.values.flatMap(_.nonTerminals) ++ axiom.nonTerminals).find { nonTerminal =>
+        val rhs = productions.get(nonTerminal.label)
+        rhs.isEmpty || (nonTerminal.connectors.size != rhs.get.connectors.size)
+      }.get
+    }\n$this")
   assert(!dependencyGraph.hasCycle, "this grammer contains cycles, which it shouldn't, so shit see this instead.")
   assert(axiom.connectors.isEmpty, "Axiom must not have connectors")
   assert(axiom.nonTerminals.nonEmpty, s"Axiom must have at least one non-terminal\n$this")

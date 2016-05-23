@@ -114,14 +114,14 @@ case class Shrink(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar
   }
 }
 
-case class AddConnectedVertex(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+case class AddConnectedVertex[V,E](config: DataGraphGrammarOpConfig[V,E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val (label, graph) = random.select(grammar.productions)
     if (graph.isEmpty) {
       val vertex = Vertex(0)
       val newVertices = Set(vertex)
-      val newVertexData: Map[Vertex, Double] = Map.empty ++ initVertexData().map(d => vertex -> d)
+      val newVertexData = Map.empty ++ initVertexData().map(d => vertex -> d)
       val newGraph = graph.copy(vertices = newVertices, vertexData = newVertexData)
       Some(grammar.updateProduction(label -> newGraph))
     }
@@ -139,8 +139,9 @@ case class AddConnectedVertex(config: FeedForwardGrammarOpConfig) extends Mutati
 
       val newGraph = graph.copy(vertices = newVertices, edges = newEdges, vertexData = newVertexData, edgeData = newEdgeData)
       val result = grammar.updateProduction(label -> newGraph)
-      if (feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
-        feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
+      // if (feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
+      //   feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
+      Some(result)
     }
   }
 }

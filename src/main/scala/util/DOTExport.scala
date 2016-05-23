@@ -6,7 +6,7 @@ import aiolia.graph._
 import scala.collection.mutable
 
 object DOTExport {
-  def toDOT[V, E](graph: Graph[V, E], feedForwardInputs: List[Vertex] = Nil, feedForwardOutputs: List[Vertex] = Nil) = {
+  def toDOT[V, E](graph: Graph[V, E], inputs: List[Vertex] = Nil, outputs: List[Vertex] = Nil) = {
     import graph._
 
     def t(c: Double) = 255 - (c.abs * 255).toInt.max(0).min(255) // range -1..1 => 0..255
@@ -21,9 +21,9 @@ object DOTExport {
 digraph G {  
   rankdir = "LR"
   ${edges.map(e => s"""$e [color = "${edgeColor(e)}"]""").mkString("\n  ")}
-  ${(vertices -- feedForwardInputs -- feedForwardOutputs).map(v => s"$v [shape = circle]").mkString("\n  ")}
-  ${feedForwardInputs.map(v => s"""$v [shape = circle, rank = "source", style = filled, fillcolor = "#FFAB38"]""").mkString("\n  ")}
-  ${feedForwardOutputs.map(v => s"""$v [shape = circle, rank = "sink", style = filled, fillcolor = "#02E8D5"]""").mkString("\n  ")}
+  ${(vertices -- inputs -- outputs).map(v => s"$v [shape = circle]").mkString("\n  ")}
+  ${inputs.map(v => s"""$v [shape = circle, rank = "source", style = filled, fillcolor = "#FFAB38"]""").mkString("\n  ")}
+  ${outputs.map(v => s"""$v [shape = circle, rank = "sink", style = filled, fillcolor = "#02E8D5"]""").mkString("\n  ")}
 }
 """
   }
