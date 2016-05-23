@@ -97,7 +97,9 @@ class Image(val im: BufferedImage) {
         val colorDistance = ref distanceNormalized this.getPixelRGB(x2, y2)
         val spatialDistance = Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2)) / radius
         // println(s"col: $colorDistance, spat: $spatialDistance")
-        colorDistance * colorDistance + spatialDistance
+        //colorDistance * colorDistance + spatialDistance
+        -((1.0 / (1.0 + spatialDistance)) * (1.0 / (1.0 + colorDistance*colorDistance)))
+        //Math.exp(colorDistance + spatialDistance)
       }).min
       error += minDistance
     }
