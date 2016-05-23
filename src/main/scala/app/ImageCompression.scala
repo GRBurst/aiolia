@@ -16,20 +16,20 @@ object ImageCompression extends App {
 }
 
 case class ImageCompressionConfig(
-    override val populationSize:  Int    = 100,
+    override val populationSize:  Int    = 24,
     override val tournamentSize:  Int    = 5,
-    mutationCountPerElement:      Double = 0.03,
-    mutationGaussianScale:        Double = 0.5,
+    mutationCountPerElement:      Double = 0.0251,
+    mutationGaussianScale:        Double = 0.1833,
     vertexMutationStrength:       Double = 0.1,
-    edgeMutationStrength:         Double = 0.1,
-    elementCountPenalty:          Double = 0.0000005,
-    addAcyclicEdgeFreq:           Int    = 100,
-    removeInterconnectedEdgeFreq: Int    = 100,
-    splitEdgeFreq:                Int    = 100,
-    reconnectEdgeFreq:            Int    = 100,
-    shrinkFreq:                   Int    = 100,
-    mutateVertexFreq:             Int    = 100,
-    mutateEdgeFreq:               Int    = 100,
+    edgeMutationStrength:         Double = 0.4602,
+    elementCountPenalty:          Double = 0.00000079,
+    addAcyclicEdgeFreq:           Int    = 189,
+    removeInterconnectedEdgeFreq: Int    = 80,
+    splitEdgeFreq:                Int    = 82,
+    reconnectEdgeFreq:            Int    = 270,
+    shrinkFreq:                   Int    = 73,
+    mutateVertexFreq:             Int    = 85,
+    mutateEdgeFreq:               Int    = 284,
 
     seed:                  Any     = 0,
     override val parallel: Boolean = true,
@@ -37,7 +37,7 @@ case class ImageCompressionConfig(
     override val nested:   Boolean = false,
     preview:               Boolean = true,
     picture:               String  = "primitives.png",
-    pictureWidth:          Int     = 32
+    pictureWidth:          Int     = 16
 ) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
   config =>
   override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutSc: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%10.8f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, mutationGaussianScale, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)

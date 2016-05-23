@@ -5,11 +5,11 @@ import scala.concurrent.duration._
 
 object ImageCompressionMeta extends App {
   try { assert(false) } catch { case ae: AssertionError => println("assertions activated") }
-  val fitnessComputations = 8000
-  val metaPopulationSize = 11
-  val pictureWidth = 32
+  val fitnessComputations = 16000
+  val metaPopulationSize = 12
+  val pictureWidth = 16
   val pictures = List("fruits.jpg", "primitives.png")
-  val seeds = List[Any](0, 1, "penos")
+  val seeds = List[Any](0, 1)//, "penos")
 
   val metaGenerations = 1000
   val metaMaxMutationCount = 1.0
