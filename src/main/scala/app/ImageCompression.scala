@@ -131,7 +131,7 @@ case class ImageCompressionConfig(
 
   def drawPopulation(population: Population, filename: String) {
     val size = Math.sqrt(1 + populationSize).ceil.toInt
-    val scale = 512.0 / (size * target.w)
+    val scale = 1.0//512.0 / (size * target.w)
     val w = (target.w * scale).toInt
     val h = (target.h * scale).toInt
     val im = Image.create(size * w, size * h)
