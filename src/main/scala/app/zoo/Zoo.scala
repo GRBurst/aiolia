@@ -5,12 +5,12 @@ import aiolia.util._
 
 class ZooConfig(
     val mutationCount:     Int    = 20,
-    val foodProbability:   Double = 0.5,
-    val minimumPopulation: Int    = 1,
+    val foodProbability:   Double = 0.4,
+    val minimumPopulation: Int    = 8,
     val initialEnergy:     Double = 0.8,
-    val walkEffort:        Double = 0.01,
+    val walkEffort:        Double = 0.005,
     val thinkEffort:       Double = 0.0005,
-    val worldDimensions:   Vec2   = Vec2(10, 10)
+    val worldDimensions:   Vec2   = Vec2(30, 30)
 ) extends DataGraphGrammarOpConfig[Double, Double] { config =>
 
   val random = Random(0)

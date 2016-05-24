@@ -51,7 +51,7 @@ class World(val dimensions: Vec2) {
   def neighbours(pos: Vec2): Set[Thing] = neigbourPositions(pos).flatMap(lookup)
   def emptyNeighbourPositions(pos: Vec2): Set[Vec2] = neigbourPositions(pos).filter(lookup(_).isEmpty)
 
-  def sensors(pos: Vec2) = directions.map(pos + _).map { pos =>
+  def sensors(pos: Vec2, rotation: Double) = directions.map(pos + _.rotate(rotation)).map { pos =>
     lookupOption(pos) match {
       case None => -1.0 // outside field / wall
       case Some(thingOption) => thingOption match {
@@ -66,7 +66,7 @@ class World(val dimensions: Vec2) {
     def desc(place: Option[Thing]) = place match {
       case Some(c: Creature) => s"${(c.energy * 10).toInt.toHexString},${"%+f".format(c.replicationStrength).head}${(c.replicationStrength.abs * 10).toInt.toHexString}"
       case Some(f: Food)     => s"F"
-      case None              => "-"
+      case None              => ""
     }
     line.map(desc(_).padTo(4, " ").mkString).mkString("|") + "\n" + "-" * 5 * line.size
   }.mkString("\n")
