@@ -32,7 +32,7 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, pro
   energy = initialEnergy
 
   private var _energy: Double = _
-  private def energy_=(newEnergy: Double) { _energy = 0.0 max newEnergy min 1.0 }
+  def energy_=(newEnergy: Double) { _energy = 0.0 max newEnergy min 1.0 }
   def energy = _energy
 
   private var _direction: Vec2 = Vec2.up
@@ -43,17 +43,13 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, pro
   private def age_=(newAge: Long) { _age = newAge }
   def age = _age
 
-  def speed = brain.getSpeed
-  def rotation = brain.getRotation
-  def replicationStrength = brain.getReplicationStrength
-
   def isAlive = energy > 0
-  def canReplicate = replicationStrength > 0 && energy > 0.5 && age > 1 //TODO: rename to wantsToReplicate?
+  def canReplicate = brain.horniness > 0 && energy > 0.5 && age > 1
 
   def think(sensors: Array[Double], effort: Double) {
     brain.feed(energy, sensors)
     brain.think()
-    direction = direction.rotate(brain.getRotation)
+    direction = direction.rotate(brain.rotation)
     age += 1
     energy -= Math.log(brain.size) * effort
   }
@@ -67,19 +63,19 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, pro
   }
 
   def replicate(): Double = {
-    if (replicationStrength <= 0) return 0
+    if (brain.horniness <= 0) return 0
 
-    val passedOnEnergy = replicationStrength * energy
+    val passedOnEnergy = brain.horniness * energy
     energy -= passedOnEnergy
     passedOnEnergy
   }
 
-  override def toString = s"Creature(energy = $energy, direction = $direction, replication = $replicationStrength, pos = $pos)"
+  override def toString = s"Creature(energy = $energy, direction = $direction, replication = $replicate, pos = $pos)"
 }
 
 object Brain {
   val inputs = VL(0 to 8)
-  val outputs = VL(9, 10, 11)
+  val outputs = VL(9, 10, 11, 12)
 }
 
 class Brain(net: Recurrent) {
@@ -92,11 +88,14 @@ class Brain(net: Recurrent) {
   private val out = new {
     def rotation = net.outputData(0)
     def speed = net.outputData(1)
-    def replicate = net.outputData(2)
+    def horniness = net.outputData(2)
+    def agression = net.outputData(3)
   }
-  import out._
 
-  def getRotation: Double = rotation * Math.PI
-  def getSpeed: Int = if (speed < -0.3) -1 else if (speed > 0.3) 1 else 0
-  def getReplicationStrength: Double = replicate
+  private def thirds(x: Double) = if (x < -0.3) -1 else if (x > 0.3) 1 else 0
+
+  def rotation: Double = out.rotation * Math.PI
+  def speed: Int = thirds(out.speed)
+  def horniness: Double = out.horniness
+  def agression: Double = thirds(out.agression)
 }

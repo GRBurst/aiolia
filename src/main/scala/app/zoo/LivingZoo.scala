@@ -50,7 +50,7 @@ class LivingZoo(config: ZooConfig) {
 
   def tick(world: World) {
     world.creatures.foreach { creature =>
-      val sensors = world.sensors(creature.pos, creature.rotation, 8)
+      val sensors = world.sensors(creature.pos, creature.brain.rotation, 8)
       creature.think(sensors, thinkEffort)
 
       if (creature.canReplicate) {
@@ -63,8 +63,8 @@ class LivingZoo(config: ZooConfig) {
       }
       if (creature.isAlive) {
         if (!creature.direction.isZero) {
-          val newPos = world.clamp(creature.pos + creature.direction * creature.speed)
-          creature.walk(creature.direction.length * creature.speed.abs, walkEffort)
+          val newPos = world.clamp(creature.pos + creature.direction * creature.brain.speed)
+          creature.walk(creature.direction.length * creature.brain.speed.abs, walkEffort)
           if (newPos != creature.pos) {
             world.lookup(newPos) match {
               case None =>
@@ -74,6 +74,17 @@ class LivingZoo(config: ZooConfig) {
                 world.remove(food)
                 world.move(creature, newPos)
               case Some(other: Creature) =>
+                if (creature.brain.agression >= 0 || other.brain.agression >= 0) {
+                  if (creature.energy > other.energy) {
+                    creature.energy -= other.energy
+                    world.remove(other)
+                    world.move(creature, newPos)
+                  }
+                  else {
+                    other.energy -= creature.energy
+                    world.remove(creature)
+                  }
+                }
               // TODO: fight? push?
             }
           }
