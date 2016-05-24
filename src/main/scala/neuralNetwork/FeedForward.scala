@@ -11,6 +11,8 @@ object FeedForward {
   }
 }
 
+//TODO: sigmoid: x / Math.sqrt(1 + x*x) ? // which is 1.75 times faster than tanh
+
 class FeedForward(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) {
   // Important for data indexing in neural network
   assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")

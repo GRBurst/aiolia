@@ -1,81 +1,73 @@
-package aiolia.app.zoo
+package aiolia.app.zoo.world
 
 import aiolia.grammar.Grammar
 import aiolia.util.Vec2
 
 import collection.mutable
 
-class Place(val position: Vec2) {
-  var creature: Option[Creature] = None
-  val foods: mutable.Set[Food] = mutable.HashSet.empty
-
-  def isEmpty = creature.isEmpty && foods.isEmpty
-
-  override def toString = s"Place($position, $creature, $foods)"
-}
-
 class World(val dimensions: Vec2) {
-  val field: Array[Array[Place]] = Array.tabulate(dimensions.x, dimensions.y)((x,y) => new Place(Vec2(x,y)))
+  //TODO: idea: HashSet[Vec2, Thing] for unlimited sized worlds
+  private val field: Array[Array[Option[Thing]]] = Array.tabulate(dimensions.x, dimensions.y)((x, y) => None)
 
-  private val _creatures: mutable.Set[Creature] = mutable.HashSet.empty
-  def creatures: Iterable[Creature] = _creatures
-
-  def apply(position: Vec2): Place = field(position.x)(position.y)
-  def clamp(position: Vec2): Vec2 = Vec2(0 max position.x min (dimensions.x - 1), 0 max position.y min (dimensions.y - 1))
-  def isInside(position: Vec2): Boolean = 0 <= position.x && position.x < dimensions.x && 0 <= position.y && position.y < dimensions.y
-
-  def neigbourPositions(position: Vec2): Set[Vec2] = directions.map(position + _).filter(isInside).toSet
-  def neighbourPlaces(position: Vec2): Set[Place] = neigbourPositions(position).map(apply)
-
-  def place(food: Food, position: Vec2) {
-    apply(position).foods += food
+  private val _things: mutable.Set[Thing] = mutable.HashSet.empty[Thing]
+  def things: collection.Set[Thing] = _things
+  //TODO: performance: manage additional lists for creature and food?
+  def add(thing: Thing) {
+    if (lookup(thing.pos).isEmpty) {
+      _things += thing
+      update(thing.pos, Some(thing))
+    }
+    else
+      throw new IllegalStateException(s"Trying to add $thing on occupied position: ${thing.pos}")
+  }
+  def remove(thing: Thing) {
+    _things -= thing
+    update(thing.pos, None)
+  }
+  def move(thing: Thing, newPos: Vec2) {
+    val oldPos = thing.pos
+    lookup(newPos) match {
+      case Some(thing) =>
+        throw new IllegalStateException(s"Trying to move $thing to occupied position: ${newPos}")
+      case None =>
+        update(oldPos, None)
+        update(newPos, Some(thing))
+        thing.pos = newPos
+    }
   }
 
-  def remove(food: Food, position: Vec2) {
-    apply(position).foods -= food
-  }
+  def creatures = things.collect{ case c: Creature => c }
+  def foods = things.collect{ case c: Food => c }
 
-  def place(creature: Creature) {
-    val place = apply(creature.position)
-    if (place.creature.nonEmpty)
-      throw new IllegalStateException(s"Trying to place creature on occupied place: $place")
+  def lookup(pos: Vec2): Option[Thing] = field(pos.x)(pos.y)
+  def lookupOption(pos: Vec2): Option[Option[Thing]] = if (isInside(pos)) Some(field(pos.x)(pos.y)) else None
+  def apply(pos: Vec2): Option[Thing] = lookup(pos)
+  private def update(pos: Vec2, newValue: Option[Thing]) { field(pos.x)(pos.y) = newValue }
+  def clamp(pos: Vec2): Vec2 = Vec2(0 max pos.x min (dimensions.x - 1), 0 max pos.y min (dimensions.y - 1))
+  def isInside(pos: Vec2): Boolean = 0 <= pos.x && pos.x < dimensions.x && 0 <= pos.y && pos.y < dimensions.y
 
-    _creatures += creature
-    place.creature = Some(creature)
-  }
+  val directions = Array(Vec2(0, 1), Vec2(1, 0), Vec2(1, 1), Vec2(0, -1), Vec2(-1, 0), Vec2(1, -1), Vec2(-1, 1), Vec2(-1, -1))
+  def neigbourPositions(pos: Vec2): Set[Vec2] = directions.map(pos + _).filter(isInside).toSet
+  def neighbours(pos: Vec2): Set[Thing] = neigbourPositions(pos).flatMap(lookup)
+  def emptyNeighbourPositions(pos: Vec2): Set[Vec2] = neigbourPositions(pos).filter(lookup(_).isEmpty)
 
-  def move(creature: Creature, position: Vec2) {
-    val place = apply(position)
-    if (place.creature.nonEmpty)
-      throw new IllegalStateException(s"Trying to move creature on occupied place: $place")
-
-    val oldPos = creature.position
-    apply(oldPos).creature = None
-    creature.position = position
-    place.creature = Some(creature)
-  }
-
-  def remove(creature: Creature) {
-    _creatures -= creature
-    apply(creature.position).creature = None
-  }
-
-  val directions = Array(Vec2(0,1), Vec2(1,0), Vec2(1,1), Vec2(0,-1), Vec2(-1,0), Vec2(1,-1), Vec2(-1,1), Vec2(-1,-1))
-
-  def sensors(position: Vec2) = directions.map(position + _).map { pos =>
-    if (isInside(pos)) {
-      val place = apply(pos)
-      val creatureScore = place.creature.map(_ => 0.5).getOrElse(0.0)
-      val foodScore = place.foods.headOption.map(_ => 0.5).getOrElse(0.0)
-      creatureScore + foodScore
-    } else {
-      -1
+  def sensors(pos: Vec2) = directions.map(pos + _).map { pos =>
+    lookupOption(pos) match {
+      case None => -1.0 // outside field / wall
+      case Some(thingOption) => thingOption match {
+        case None              => 0.0 // empty position
+        case Some(_: Food)     => 0.5
+        case Some(_: Creature) => 0.5
+      }
     }
   }
 
   override def toString = field.map { line =>
-    def who(place: Place) = place.creature.map(c => s"${(c.energy * 10).toInt.toHexString},${"%+f".format(c.replicationStrength).head}${(c.replicationStrength.abs * 10).toInt.toHexString}").getOrElse("-")
-    def what(place: Place) = place.foods.size.toString
-    Seq(who(_), what(_)).map(f => line.map(f(_).padTo(4, " ").mkString).mkString("|")).mkString("\n") + "\n" + "-" * 5 * line.size
+    def desc(place: Option[Thing]) = place match {
+      case Some(c: Creature) => s"${(c.energy * 10).toInt.toHexString},${"%+f".format(c.replicationStrength).head}${(c.replicationStrength.abs * 10).toInt.toHexString}"
+      case Some(f: Food)     => s"F"
+      case None              => "-"
+    }
+    line.map(desc(_).padTo(4, " ").mkString).mkString("|") + "\n" + "-" * 5 * line.size
   }.mkString("\n")
 }

@@ -1,5 +1,6 @@
 package aiolia.app.zoo
 
+import world._
 import aiolia.grammar.Grammar
 import aiolia.util._
 import aiolia.graph.DSL._
@@ -7,8 +8,8 @@ import aiolia.graph.DSL._
 class LivingZoo(config: ZooConfig) {
   import config._
 
-  def baseGenotype: Grammar[Double,Double] = Grammar.inOut(Creature.inputs, Creature.outputs, initVertexData)
-  def newCreature(position: Vec2) = Creature(mutate(baseGenotype), initialEnergy, position)
+  def baseGenotype: Grammar[Double, Double] = Grammar.inOut(Creature.inputs, Creature.outputs, initVertexData)
+  def newCreature(pos: Vec2) = Creature(mutate(baseGenotype), initialEnergy, pos)
   def randomPosition(world: World): Vec2 = Vec2(random.r.nextInt(world.dimensions.x), random.r.nextInt(world.dimensions.y))
 
   def live() {
@@ -16,7 +17,7 @@ class LivingZoo(config: ZooConfig) {
     println("Initial world:")
     println(world)
     while (true) {
-      println("#" * 10)
+      println("#" * world.dimensions.x * 5)
 
       assurePopulation(world)
       assureFood(world)
@@ -31,49 +32,52 @@ class LivingZoo(config: ZooConfig) {
   def assurePopulation(world: World) {
     if (world.creatures.size >= minimumPopulation) return
 
-    val position = randomPosition(world)
-    val place = world(position)
-    if (place.creature.isEmpty)
-      world.place(newCreature(position))
+    val pos = randomPosition(world)
+    if (world(pos).isEmpty)
+      world.add(newCreature(pos))
   }
 
   def assureFood(world: World) {
-    val rand = random.r.nextDouble
-    if (rand <= foodProbability) {
-      val position = randomPosition(world)
-      world.place(Apple, position)
+    if (random.r.nextDouble <= foodProbability) {
+      val pos = randomPosition(world)
+      if (world(pos).isEmpty)
+        world.add(new Apple(pos))
     }
   }
 
   def tick(world: World) {
     world.creatures.foreach { creature =>
-      val currentPlace = world(creature.position)
-      val sensors = world.sensors(creature.position)
-
-      currentPlace.foods.headOption.foreach { food =>
-        creature.eat(food)
-        world.remove(food, currentPlace.position)
-      }
-
+      val sensors = world.sensors(creature.pos)
       creature.think(sensors, thinkEffort)
 
       if (creature.canReplicate) {
-        val birthplace = world.neighbourPlaces(creature.position).find(_.creature.isEmpty)
-        birthplace.foreach { place =>
+        val birthPos = world.emptyNeighbourPositions(creature.pos).headOption
+        birthPos.foreach { pos =>
           val passedOnEnergy = creature.replicate()
-          val child = Creature(mutate(creature.genotype), passedOnEnergy, place.position)
-          world.place(child)
+          val child = Creature(mutate(creature.genotype), passedOnEnergy, pos)
+          world.add(child)
         }
       }
-
       if (creature.isAlive) {
-        val clamped = world.clamp(creature.position + creature.direction)
-        val target = world(clamped)
-        if (target.creature.isEmpty) {
-          creature.walk(creature.position distance target.position, walkEffort)
-          world.move(creature, target.position)
+        if (!creature.direction.isZero) {
+          val newPos = world.clamp(creature.pos + creature.direction)
+          creature.walk(creature.direction.length, walkEffort)
+          if (newPos != creature.pos) {
+            world.lookup(newPos) match {
+              case None =>
+                world.move(creature, newPos)
+              case Some(food: Food) =>
+                creature.eat(food)
+                world.remove(food)
+                world.move(creature, newPos)
+              case Some(other: Creature) =>
+              // TODO: fight? push?
+            }
+          }
         }
-      } else {
+      }
+      else {
+        // TODO: transform into eadable corpse?
         world.remove(creature)
       }
     }
@@ -83,10 +87,10 @@ class LivingZoo(config: ZooConfig) {
     if (world.creatures.isEmpty) return
 
     val oldest = world.creatures.maxBy(_.age)
-    File.write("oldest.dot", DOTExport.toDOT(oldest.genotype.expand, Creature.inputs, Creature.outputs))
+    File.write("/tmp/oldest.dot", DOTExport.toDOT(oldest.genotype.expand, Creature.inputs, Creature.outputs))
   }
 
-  def mutate(genotype: Grammar[Double,Double]): Grammar[Double,Double] = {
+  def mutate(genotype: Grammar[Double, Double]): Grammar[Double, Double] = {
     var curr = genotype
     for (_ <- 0 to mutationCount) {
       val mut = random.select(mutationOperators)

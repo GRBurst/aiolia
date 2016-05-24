@@ -4,18 +4,18 @@ import aiolia.grammar._
 import aiolia.util._
 
 class ZooConfig(
-  val mutationCount: Int = 20,
-  val foodProbability: Double = 0.5,
-  val minimumPopulation: Int = 10,
-  val initialEnergy: Double = 0.8,
-  val walkEffort: Double = 0.001,
-  val thinkEffort: Double = 0.0005,
-  val worldDimensions: Vec2 = Vec2(10,10)
+    val mutationCount:     Int    = 20,
+    val foodProbability:   Double = 0.5,
+    val minimumPopulation: Int    = 1,
+    val initialEnergy:     Double = 0.8,
+    val walkEffort:        Double = 0.01,
+    val thinkEffort:       Double = 0.0005,
+    val worldDimensions:   Vec2   = Vec2(10, 10)
 ) extends DataGraphGrammarOpConfig[Double, Double] { config =>
 
   val random = Random(0)
 
-  val mutationOperators: List[(Grammar[Double,Double]) => Option[Grammar[Double,Double]]] = (
+  val mutationOperators: List[(Grammar[Double, Double]) => Option[Grammar[Double, Double]]] = (
     2 -> AddConnectedVertex(config) ::
     2 -> AddEdge(config) ::
     1 -> MutateVertex(config) ::
@@ -36,4 +36,3 @@ object Zoo extends App {
   val zoo = new LivingZoo(new ZooConfig)
   zoo.live()
 }
-
