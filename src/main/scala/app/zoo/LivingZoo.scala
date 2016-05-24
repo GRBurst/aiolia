@@ -1,5 +1,9 @@
 package aiolia.app.zoo
 
+import scala.concurrent.duration._
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import world._
 import aiolia.grammar.Grammar
 import aiolia.util._
@@ -83,11 +87,18 @@ class LivingZoo(config: ZooConfig) {
     }
   }
 
+  var nextDraw = Duration.Zero.fromNow
+
   def writeDOTToFile(world: World) {
     if (world.creatures.isEmpty) return
 
-    val oldest = world.creatures.maxBy(_.age)
-    File.write("/tmp/oldest.dot", DOTExport.toDOT(oldest.genotype.expand, Brain.inputs, Brain.outputs))
+    if (nextDraw.timeLeft <= Duration.Zero) {
+      nextDraw = 5 seconds fromNow
+      Future {
+        val oldest = world.creatures.maxBy(_.age)
+        File.write("/tmp/oldest.dot", DOTExport.toDOT(oldest.genotype.expand, Brain.inputs, Brain.outputs))
+      }
+    }
   }
 
   def mutate(genotype: Grammar[Double, Double]): Grammar[Double, Double] = {
