@@ -10,6 +10,7 @@ object DSL {
   def V(labels: Range) = labels.map(Vertex(_)).toSet
   def V(labels: Label*) = labels.map(Vertex(_)).toSet
   def VL(labels: Label*) = labels.map(Vertex(_)).toList
+  def VL(labels: Range) = labels.map(Vertex(_)).toList
   def e(edge: (Label, Label)) = edge match { case (in, out) => Edge(Vertex(in), Vertex(out)) }
   def E(es: (Label, Label)*) = es.map{ case (in, out) => Edge(Vertex(in), Vertex(out)) }.toSet
   def C(labels: Label*) = labels.map(Vertex(_)).toList // connectors

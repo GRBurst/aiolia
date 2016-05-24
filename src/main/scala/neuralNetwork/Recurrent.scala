@@ -19,7 +19,7 @@ class Recurrent(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double
   // assert(in.forall(graph.incomingEdges(_).isEmpty), "Input neurons should not have incoming edges")
   // assert(out.forall(graph.outgoingEdges(_).isEmpty), "Output neurons should not have outgoing edges")
 
-  import graph.{edgeData => weight, vertexData => bias, vertices => neurons}
+  import graph.{edgeData => weight, vertexData => bias, vertices => neurons, edges => synapses}
 
   private var currentState = 0
   private val stateArray = Array(Array.fill[Double](graph.vertices.size)(0), Array.fill[Double](graph.vertices.size)(0))
@@ -44,6 +44,8 @@ class Recurrent(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double
 
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1).toDouble
   def dot(as: List[Double], bs: List[Double]): Double = ((as zip bs) map { case (a, b) => a * b }).sum
+
+  def size = neurons.size + synapses.size
 
   def think() {
     for (neuron <- neurons -- in) {

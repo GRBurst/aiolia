@@ -7,11 +7,7 @@ import scala.annotation.tailrec
 
 object Grammar {
   def minimal[V, E] = Grammar[V, E](Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))
-  def inOut(in: List[Vertex], out: List[Vertex]) = {
-    val axiom = Graph(Set.empty ++ in ++ out, nonTerminals = List(NonTerminal(1, in ++ out)))
-    Grammar(axiom, Map(1 -> Graph(axiom.vertices, connectors = in ++ out)))
-  }
-  def inOutWithData[T](in: List[Vertex], out: List[Vertex], dataFunc: () => Option[T]) = {
+  def inOut[T](in: List[Vertex], out: List[Vertex], dataFunc: () => Option[T] = () => None) = {
     val vertexData = (in ++ out).flatMap(v => dataFunc().map(v -> _)).toMap
     val axiom = Graph(Set.empty ++ in ++ out, nonTerminals = List(NonTerminal(1, in ++ out)), vertexData = vertexData)
     Grammar(axiom, Map(1 -> Graph(axiom.vertices, connectors = in ++ out)))
