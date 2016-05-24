@@ -50,15 +50,40 @@ class World(val dimensions: Vec2) {
   def neigbourPositions(pos: Vec2): Set[Vec2] = directions.map(pos + _).filter(isInside).toSet
   def neighbours(pos: Vec2): Set[Thing] = neigbourPositions(pos).flatMap(lookup)
   def emptyNeighbourPositions(pos: Vec2): Set[Vec2] = neigbourPositions(pos).filter(lookup(_).isEmpty)
+  def neighbourCirclePositions(pos: Vec2, radius: Double) = { // without pos
+    val radiusSq = radius * radius
+    for (
+      x <- (pos.x - radius.ceil.toInt) to (pos.x + radius.ceil.toInt);
+      y <- (pos.y - radius.ceil.toInt) to (pos.y + radius.ceil.toInt);
+      if pos != Vec2(x, y) && ((pos.x - x) * (pos.x - x) + (pos.y - y) * (pos.y - y)) < radiusSq
+    ) yield Vec2(x, y)
+  }
+  def neighbourCone(pos: Vec2, radius: Double, startAngle: Double, endAngle: Double) = neighbourCirclePositions(pos, radius).filter{ p =>
+    val a = (p - pos).angle
+    if (startAngle < endAngle) startAngle <= a && a <= endAngle
+    else {
+      val d = 2 * Math.PI - startAngle
+      0 <= (a + d) && a <= endAngle
+    }
+  }
 
-  def sensors(pos: Vec2, rotation: Double) = directions.map(pos + _.rotate(rotation)).map { pos =>
-    lookupOption(pos) match {
-      case None => -1.0 // outside field / wall
-      case Some(thingOption) => thingOption match {
-        case None              => 0.0 // empty position
-        case Some(_: Food)     => 0.5
-        case Some(_: Creature) => 0.5
-      }
+  def appearance(pos: Vec2): Double = lookupOption(pos) match {
+    case None => -1.0 // outside field / wall
+    case Some(thingOption) => thingOption match {
+      case None              => 0.0 // empty position
+      case Some(_: Food)     => 0.5
+      case Some(_: Creature) => 0.5
+    }
+  }
+
+  def sensors(pos: Vec2, rotation: Double, count: Int): Array[Double] = {
+    val radius = 5 //TODO -> config
+    val a = 2 * Math.PI / count
+    Array.tabulate(count){ i =>
+      val startAngle = rotation + i * a
+      val endAngle = rotation + (i + 1) * a
+      val cone = neighbourCone(pos, radius, startAngle, endAngle)
+      cone.map(appearance).sum / cone.size
     }
   }
 
