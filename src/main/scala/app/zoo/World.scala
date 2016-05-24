@@ -7,7 +7,7 @@ import collection.mutable
 
 class World(val dimensions: Vec2) {
   //TODO: idea: HashSet[Vec2, Thing] for unlimited sized worlds
-  private val field: Array[Array[Option[Thing]]] = Array.tabulate(dimensions.x, dimensions.y)((x, y) => None)
+  private val field: Array[Array[Option[Thing]]] = Array.fill(dimensions.y, dimensions.x)(None)
 
   private val _things: mutable.Set[Thing] = mutable.HashSet.empty[Thing]
   def things: collection.Set[Thing] = _things
@@ -39,10 +39,10 @@ class World(val dimensions: Vec2) {
   def creatures = things.collect{ case c: Creature => c }
   def foods = things.collect{ case c: Food => c }
 
-  def lookup(pos: Vec2): Option[Thing] = field(pos.x)(pos.y)
-  def lookupOption(pos: Vec2): Option[Option[Thing]] = if (isInside(pos)) Some(field(pos.x)(pos.y)) else None
+  def lookup(pos: Vec2): Option[Thing] = field(pos.y)(pos.x)
+  def lookupOption(pos: Vec2): Option[Option[Thing]] = if (isInside(pos)) Some(field(pos.y)(pos.x)) else None
   def apply(pos: Vec2): Option[Thing] = lookup(pos)
-  private def update(pos: Vec2, newValue: Option[Thing]) { field(pos.x)(pos.y) = newValue }
+  private def update(pos: Vec2, newValue: Option[Thing]) { field(pos.y)(pos.x) = newValue }
   def clamp(pos: Vec2): Vec2 = Vec2(0 max pos.x min (dimensions.x - 1), 0 max pos.y min (dimensions.y - 1))
   def isInside(pos: Vec2): Boolean = 0 <= pos.x && pos.x < dimensions.x && 0 <= pos.y && pos.y < dimensions.y
 
