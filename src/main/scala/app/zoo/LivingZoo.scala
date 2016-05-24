@@ -11,7 +11,7 @@ class LivingZoo(config: ZooConfig) {
   def baseGenotype: Grammar[Double, Double] = Grammar.inOut(Brain.inputs, Brain.outputs, initVertexData)
   def newCreature(pos: Vec2) = Creature(mutate(baseGenotype), initialEnergy, pos)
   def randomPosition(world: World): Vec2 = Vec2(random.r.nextInt(world.dimensions.x), random.r.nextInt(world.dimensions.y))
-
+  def randomPositionAround(world: World, pos: Vec2, radius: Double = 1): Vec2 = pos + Vec2((random.r.nextGaussian * radius).round.toInt, (random.r.nextGaussian * radius).round.toInt)
   def live() {
     val world = new World(worldDimensions)
     println("Initial world:")
@@ -39,7 +39,7 @@ class LivingZoo(config: ZooConfig) {
 
   def assureFood(world: World) {
     if (random.r.nextDouble <= foodProbability) {
-      val pos = randomPosition(world)
+      val pos = randomPositionAround(world, world.dimensions / 2, radius = 2)
       if (world(pos).isEmpty)
         world.add(new Apple(pos))
     }

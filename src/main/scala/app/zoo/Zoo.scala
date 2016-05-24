@@ -10,7 +10,7 @@ class ZooConfig(
     val initialEnergy:     Double = 0.8,
     val walkEffort:        Double = 0.005,
     val thinkEffort:       Double = 0.0005,
-    val worldDimensions:   Vec2   = Vec2(30, 30)
+    val worldDimensions:   Vec2   = Vec2(20, 20)
 ) extends DataGraphGrammarOpConfig[Double, Double] { config =>
 
   val random = Random(0)

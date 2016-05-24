@@ -65,7 +65,7 @@ class World(val dimensions: Vec2) {
   override def toString = field.map { line =>
     def desc(place: Option[Thing]) = place match {
       case Some(c: Creature) => s"${(c.energy * 10).toInt.toHexString},${"%+f".format(c.replicationStrength).head}${(c.replicationStrength.abs * 10).toInt.toHexString}"
-      case Some(f: Food)     => s"F"
+      case Some(f: Food)     => s" F"
       case None              => ""
     }
     line.map(desc(_).padTo(4, " ").mkString).mkString("|") + "\n" + "-" * 5 * line.size
