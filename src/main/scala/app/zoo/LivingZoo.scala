@@ -21,14 +21,13 @@ class LivingZoo(config: ZooConfig) {
     println("Initial world:")
     println(world)
     while (true) {
-      println("#" * world.dimensions.x * 5)
-
       assurePopulation(world)
       assureFood(world)
       tick(world)
 
       writeDOTToFile(world)
       println(world)
+      println("#" * world.dimensions.x * 5)
       Thread.sleep(200)
     }
   }
