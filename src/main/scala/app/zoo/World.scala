@@ -67,24 +67,29 @@ class World(val dimensions: Vec2) {
     }
   }
 
-  def appearance(pos: Vec2): Double = lookupOption(pos) match {
-    case None => -1.0 // outside field / wall
+  def appearanceAt(pos: Vec2): Double = lookupOption(pos) match {
+    case None => 0.1 // outside field / wall
     case Some(thingOption) => thingOption match {
       case None              => 0.0 // empty position
-      case Some(_: Food)     => 0.5
-      case Some(_: Creature) => 0.5
+      case Some(_: Food)     => 1.0
+      case Some(c: Creature) => -c.brain.agression
     }
   }
 
   def sensors(pos: Vec2, rotation: Double, count: Int): Array[Double] = {
     val radius = 5 //TODO -> config
     val a = 2 * Math.PI / count
-    Array.tabulate(count){ i =>
+    (Array.tabulate(count){ i =>
       val startAngle = rotation + i * a
       val endAngle = rotation + (i + 1) * a
       val cone = neighbourCone(pos, radius, startAngle, endAngle)
-      cone.map(appearance).sum / cone.size
-    }
+      val visible = cone.map(p => ((p distance pos) -> appearanceAt(p))).filter{ case (_, a) => a != 0.0 }
+      if (visible.isEmpty) Array(1.0, 0.0)
+      else {
+        val (distance, appearance) = visible.minBy{ case (distance, _) => distance }
+        Array(distance, appearance)
+      }
+    }).flatten
   }
 
   override def toString = field.map { line =>

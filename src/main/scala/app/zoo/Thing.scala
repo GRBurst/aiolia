@@ -74,7 +74,7 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, pro
 }
 
 object Brain {
-  val inputs = VL(0 to 8)
+  val inputs = VL(0) ::: VL(1 to 8)
   val outputs = VL(9, 10, 11, 12)
 }
 

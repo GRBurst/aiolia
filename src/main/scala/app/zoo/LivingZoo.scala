@@ -50,7 +50,7 @@ class LivingZoo(config: ZooConfig) {
 
   def tick(world: World) {
     world.creatures.foreach { creature =>
-      val sensors = world.sensors(creature.pos, creature.brain.rotation, 8)
+      val sensors = world.sensors(creature.pos, creature.brain.rotation, 4)
       creature.think(sensors, thinkEffort)
 
       if (creature.canReplicate) {
