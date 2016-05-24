@@ -91,8 +91,8 @@ class LivingZoo(config: ZooConfig) {
         }
       }
       else {
-        // TODO: transform into eadable corpse?
         world.remove(creature)
+        world.add(new Corpse(creature))
       }
     }
   }

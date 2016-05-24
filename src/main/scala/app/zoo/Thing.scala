@@ -5,27 +5,35 @@ import aiolia.graph.DSL._
 import aiolia.neuralNetwork.Recurrent
 import aiolia.util.Vec2
 
-sealed trait Thing {
-  protected def initialPos: Vec2
+sealed abstract class Thing(initialPos: Vec2) {
   private var _pos: Vec2 = initialPos
   private[world] def pos_=(pos: Vec2) { _pos = pos }
   def pos = _pos
 }
 
-sealed trait Food extends Thing {
+sealed abstract class Food(initialPos: Vec2) extends Thing(initialPos) {
   val energy: Double
+  val symbol: String
 }
 
-class Apple(protected val initialPos: Vec2) extends Food {
+class Apple(initialPos: Vec2) extends Food(initialPos) {
   val energy = 0.5
+  val symbol = "A"
   override def toString = s"Apple($energy)"
+}
+
+class Corpse(val creature: Creature) extends Food(creature.pos) {
+  protected val initialPos = creature.pos
+  val energy = creature.energy
+  val symbol = "✝"
+  override def toString = s"Corpse($creature)"
 }
 
 object Creature {
   def apply(genotype: Grammar[Double, Double], initialEnergy: Double, pos: Vec2) = new Creature(genotype, initialEnergy, pos)
 }
 
-class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, protected val initialPos: Vec2) extends Thing {
+class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, initialPos: Vec2) extends Thing(initialPos) {
   import Brain._
 
   val brain = new Brain(genotype)
