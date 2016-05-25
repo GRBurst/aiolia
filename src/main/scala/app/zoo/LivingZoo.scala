@@ -50,7 +50,7 @@ class LivingZoo(config: ZooConfig) {
 
   def tick(world: World) {
     world.creatures.foreach { creature =>
-      val sensors = world.sensors(creature.pos, creature.brain.rotation, 4)
+      val sensors = world.sensors(creature.pos, creature.brain.rotation, 3)
       creature.think(sensors, thinkEffort)
 
       if (creature.canReplicate) {
@@ -106,7 +106,7 @@ class LivingZoo(config: ZooConfig) {
       nextDraw = 5 seconds fromNow
       Future {
         val oldest = world.creatures.maxBy(_.age)
-        File.write("/tmp/oldest.dot", DOTExport.toDOT(oldest.genotype.expand, Brain.inputs, Brain.outputs))
+        File.write("/tmp/oldest.dot", DOTExport.toDOT(oldest.genotype.expand, Brain.inputs, Brain.outputs, Brain.labelNames))
       }
     }
   }

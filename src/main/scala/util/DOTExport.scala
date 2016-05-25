@@ -6,24 +6,34 @@ import aiolia.graph._
 import scala.collection.mutable
 
 object DOTExport {
-  def toDOT[V, E](graph: Graph[V, E], inputs: List[Vertex] = Nil, outputs: List[Vertex] = Nil) = {
+  def toDOT[V, E](graph: Graph[V, E], inputs: List[Vertex] = Nil, outputs: List[Vertex] = Nil, _labelNames: Map[Label, String] = Map.empty.withDefault(_.toString)) = {
+    val name = _labelNames.withDefault(_.toString)
     import graph._
 
-    def t(c: Double) = 255 - (c.abs * 255).toInt.max(0).min(255) // range -1..1 => 0..255
-    def edgeColor(e: Edge) = graph.edgeData.get(e) match {
-      case Some(d: Double) =>
-        if (d >= 0)
-          "#" + ("%02X" format t(d)) * 3
-        else { "#" + ("%02X%02X%02X" format (t(d) / 2, t(d) / 3, t(d))) }
-      case _ => "#000000"
+    def t(c: Double) = 255 - (c.abs * 255).round.toInt.max(0).min(255) // range -1..1 => 0..255
+
+    def color(d: Double) = {
+      if (d >= 0)
+        "#" + ("%02X" format t(d)) * 3
+      else { "#" + ("%02X%02X%02X" format (t(d) / 2, t(d) / 3, t(d))) }
+    }
+
+    def eColor(e: Edge) = graph.edgeData.get(e) match {
+      case Some(d: Double) => color(d)
+      case _               => "#000000"
+    }
+
+    def vColor(e: Vertex) = graph.vertexData.get(e) match {
+      case Some(d: Double) => color(d)
+      case _               => "#000000"
     }
     s"""
 digraph G {  
   rankdir = "LR"
-  ${edges.map(e => s"""$e [color = "${edgeColor(e)}"]""").mkString("\n  ")}
-  ${(vertices -- inputs -- outputs).map(v => s"$v [shape = circle]").mkString("\n  ")}
-  ${inputs.map(v => s"""$v [shape = circle, rank = "source", style = filled, fillcolor = "#FFAB38"]""").mkString("\n  ")}
-  ${outputs.map(v => s"""$v [shape = circle, rank = "sink", style = filled, fillcolor = "#02E8D5"]""").mkString("\n  ")}
+  ${edges.map(e => s"""${name(e.in.label)} -> ${name(e.out.label)} [color = "${eColor(e)}"]""").mkString("\n  ")}
+  ${(vertices -- inputs -- outputs).map(v => s"${name(v.label)} [shape = circle]").mkString("\n  ")}
+  ${inputs.map(v => s"""${name(v.label)} [shape = circle, rank = "source", style = filled, fillcolor = "#FFAB38"]""").mkString("\n  ")}
+  ${outputs.map(v => s"""${name(v.label)} [shape = circle, rank = "sink", style = filled, fillcolor = "#02E8D5", color = "${vColor(v)}"]""").mkString("\n  ")}
 }
 """
   }

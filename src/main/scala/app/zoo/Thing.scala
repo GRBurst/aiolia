@@ -82,8 +82,33 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
 }
 
 object Brain {
-  val inputs = VL(0) ::: VL(1 to 8)
-  val outputs = VL(9, 10, 11, 12)
+  val visionSensors = 3
+  private val inAutoId = AutoId(0)
+  private def inId = inAutoId.nextId
+  private val _inMap: List[(Int, String)] = (
+    (inId -> "enr") ::
+    (0 until visionSensors).toList.flatMap(i => List(inId -> s"dst$i", inId -> s"ap$i")) :::
+    Nil
+  )
+  private val inMap: Map[Label, String] = _inMap.toMap
+  private val inLabels: List[Label] = _inMap.unzip._1
+  println(inLabels)
+
+  private val outAutoId = AutoId(inId)
+  private def outId = outAutoId.nextId
+  private val _outMap: List[(Int, String)] = (
+    (outId -> "rot") ::
+    (outId -> "spd") ::
+    (outId -> "hrn") ::
+    (outId -> "agr") ::
+    Nil
+  )
+  private val outMap: Map[Label, String] = _outMap.toMap
+  private val outLabels: List[Label] = _outMap.unzip._1
+
+  val inputs = VL(inLabels: _*)
+  val outputs = VL(outLabels: _*)
+  val labelNames = inMap ++ outMap
 }
 
 class Brain(net: Recurrent) {
