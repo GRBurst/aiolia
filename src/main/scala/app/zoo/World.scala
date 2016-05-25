@@ -94,7 +94,7 @@ class World(val dimensions: Vec2) {
 
   override def toString = field.map { line =>
     def desc(place: Option[Thing]) = place match {
-      case Some(c: Creature) => s"${(c.energy * 10).toInt.toHexString},${"%+f".format(c.replicate).head}${(c.replicate.abs * 10).toInt.toHexString}"
+      case Some(c: Creature) => s"${(c.energy * 10).toInt.toHexString},${((c.brain.horniness + 1) * 5).toInt.toHexString}${if (c.canReplicate) "+" else " "}"
       case Some(f: Food)     => s" ${f.symbol}"
       case None              => ""
     }

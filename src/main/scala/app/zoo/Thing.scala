@@ -53,8 +53,8 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
   def age = _age
   var walkedDistance = 0
 
-  def canReplicate = brain.horniness > 0 && energy > 0.5 && age > 1
   def isAlive = energy > 0 && (age - walkedDistance < 15)
+  def canReplicate = energy > 0.8 && age > 2
 
   def think(sensors: Array[Double], effort: Double) {
     brain.feed(energy, sensors)
@@ -76,11 +76,12 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
     if (brain.horniness <= 0) return 0
 
     val passedOnEnergy = brain.horniness * energy
+    // val passedOnEnergy = 0.3 * energy
     energy -= passedOnEnergy
     passedOnEnergy
   }
 
-  override def toString = s"Creature(energy = $energy, direction = $direction, replication = $replicate, pos = $pos)"
+  override def toString = s"Creature(energy = $energy, direction = $direction, replication = ${brain.horniness}, pos = $pos)"
 }
 
 object Brain {
