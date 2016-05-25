@@ -66,6 +66,7 @@ class LivingZoo(config: ZooConfig) {
           val newPos = world.clamp(creature.pos + creature.direction * creature.brain.speed)
           creature.walk(creature.direction.length * creature.brain.speed.abs, walkEffort)
           if (newPos != creature.pos) {
+            creature.walkedDistance += 1
             world.lookup(newPos) match {
               case None =>
                 world.move(creature, newPos)

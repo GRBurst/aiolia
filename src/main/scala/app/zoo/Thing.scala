@@ -2,8 +2,9 @@ package aiolia.app.zoo.world
 
 import aiolia.grammar.Grammar
 import aiolia.graph.DSL._
+import aiolia.graph._
 import aiolia.neuralNetwork.Recurrent
-import aiolia.util.Vec2
+import aiolia.util.{Vec2, AutoId}
 
 sealed abstract class Thing(initialPos: Vec2) {
   private var _pos: Vec2 = initialPos
@@ -50,9 +51,10 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
   private var _age: Long = 0
   private def age_=(newAge: Long) { _age = newAge }
   def age = _age
+  var walkedDistance = 0
 
-  def isAlive = energy > 0
   def canReplicate = brain.horniness > 0 && energy > 0.5 && age > 1
+  def isAlive = energy > 0 && (age - walkedDistance < 15)
 
   def think(sensors: Array[Double], effort: Double) {
     brain.feed(energy, sensors)
