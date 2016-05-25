@@ -75,18 +75,24 @@ class LivingZoo(config: ZooConfig) {
                 world.remove(food)
                 world.move(creature, newPos)
               case Some(other: Creature) =>
-                if (creature.brain.agression >= 0 || other.brain.agression >= 0) {
-                  if (creature.energy > other.energy) {
-                    creature.energy -= other.energy
+                if (creature.brain.agression >= 0) {
+                  if (other.brain.agression >= 0) { // fight to death
+                    if (creature.energy > other.energy) { // creature is stronger
+                      creature.energy -= other.energy
+                      world.remove(other)
+                      world.move(creature, newPos)
+                    }
+                    else { // creature is weaker
+                      other.energy -= creature.energy
+                      world.remove(creature)
+                    }
+                  }
+                  else { // other does not defend itself and gets eaten
+                    creature.energy += other.energy * 0.5
                     world.remove(other)
                     world.move(creature, newPos)
                   }
-                  else {
-                    other.energy -= creature.energy
-                    world.remove(creature)
-                  }
                 }
-              // TODO: fight? push?
             }
           }
         }
