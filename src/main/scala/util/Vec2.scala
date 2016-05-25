@@ -17,9 +17,10 @@ case class Vec2(x: Int, y: Int) {
     assert(x.abs == 1 || x == 0)
     assert(y.abs == 1 || y == 0)
 
+    def thirds(x: Double) = if (x < -0.3) -1 else if (x > 0.3) 1 else 0
     val res = Vec2(
-      x = Math.cos(this.angle + angle).signum,
-      y = Math.sin(this.angle + angle).signum
+      x = thirds(Math.cos(this.angle + angle)),
+      y = thirds(Math.sin(this.angle + angle))
     )
 
     assert(res.x.abs == 1 || res.x == 0)
