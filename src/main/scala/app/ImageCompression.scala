@@ -38,7 +38,7 @@ case class ImageCompressionConfig(
     preview:               Boolean = true,
     picture:               String  = "primitives.png",
     pictureWidth:          Int     = 16
-) extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig {
+) extends Config[Grammar[Double, Double]] with InOutGrammarOpConfig[Double, Double] {
   config =>
   override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutSc: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%10.8f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, mutationGaussianScale, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
   type Genotype = Grammar[Double, Double]
@@ -67,9 +67,9 @@ case class ImageCompressionConfig(
   override def mutateVertexData(d: Double) = d + random.r.nextGaussian * vertexMutationStrength
   override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * edgeMutationStrength
   override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle &&
-    feedForwardInputs.forall(grammar.expand.inDegree(_) == 0) &&
-    feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0) &&
-    (grammar.expand.vertices -- feedForwardInputs -- feedForwardOutputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
+    inputs.forall(grammar.expand.inDegree(_) == 0) &&
+    outputs.forall(grammar.expand.outDegree(_) == 0) &&
+    (grammar.expand.vertices -- inputs -- outputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
 
   val compilePixelThreshold = 1000000
 
@@ -81,9 +81,9 @@ case class ImageCompressionConfig(
   lazy val resizedTargets = (0 to steps).map(1 << _).map(target.resized(_))
   // Future { target.write("/tmp/currentresized.png") }
 
-  val feedForwardInputs = VL(0, 1)
-  val feedForwardOutputs = VL(2, 3, 4)
-  val baseGenotype = Grammar.inOut(feedForwardInputs, feedForwardOutputs)
+  val inputs = VL(0, 1)
+  val outputs = VL(2, 3, 4)
+  val baseGenotype = Grammar.inOut(inputs, outputs)
 
   def calculateFitness(g: Genotype, prefix: String): Double = {
     var sum = 0.0
@@ -99,7 +99,7 @@ case class ImageCompressionConfig(
   def imageDistance(g: Genotype, target: Image, prefix: String = ""): Double = generateImage(g, target.w, target.h, prefix) fuzzyDistance target
 
   def generateImage(g: Genotype, w: Int, h: Int, prefix: String = "") = {
-    val network = FeedForward(feedForwardInputs, feedForwardOutputs, g.expand)
+    val network = FeedForward(inputs, outputs, g.expand)
     val image = Image.create(w, h)
 
     if (image.pixels >= compilePixelThreshold) {
@@ -122,7 +122,7 @@ case class ImageCompressionConfig(
         val population = _population.sortBy(fitness).reverse
         // val best = population.head
         //   // generateImage(best, target.w, target.h).write(s"/tmp/current.png")
-        //   // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, feedForwardInputs, feedForwardOutputs))
+        //   // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best.expand, inputs, outputs))
         //   // File.write("/tmp/currentgrammar.dot", DOTExport.toDOT(best))
         drawPopulation(population, "/tmp/population.png")
       }

@@ -30,7 +30,7 @@ case class AddVertex[V, E](config: DataGraphGrammarOpConfig[V, E]) extends Mutat
   }
 }
 
-case class SplitEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+case class SplitEdge(config: InOutGrammarOpConfig[Double, Double]) extends MutationOp[Grammar[Double, Double]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val requirement = (graph: Graph[Double, Double], edge: Edge) => edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
@@ -56,10 +56,10 @@ case class SplitEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Gram
   }
 }
 
-case class ReconnectEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+case class ReconnectEdge[V,E](config: InOutGrammarOpConfig[V,E]) extends MutationOp[Grammar[V,E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
-    val requirement = (graph: Graph[Double, Double], edge: Edge) => edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
+    def requirement(graph: Graph[_, _], edge: Edge) = edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
     val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists(requirement(graph, _)) }
     random.selectOpt(candidates).flatMap {
       case (label, graph) =>
@@ -76,14 +76,14 @@ case class ReconnectEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[
         //TODO: choose non-violating vertices in the first place
         val result = grammar.updateProduction(label -> newGraph)
         if (newGraph.hasCycle || result.expand.hasCycle ||
-          feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
-          feedForwardOutputs.exists(result.expand.outDegree(_) > 0) ||
-          (result.expand.vertices -- feedForwardInputs -- feedForwardOutputs).exists(v => result.expand.inDegree(v) == 0 || result.expand.outDegree(v) == 0)) None else Some(result)
+          inputs.exists(result.expand.inDegree(_) > 0) ||
+          outputs.exists(result.expand.outDegree(_) > 0) ||
+          (result.expand.vertices -- inputs -- outputs).exists(v => result.expand.inDegree(v) == 0 || result.expand.outDegree(v) == 0)) None else Some(result)
     }
   }
 }
 
-case class Shrink(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+case class Shrink(config: InOutGrammarOpConfig[Double,Double]) extends MutationOp[Grammar[Double, Double]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
@@ -139,8 +139,8 @@ case class AddConnectedVertex[V,E](config: DataGraphGrammarOpConfig[V,E]) extend
 
       val newGraph = graph.copy(vertices = newVertices, edges = newEdges, vertexData = newVertexData, edgeData = newEdgeData)
       val result = grammar.updateProduction(label -> newGraph)
-      // if (feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
-      //   feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
+      // if (inputs.exists(result.expand.inDegree(_) > 0) ||
+      //   outputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
       Some(result)
     }
   }
@@ -170,7 +170,7 @@ case class RemoveVertex[V, E](config: MutationOpConfig[Grammar[V, E]]) extends M
   }
 }
 
-case class AddAcyclicEdge(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+case class AddAcyclicEdge[V,E](config: InOutGrammarOpConfig[V,E]) extends MutationOp[Grammar[V,E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter {
@@ -193,8 +193,8 @@ case class AddAcyclicEdge(config: FeedForwardGrammarOpConfig) extends MutationOp
         // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
         // TODO: prevent creating cycles in the first place -> in/out connectors?
         if (newGraph.hasCycle || result.expand.hasCycle ||
-          feedForwardInputs.exists(result.expand.inDegree(_) > 0) ||
-          feedForwardOutputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
+          inputs.exists(result.expand.inDegree(_) > 0) ||
+          outputs.exists(result.expand.outDegree(_) > 0)) None else Some(result)
     }
   }
 }
@@ -356,7 +356,7 @@ case class ReuseNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extend
   }
 }
 
-case class ReuseNonTerminalAcyclic(config: FeedForwardGrammarOpConfig) extends MutationOp[Grammar[Double, Double]] {
+case class ReuseNonTerminalAcyclic[V,E](config: InOutGrammarOpConfig[V,E]) extends MutationOp[Grammar[V,E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config.{random => rand, _}
     val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
@@ -372,8 +372,8 @@ case class ReuseNonTerminalAcyclic(config: FeedForwardGrammarOpConfig) extends M
         //TODO: cycle detection!
         Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap{ g =>
           if (g.dependencyGraph.hasCycle ||
-            feedForwardInputs.exists(g.expand.inDegree(_) > 0) ||
-            feedForwardOutputs.exists(g.expand.outDegree(_) > 0) ||
+            inputs.exists(g.expand.inDegree(_) > 0) ||
+            outputs.exists(g.expand.outDegree(_) > 0) ||
             g.expand.hasCycle) None else Some(g)
         }
     }

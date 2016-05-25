@@ -3,12 +3,7 @@ package aiolia.grammar
 import aiolia.geneticAlgorithm._
 import aiolia.graph._
 
-trait FeedForwardGrammarOpConfig extends DataGraphGrammarOpConfig[Double, Double] {
-  val feedForwardInputs: List[Vertex]
-  val feedForwardOutputs: List[Vertex]
-}
-
-trait GeneticAlgorithmFeedForwardConfig extends Config[Grammar[Double, Double]] with FeedForwardGrammarOpConfig { config =>
+trait GeneticAlgorithmFeedForwardConfig extends Config[Grammar[Double, Double]] with InOutGrammarOpConfig[Double,Double] { config =>
 
   val mutationOperators = (
     1 -> AddAcyclicEdge(config) ::
@@ -29,7 +24,7 @@ trait GeneticAlgorithmFeedForwardConfig extends Config[Grammar[Double, Double]] 
   override def mutateVertexData(d: Double) = d + random.r.nextGaussian * 0.05
   override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * 0.05
   override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle &&
-    feedForwardInputs.forall(grammar.expand.inDegree(_) == 0) &&
-    feedForwardOutputs.forall(grammar.expand.outDegree(_) == 0) &&
-    (grammar.expand.vertices -- feedForwardInputs -- feedForwardOutputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
+    inputs.forall(grammar.expand.inDegree(_) == 0) &&
+    outputs.forall(grammar.expand.outDegree(_) == 0) &&
+    (grammar.expand.vertices -- inputs -- outputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
 }

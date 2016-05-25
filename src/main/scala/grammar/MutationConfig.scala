@@ -13,3 +13,8 @@ trait DataGraphGrammarOpConfig[V, E] extends MutationOpConfig[Grammar[V, E]] {
   def mutateVertexData(d: V): V = d
   def mutateEdgeData(d: E): E = d
 }
+
+trait InOutGrammarOpConfig[V,E] extends DataGraphGrammarOpConfig[V,E] {
+  val inputs: List[Vertex]
+  val outputs: List[Vertex]
+}

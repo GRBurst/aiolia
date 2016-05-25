@@ -1,5 +1,6 @@
 package aiolia.app.zoo
 
+import world.Brain
 import aiolia.grammar._
 import aiolia.util._
 
@@ -11,15 +12,23 @@ class ZooConfig(
     val walkEffort:        Double = 0.001,
     val thinkEffort:       Double = 0.0005,
     val worldDimensions:   Vec2   = Vec2(20, 20)
-) extends DataGraphGrammarOpConfig[Double, Double] { config =>
+) extends InOutGrammarOpConfig[Double, Double] { config =>
+
+  val inputs = Brain.inputs
+  val outputs = Brain.outputs
 
   val random = Random(0)
 
   val mutationOperators: List[(Grammar[Double, Double]) => Option[Grammar[Double, Double]]] = (
-    2 -> AddConnectedVertex(config) ::
-    2 -> AddEdge(config) ::
+    1 -> AddConnectedVertex(config) ::
+    1 -> AddEdge(config) ::
     1 -> MutateVertex(config) ::
     1 -> MutateEdge(config) ::
+    1 -> AddAcyclicEdge(config) ::
+    1 -> RemoveInterconnectedEdge(config) ::
+    1 -> SplitEdge(config) ::
+    1 -> ReconnectEdge(config) ::
+    1 -> Shrink(config) ::
     // 1 -> ExtractNonTerminal(config) ::
     // 1 -> ReuseNonTerminalAcyclic(config) ::
     // 1 -> InlineNonTerminal(config) ::
