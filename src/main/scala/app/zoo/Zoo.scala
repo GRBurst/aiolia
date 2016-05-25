@@ -28,7 +28,7 @@ class ZooConfig(
     1 -> RemoveInterconnectedEdge(config) ::
     1 -> SplitEdge(config) ::
     1 -> ReconnectEdge(config) ::
-    1 -> Shrink(config) ::
+    0 -> Shrink(config) ::
     // 1 -> ExtractNonTerminal(config) ::
     // 1 -> ReuseNonTerminalAcyclic(config) ::
     // 1 -> InlineNonTerminal(config) ::
