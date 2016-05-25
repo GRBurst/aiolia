@@ -21,8 +21,8 @@ class World(val dimensions: Vec2) {
       throw new IllegalStateException(s"Trying to add $thing on occupied position: ${thing.pos}")
   }
   def remove(thing: Thing) {
-    _things -= thing
     update(thing.pos, None)
+    _things -= thing
   }
   def move(thing: Thing, newPos: Vec2) {
     val oldPos = thing.pos
@@ -77,7 +77,7 @@ class World(val dimensions: Vec2) {
   }
 
   def sensors(pos: Vec2, rotation: Double, count: Int): Array[Double] = {
-    val radius = 5 //TODO -> config
+    val radius = 10 //TODO -> config
     val a = 2 * Math.PI / count
     (Array.tabulate(count){ i =>
       val startAngle = rotation + i * a
