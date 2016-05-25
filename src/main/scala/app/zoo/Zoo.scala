@@ -5,13 +5,13 @@ import aiolia.grammar._
 import aiolia.util._
 
 class ZooConfig(
-    val mutationCount:     Int    = 5,
-    val foodProbability:   Double = 0.4,
-    val minimumPopulation: Int    = 8,
+    val mutationCount:     Int    = 10,
+    val foodProbability:   Double = 0.2,
+    val minimumPopulation: Int    = 5,
     val initialEnergy:     Double = 0.8,
-    val walkEffort:        Double = 0.001,
-    val thinkEffort:       Double = 0.0005,
-    val worldDimensions:   Vec2   = Vec2(20, 20)
+    val walkEffort:        Double = 0.005,
+    val thinkEffort:       Double = 0.0001,
+    val worldDimensions:   Vec2   = Vec2(30, 30)
 ) extends InOutGrammarOpConfig[Double, Double] { config =>
 
   val inputs = Brain.inputs
