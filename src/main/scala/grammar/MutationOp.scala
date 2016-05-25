@@ -56,7 +56,7 @@ case class SplitEdge(config: InOutGrammarOpConfig[Double, Double]) extends Mutat
   }
 }
 
-case class ReconnectEdge[V,E](config: InOutGrammarOpConfig[V,E]) extends MutationOp[Grammar[V,E]] {
+case class ReconnectEdge[V, E](config: InOutGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     def requirement(graph: Graph[_, _], edge: Edge) = edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
@@ -66,7 +66,7 @@ case class ReconnectEdge[V,E](config: InOutGrammarOpConfig[V,E]) extends Mutatio
         import graph._
         val edge = random.select(edges.filter(requirement(graph, _)))
         def newOut = random.select(vertices -- depthFirstSearch(edge.in, predecessors)) //TODO: selectOpt
-        def newIn = random.select(vertices -- depthFirstSearch(edge.in, successors)) //TODO: selectOpt
+        def newIn = random.select(vertices -- depthFirstSearch(edge.in, successors)) //TODO: selectOpt -- already crashed once!
         val newEdge = if (random.r.nextBoolean) Edge(edge.in, newOut) else Edge(newIn, edge.out)
         val newGraph = graph.copy(
           vertices = vertices,
@@ -83,7 +83,7 @@ case class ReconnectEdge[V,E](config: InOutGrammarOpConfig[V,E]) extends Mutatio
   }
 }
 
-case class Shrink(config: InOutGrammarOpConfig[Double,Double]) extends MutationOp[Grammar[Double, Double]] {
+case class Shrink(config: InOutGrammarOpConfig[Double, Double]) extends MutationOp[Grammar[Double, Double]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter(_._2.nonConnectors.nonEmpty)
@@ -114,7 +114,7 @@ case class Shrink(config: InOutGrammarOpConfig[Double,Double]) extends MutationO
   }
 }
 
-case class AddConnectedVertex[V,E](config: DataGraphGrammarOpConfig[V,E]) extends MutationOp[Grammar[V, E]] {
+case class AddConnectedVertex[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val (label, graph) = random.select(grammar.productions)
@@ -170,7 +170,7 @@ case class RemoveVertex[V, E](config: MutationOpConfig[Grammar[V, E]]) extends M
   }
 }
 
-case class AddAcyclicEdge[V,E](config: InOutGrammarOpConfig[V,E]) extends MutationOp[Grammar[V,E]] {
+case class AddAcyclicEdge[V, E](config: InOutGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter {
@@ -356,7 +356,7 @@ case class ReuseNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extend
   }
 }
 
-case class ReuseNonTerminalAcyclic[V,E](config: InOutGrammarOpConfig[V,E]) extends MutationOp[Grammar[V,E]] {
+case class ReuseNonTerminalAcyclic[V, E](config: InOutGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config.{random => rand, _}
     val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {

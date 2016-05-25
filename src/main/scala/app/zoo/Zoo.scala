@@ -21,13 +21,13 @@ class ZooConfig(
 
   val mutationOperators: List[(Grammar[Double, Double]) => Option[Grammar[Double, Double]]] = (
     1 -> AddConnectedVertex(config) ::
-    1 -> AddEdge(config) ::
+    20 -> AddEdge(config) ::
     1 -> MutateVertex(config) ::
     1 -> MutateEdge(config) ::
-    1 -> AddAcyclicEdge(config) ::
+    0 -> AddAcyclicEdge(config) ::
     1 -> RemoveInterconnectedEdge(config) ::
-    1 -> SplitEdge(config) ::
-    1 -> ReconnectEdge(config) ::
+    5 -> SplitEdge(config) ::
+    0 -> ReconnectEdge(config) ::
     0 -> Shrink(config) ::
     // 1 -> ExtractNonTerminal(config) ::
     // 1 -> ReuseNonTerminalAcyclic(config) ::

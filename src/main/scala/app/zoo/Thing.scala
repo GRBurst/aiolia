@@ -54,7 +54,7 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
   var walkedDistance = 0
 
   def isAlive = energy > 0 && (age - walkedDistance < 15)
-  def canReplicate = energy > 0.8 && age > 2
+  def canReplicate = energy > 0.8 && age > 5
 
   def think(sensors: Array[Double], effort: Double) {
     brain.feed(energy, sensors)
