@@ -14,7 +14,7 @@ class RecurrentNeuralNetworkSpec extends org.specs2.mutable.Specification {
       val n = Recurrent(in = VL(0, 1), out = VL(2), Graph(V(0 to 2), E(0 -> 2, 1 -> 2), vData(2 -> -1), eData((0 -> 2) -> 0.4f, (1 -> 2) -> 0.6f)))
       n.setInputData(List(2, 4))
       n.think()
-      n.outputData mustEqual List(0.9103665f)
+      n.outputData mustEqual List(0.9103664850647001)
     }
 
     "two steps" >> {
@@ -22,7 +22,7 @@ class RecurrentNeuralNetworkSpec extends org.specs2.mutable.Specification {
       n.setInputData(List(2, 4))
       n.think()
       n.think()
-      n.outputData mustEqual List(0.9358292f)
+      n.outputData mustEqual List(0.9358292406685601)
     }
 
     "fail on too much input data" >> {
