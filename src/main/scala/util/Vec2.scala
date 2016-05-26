@@ -28,6 +28,14 @@ case class Vec2(x: Int, y: Int) {
     res
   }
 
+  def to(that: Vec2): Iterable[Vec2] = {
+    for (x <- this.x to that.x; y <- this.y to that.y) yield Vec2(x, y)
+  }
+
+  def until(that: Vec2): Iterable[Vec2] = {
+    for (x <- this.x until that.x; y <- this.y until that.y) yield Vec2(x, y)
+  }
+
   override def toString = s"($x,$y)"
 }
 
