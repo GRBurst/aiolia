@@ -19,12 +19,18 @@ class World(val dimensions: Vec2) {
     }
     else
       throw new IllegalStateException(s"Trying to add $thing on occupied position: ${thing.pos}")
+    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
   }
   def remove(thing: Thing) {
+    assert(things contains thing)
+    assert(lookup(thing.pos) == Some(thing))
     update(thing.pos, None)
     _things -= thing
+    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
   }
   def move(thing: Thing, newPos: Vec2) {
+    assert(things contains thing)
+    assert(lookup(thing.pos) == Some(thing))
     val oldPos = thing.pos
     lookup(newPos) match {
       case Some(thing) =>
@@ -34,6 +40,7 @@ class World(val dimensions: Vec2) {
         update(newPos, Some(thing))
         thing.pos = newPos
     }
+    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
   }
 
   def creatures = things.collect{ case c: Creature => c }

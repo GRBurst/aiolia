@@ -10,6 +10,8 @@ sealed abstract class Thing(initialPos: Vec2) {
   private var _pos: Vec2 = initialPos
   private[world] def pos_=(pos: Vec2) { _pos = pos }
   def pos = _pos
+
+  //TODO: def appearance:Double instead of World.appearance(thing:Option[Thing]) ?
 }
 
 sealed abstract class Food(initialPos: Vec2) extends Thing(initialPos) {
