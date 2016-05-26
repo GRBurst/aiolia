@@ -83,12 +83,8 @@ class World(val dimensions: Vec2) extends DoubleBuffering[Field] {
   }
 
   def appearanceAt(pos: Vec2): Double = lookupOption(pos) match {
-    case None => 0.1 // outside field / wall
-    case Some(thingOption) => thingOption match {
-      case None              => 0.0 // empty position
-      case Some(_: Food)     => 1.0
-      case Some(c: Creature) => -c.brain.agression
-    }
+    case None              => -0.1 // outside field / wall
+    case Some(thingOption) => thingOption.map(_.appearance).getOrElse(0.0)
   }
 
   def sensors(pos: Vec2, rotation: Double, count: Int): Array[Double] = {

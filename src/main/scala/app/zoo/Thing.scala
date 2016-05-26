@@ -11,12 +11,13 @@ sealed abstract class Thing(initialPos: Vec2) {
   private[world] def pos_=(pos: Vec2) { _pos = pos }
   def pos = _pos
 
-  //TODO: def appearance:Double instead of World.appearance(thing:Option[Thing]) ?
+  def appearance: Double
 }
 
 sealed abstract class Food(initialPos: Vec2) extends Thing(initialPos) {
   val energy: Double
   val symbol: String
+  def appearance = energy
 }
 
 class Apple(initialPos: Vec2) extends Food(initialPos) {
@@ -28,6 +29,7 @@ class Apple(initialPos: Vec2) extends Food(initialPos) {
 class Corpse(val creature: Creature) extends Food(creature.pos) {
   protected val initialPos = creature.pos
   val energy = creature.energy
+  //TODO: assert(energy > 0.0, energy)
   val symbol = "✝"
   override def toString = s"Corpse($creature)"
 }
@@ -41,6 +43,7 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
 
   val brain = new Brain(genotype)
   energy = initialEnergy
+  def appearance = -brain.agression
 
   private var _energy: Double = _
   def energy_=(newEnergy: Double) { _energy = 0.0 max newEnergy min 1.0 }
