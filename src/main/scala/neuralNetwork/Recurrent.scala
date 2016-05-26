@@ -33,11 +33,11 @@ class Recurrent(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double
   }
 
   def setInputData(index: Int, datum: Double) {
-    prevBuffer(index) = datum
     buffer(index) = datum
+    nextBuffer(index) = datum
   }
 
-  def outputData = out map (n => prevBuffer(n.label))
+  def outputData = out map (n => buffer(n.label))
 
   def sigmoid(x: Double): Double = x / Math.sqrt(x * x + 1).toDouble
   def dot(as: List[Double], bs: List[Double]): Double = ((as zip bs) map { case (a, b) => a * b }).sum
@@ -47,12 +47,12 @@ class Recurrent(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double
   def think() = {
     for (neuron <- neurons -- in) {
       val incoming = graph.incomingEdges(neuron).toList
-      val incomingData = incoming.map(edge => prevBuffer(edge.in.label))
+      val incomingData = incoming.map(edge => buffer(edge.in.label))
       val weights = incoming map weight
 
       //TODO: incomingData and weights come from Sets, so the order may not be correct.
       // only use incomingEdges and get to the neurons from there
-      buffer(neuron.label) = sigmoid(dot(incomingData, weights) + bias(neuron))
+      nextBuffer(neuron.label) = sigmoid(dot(incomingData, weights) + bias(neuron))
     }
     swapBuffers()
   }
