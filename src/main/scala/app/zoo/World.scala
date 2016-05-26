@@ -2,12 +2,19 @@ package aiolia.app.zoo.world
 
 import aiolia.grammar.Grammar
 import aiolia.util.Vec2
+import aiolia.util.DoubleBuffering
 
 import collection.mutable
 
-class World(val dimensions: Vec2) {
+object World {
+  type Field = Array[Array[Option[Thing]]]
+}
+import World._
+
+class World(val dimensions: Vec2) extends DoubleBuffering[Field] {
   //TODO: idea: HashSet[Vec2, Thing] for unlimited sized worlds
-  private val field: Array[Array[Option[Thing]]] = Array.fill(dimensions.y, dimensions.x)(None)
+  def bufferInit = Array.fill(dimensions.y, dimensions.x)(None)
+  def field = buffer
 
   private val _things: mutable.Set[Thing] = mutable.HashSet.empty[Thing]
   def things: collection.Set[Thing] = _things
@@ -54,9 +61,10 @@ class World(val dimensions: Vec2) {
   def isInside(pos: Vec2): Boolean = 0 <= pos.x && pos.x < dimensions.x && 0 <= pos.y && pos.y < dimensions.y
 
   val directions = Array(Vec2(0, 1), Vec2(1, 0), Vec2(1, 1), Vec2(0, -1), Vec2(-1, 0), Vec2(1, -1), Vec2(-1, 1), Vec2(-1, -1))
-  def neigbourPositions(pos: Vec2): Set[Vec2] = directions.map(pos + _).filter(isInside).toSet
-  def neighbours(pos: Vec2): Set[Thing] = neigbourPositions(pos).flatMap(lookup)
-  def emptyNeighbourPositions(pos: Vec2): Set[Vec2] = neigbourPositions(pos).filter(lookup(_).isEmpty)
+  def positions = Vec2(0, 0) until dimensions
+  def neighbourPositions(pos: Vec2): Set[Vec2] = directions.map(pos + _).filter(isInside).toSet
+  def neighbours(pos: Vec2): Set[Thing] = neighbourPositions(pos).flatMap(lookup)
+  def emptyNeighbourPositions(pos: Vec2): Set[Vec2] = neighbourPositions(pos).filter(lookup(_).isEmpty)
   def neighbourCirclePositions(pos: Vec2, radius: Double) = { // without pos
     val radiusSq = radius * radius
     for (

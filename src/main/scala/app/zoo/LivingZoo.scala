@@ -50,9 +50,27 @@ class LivingZoo(config: ZooConfig) {
 
   def tick(world: World) {
     world.creatures.foreach { creature =>
-      val sensors = world.sensors(creature.pos, creature.brain.rotation, 3)
+      val sensors = world.sensors(creature.pos, creature.brain.rotation, 3) //TODO: create a global setting (mutate this in the future)
       creature.think(sensors, thinkEffort)
+    }
 
+    // TODO:
+    // world.positions.foreach { pos =>
+    //   val neighbourPositions = world.neighbourPositions(pos)
+    //   val creaturesGoingHere = neighbourPositions.map(pos => (pos, world(pos))).collect{
+    //     case (p, Some(c: Creature)) if (p + c.direction * c.brain.speed) == pos => c
+    //   }
+
+    //   world(pos) match {
+    //     case Some(thing) =>
+    //     case None        =>
+    //   }
+
+    // }
+
+    // world.swapBuffers()
+
+    world.creatures.foreach { creature =>
       if (creature.canReplicate) {
         val birthPos = world.emptyNeighbourPositions(creature.pos).headOption
         birthPos.foreach { pos =>
