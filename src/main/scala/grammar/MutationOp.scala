@@ -170,7 +170,7 @@ case class RemoveVertex[V, E](config: MutationOpConfig[Grammar[V, E]]) extends M
   }
 }
 
-case class AddAcyclicEdge[V, E](config: InOutGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
+case class AddAcyclicEdge[V, E](config: InOutGrammarOpConfig[V, E] with DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val candidates = grammar.productions.filter {

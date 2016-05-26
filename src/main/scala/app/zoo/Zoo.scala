@@ -12,13 +12,15 @@ class ZooConfig(
     val walkEffort:        Double = 0.005,
     val thinkEffort:       Double = 0.0001,
     val worldDimensions:   Vec2   = Vec2(30, 30)
-) extends InOutGrammarOpConfig[Double, Double] { config =>
+) extends NeuralNetworkGrammarOpConfig { config =>
 
   val inputs = Brain.inputs
   val outputs = Brain.outputs
 
   val random = Random(0)
 
+  val neuronMutationStrength = 0.1
+  val synapseMutationStrength = 0.4
   val mutationOperators: List[(Grammar[Double, Double]) => Option[Grammar[Double, Double]]] = (
     1 -> AddConnectedVertex(config) ::
     20 -> AddEdge(config) ::
@@ -34,11 +36,6 @@ class ZooConfig(
     // 1 -> InlineNonTerminal(config) ::
     Nil
   ).flatMap{ case (n, op) => List.fill(n)(op) }
-
-  override def initVertexData() = Some(random.r.nextDouble * 2 - 1)
-  override def initEdgeData() = Some(random.r.nextDouble * 2 - 1)
-  override def mutateVertexData(d: Double) = d + random.r.nextGaussian
-  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian
 }
 
 object Zoo extends App {

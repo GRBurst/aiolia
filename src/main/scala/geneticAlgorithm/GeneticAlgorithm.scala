@@ -24,8 +24,6 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
 
   // TODO: post processing of genotype, eg: clean up isolated vertices
   val mutationOperators: List[(Genotype) => Option[Genotype]]
-  def genotypeInvariant(g: Genotype): Boolean = true
-  def genotypeInvariantError: String = "Genotype invariant violated."
 
   val populationSize: Int = 30
   val tournamentSize = 4
@@ -149,7 +147,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   }
 
   def runForFitnessComputations(numbers: Int): Genotype = {
-    runFor( numbers / populationSize )
+    runFor(numbers / populationSize)
   }
 
   def runUntil(condition: (Genotype) => Boolean): Genotype = {

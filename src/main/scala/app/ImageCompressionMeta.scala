@@ -9,7 +9,7 @@ object ImageCompressionMeta extends App {
   val metaPopulationSize = 12
   val pictureWidth = 16
   val pictures = List("fruits.jpg", "primitives.png")
-  val seeds = List[Any](0, 1)//, "penos")
+  val seeds = List[Any](0, 1) //, "penos")
 
   val metaGenerations = 1000
   val metaMaxMutationCount = 1.0
@@ -45,8 +45,8 @@ object ImageCompressionMeta extends App {
       ((icc: G) => Some(icc.copy(tournamentSize = 1.max(m(icc.tournamentSize)).min(icc.populationSize)))) ::
       ((icc: G) => Some(icc.copy(mutationCountPerElement = m(icc.mutationCountPerElement)))) ::
       ((icc: G) => Some(icc.copy(mutationGaussianScale = m(icc.mutationGaussianScale)))) ::
-      ((icc: G) => Some(icc.copy(vertexMutationStrength = m(icc.vertexMutationStrength)))) ::
-      ((icc: G) => Some(icc.copy(edgeMutationStrength = m(icc.edgeMutationStrength)))) ::
+      ((icc: G) => Some(icc.copy(neuronMutationStrength = m(icc.neuronMutationStrength)))) ::
+      ((icc: G) => Some(icc.copy(synapseMutationStrength = m(icc.synapseMutationStrength)))) ::
       ((icc: G) => Some(icc.copy(elementCountPenalty = m(icc.elementCountPenalty)))) ::
       ((icc: G) => Some(icc.copy(addAcyclicEdgeFreq = 0 max m(icc.addAcyclicEdgeFreq)))) ::
       ((icc: G) => Some(icc.copy(removeInterconnectedEdgeFreq = 0 max m(icc.removeInterconnectedEdgeFreq)))) ::

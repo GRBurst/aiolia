@@ -16,20 +16,20 @@ object ImageCompression extends App {
 }
 
 case class ImageCompressionConfig(
-    override val populationSize:  Int    = 24,
-    override val tournamentSize:  Int    = 5,
-    mutationCountPerElement:      Double = 0.0251,
-    mutationGaussianScale:        Double = 0.1833,
-    vertexMutationStrength:       Double = 0.1,
-    edgeMutationStrength:         Double = 0.4602,
-    elementCountPenalty:          Double = 0.00000079,
-    addAcyclicEdgeFreq:           Int    = 189,
-    removeInterconnectedEdgeFreq: Int    = 80,
-    splitEdgeFreq:                Int    = 82,
-    reconnectEdgeFreq:            Int    = 270,
-    shrinkFreq:                   Int    = 73,
-    mutateVertexFreq:             Int    = 85,
-    mutateEdgeFreq:               Int    = 284,
+    override val populationSize:               Int    = 24,
+    override val tournamentSize:               Int    = 5,
+    mutationCountPerElement:                   Double = 0.0251,
+    mutationGaussianScale:                     Double = 0.1833,
+    override val neuronMutationStrength:       Double = 0.1,
+    override val synapseMutationStrength:      Double = 0.4602,
+    elementCountPenalty:                       Double = 0.00000079,
+    override val addAcyclicEdgeFreq:           Int    = 189,
+    override val removeInterconnectedEdgeFreq: Int    = 80,
+    override val splitEdgeFreq:                Int    = 82,
+    override val reconnectEdgeFreq:            Int    = 270,
+    override val shrinkFreq:                   Int    = 73,
+    override val mutateVertexFreq:             Int    = 85,
+    override val mutateEdgeFreq:               Int    = 284,
 
     seed:                  Any     = 0,
     override val parallel: Boolean = true,
@@ -38,38 +38,13 @@ case class ImageCompressionConfig(
     preview:               Boolean = true,
     picture:               String  = "primitives.png",
     pictureWidth:          Int     = 16
-) extends Config[Grammar[Double, Double]] with InOutGrammarOpConfig[Double, Double] {
+) extends Config[Grammar[Double, Double]] with FeedForwardNetworkConfig {
   config =>
-  override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutSc: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%10.8f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, mutationGaussianScale, vertexMutationStrength, edgeMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
+  override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutSc: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%10.8f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, mutationGaussianScale, neuronMutationStrength, synapseMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
   type Genotype = Grammar[Double, Double]
   type Phenotype = Image
 
   override def mutationCount(g: Genotype) = random.nextGaussian(mutationGaussianScale * mutationCountPerElement * g.expand.vertices.size, mutationCountPerElement * g.expand.vertices.size).toInt.max(1)
-
-  val mutationOperators = (
-    addAcyclicEdgeFreq -> AddAcyclicEdge(config) ::
-    removeInterconnectedEdgeFreq -> RemoveInterconnectedEdge(config) ::
-    splitEdgeFreq -> SplitEdge(config) ::
-    reconnectEdgeFreq -> ReconnectEdge(config) ::
-    shrinkFreq -> Shrink(config) ::
-    mutateVertexFreq -> MutateVertex(config) ::
-    mutateEdgeFreq -> MutateEdge(config) ::
-    // 1 -> ExtractNonTerminal(config) ::
-    // 1 -> ReuseNonTerminalAcyclic(config) ::
-    // 1 -> InlineNonTerminal(config) ::
-    Nil
-  ).flatMap{ case (n, op) => List.fill(n)(op) }
-
-  override def afterMutationOp(g: Grammar[Double, Double]) = g.cleanup
-
-  override def initVertexData() = Some(random.r.nextDouble * 2 - 1)
-  override def initEdgeData() = Some(random.r.nextDouble * 2 - 1)
-  override def mutateVertexData(d: Double) = d + random.r.nextGaussian * vertexMutationStrength
-  override def mutateEdgeData(d: Double) = d + random.r.nextGaussian * edgeMutationStrength
-  override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle &&
-    inputs.forall(grammar.expand.inDegree(_) == 0) &&
-    outputs.forall(grammar.expand.outDegree(_) == 0) &&
-    (grammar.expand.vertices -- inputs -- outputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
 
   val compilePixelThreshold = 1000000
 
@@ -131,7 +106,7 @@ case class ImageCompressionConfig(
 
   def drawPopulation(population: Population, filename: String) {
     val size = Math.sqrt(1 + populationSize).ceil.toInt
-    val scale = 1.0//512.0 / (size * target.w)
+    val scale = 1.0 //512.0 / (size * target.w)
     val w = (target.w * scale).toInt
     val h = (target.h * scale).toInt
     val im = Image.create(size * w, size * h)
