@@ -34,7 +34,6 @@ class LivingZoo(config: ZooConfig) {
     }
   }
 
-
   //TODO: Why is position set twice (update + newCreature)
   def assurePopulation(world: World) {
     if (world.gen.creatures.size >= minimumPopulation) return
@@ -69,7 +68,7 @@ class LivingZoo(config: ZooConfig) {
 
       world.gen(pos) match {
         case Some(thing) => world.nextGen(pos) = Some(thing)
-        case None        => 
+        case None        =>
       }
 
     }

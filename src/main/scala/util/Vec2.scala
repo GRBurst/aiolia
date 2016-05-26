@@ -3,13 +3,19 @@ package aiolia.util
 case class Vec2(x: Int, y: Int) {
   def +(that: Vec2) = Vec2(x + that.x, y + that.y)
   def -(that: Vec2) = Vec2(x - that.x, y - that.y)
+
+  def +(s: Int) = Vec2(x + s, y + s)
+  def -(s: Int) = Vec2(x - s, y - s)
   def *(s: Int) = Vec2(x * s, y * s)
   def /(s: Int) = Vec2(x / s, y / s)
 
   def unary_- = Vec2(-x, -y)
 
-  def distance(that: Vec2) = Math.sqrt((this.x - that.x) * (this.x - that.x) + (this.y - that.y) * (this.y - that.y))
-  def length = Math.sqrt(x * x + y * y)
+  def lengthSq = x * x + y * y
+  def length = Math.sqrt(lengthSq)
+  def distanceSq(that: Vec2) = (this.x - that.x) * (this.x - that.x) + (this.y - that.y) * (this.y - that.y)
+  def distance(that: Vec2) = Math.sqrt(distanceSq(that))
+
   def angle = Math.atan2(y, x)
   def isZero = (x == 0 && y == 0)
 
@@ -29,11 +35,11 @@ case class Vec2(x: Int, y: Int) {
   }
 
   def until(that: Vec2): Iterable[Vec2] = {
-    Stream.tabulate(that.x - this.x, that.y - this.y)(Vec2(_, _)).flatten
+    Stream.tabulate(that.x - this.x, that.y - this.y)((x, y) => Vec2(this.x + x, this.y + y)).flatten
   }
 
   def to(that: Vec2): Iterable[Vec2] = {
-    Stream.tabulate(that.x - this.x + 1, that.y - this.y + 1)(Vec2(_, _)).flatten
+    Stream.tabulate(that.x - this.x + 1, that.y - this.y + 1)((x, y) => Vec2(this.x + x, this.y + y)).flatten
   }
 
   override def toString = s"($x,$y)"

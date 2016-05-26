@@ -25,20 +25,21 @@ class Field(val dimensions: Vec2) {
   def lookupOption(pos: Vec2): Option[Option[Thing]] = if (isInside(pos)) Some(field(pos.y)(pos.x)) else None
   def apply(pos: Vec2): Option[Thing] = lookup(pos)
   def update(pos: Vec2, newValue: Thing) { update(pos, Some(newValue)) }
-  def update(pos: Vec2, newValue: Option[Thing]) { 
+  def update(pos: Vec2, newValue: Option[Thing]) {
     assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
     (newValue, field(pos.y)(pos.x)) match {
-      case (Some(thing), None) => _things += thing; thing.pos = pos
-      case (None, Some(thing)) => 
+      case (Some(thing), None) =>
+        _things += thing; thing.pos = pos
+      case (None, Some(thing)) =>
         assert(things contains thing)
         assert(lookup(thing.pos) == Some(thing))
         _things -= thing
       case (Some(thing1), Some(thing2)) =>
-        if(thing1 != thing2)
+        if (thing1 != thing2)
           throw new IllegalStateException(s"Trying to add $thing1 on occupied position: ${thing1.pos}")
-      case (None, None) => 
+      case (None, None) =>
     }
-    field(pos.y)(pos.x) = newValue 
+    field(pos.y)(pos.x) = newValue
     assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
   }
   def clamp(pos: Vec2): Vec2 = Vec2(0 max pos.x min (dimensions.x - 1), 0 max pos.y min (dimensions.y - 1))
@@ -49,20 +50,34 @@ class Field(val dimensions: Vec2) {
   def neighbourPositions(pos: Vec2): Set[Vec2] = directions.map(pos + _).filter(isInside).toSet
   def neighbours(pos: Vec2): Set[Thing] = neighbourPositions(pos).flatMap(lookup)
   def emptyNeighbourPositions(pos: Vec2): Set[Vec2] = neighbourPositions(pos).filter(lookup(_).isEmpty)
-  def neighbourCirclePositions(pos: Vec2, radius: Double) = { // without pos
+  def neighbourCirclePositions(center: Vec2, radius: Double) = { // without center
     val radiusSq = radius * radius
-    for (
-      x <- (pos.x - radius.ceil.toInt) to (pos.x + radius.ceil.toInt);
-      y <- (pos.y - radius.ceil.toInt) to (pos.y + radius.ceil.toInt);
-      if pos != Vec2(x, y) && ((pos.x - x) * (pos.x - x) + (pos.y - y) * (pos.y - y)) < radiusSq
-    ) yield Vec2(x, y)
+    val intRadius = radius.ceil.toInt
+    ((center - intRadius) to (center + intRadius)).filter(p => center != p && p.distanceSq(center) <= radiusSq)
   }
-  def neighbourCone(pos: Vec2, radius: Double, startAngle: Double, endAngle: Double) = neighbourCirclePositions(pos, radius).filter{ p =>
-    val a = (p - pos).angle
-    if (startAngle < endAngle) startAngle <= a && a <= endAngle
+
+  def betweenAngle(start: Double, a: Double, end: Double): Boolean = {
+    // TODO: test cases
+    // assert(betweenAngle(0.1, 0.2, 0.3))
+    // assert(!betweenAngle(-0.1, -0.2, -0.3))
+    // assert(betweenAngle(-0.1, 1, -1))
+    // assert(betweenAngle(-Math.PI / 2, 0.1, Math.PI / 2))
+    // assert(betweenAngle(-Math.PI / 2, -0.1, Math.PI / 2))
+
+    def modulo(a: Double, b: Double) = { val r = a % b; if (r < 0) r + b else r }
+    def pa(a: Double) = modulo(a, 2 * Math.PI) // positive angle
+
+    if (pa(start) <= pa(end))
+      pa(start) <= pa(a) && pa(a) <= pa(end)
     else {
-      val d = 2 * Math.PI - startAngle
-      0 <= (a + d) && a <= endAngle
+      val d = 2 * Math.PI - pa(start)
+      0 <= pa(a + d) && pa(a + d) <= pa(end + d)
+    }
+  }
+
+  def neighbourCone(center: Vec2, radius: Double, startAngle: Double, endAngle: Double) = {
+    neighbourCirclePositions(center, radius).filter{ p =>
+      betweenAngle(startAngle, (p - center).angle, endAngle)
     }
   }
 
