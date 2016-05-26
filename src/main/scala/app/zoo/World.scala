@@ -6,48 +6,16 @@ import aiolia.util.DoubleBuffering
 
 import collection.mutable
 
-object World {
-  type Field = Array[Array[Option[Thing]]]
-}
-import World._
+class Field(val dimensions: Vec2) {
 
-class World(val dimensions: Vec2) extends DoubleBuffering[Field] {
-  //TODO: idea: HashSet[Vec2, Thing] for unlimited sized worlds
-  def bufferInit = Array.fill(dimensions.y, dimensions.x)(None)
-  def field = buffer
+  val field: Array[Array[Option[Thing]]] = Array.fill(dimensions.y, dimensions.x)(None)
 
   private val _things: mutable.Set[Thing] = mutable.HashSet.empty[Thing]
   def things: collection.Set[Thing] = _things
   //TODO: performance: manage additional lists for creature and food?
-  def add(thing: Thing) {
-    if (lookup(thing.pos).isEmpty) {
-      _things += thing
-      update(thing.pos, Some(thing))
-    }
-    else
-      throw new IllegalStateException(s"Trying to add $thing on occupied position: ${thing.pos}")
-    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
-  }
-  def remove(thing: Thing) {
-    assert(things contains thing)
-    assert(lookup(thing.pos) == Some(thing))
-    update(thing.pos, None)
-    _things -= thing
-    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
-  }
   def move(thing: Thing, newPos: Vec2) {
-    assert(things contains thing)
-    assert(lookup(thing.pos) == Some(thing))
-    val oldPos = thing.pos
-    lookup(newPos) match {
-      case Some(thing) =>
-        throw new IllegalStateException(s"Trying to move $thing to occupied position: ${newPos}")
-      case None =>
-        update(oldPos, None)
-        update(newPos, Some(thing))
-        thing.pos = newPos
-    }
-    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
+    update(thing.pos, None)
+    update(newPos, Some(thing))
   }
 
   def creatures = things.collect{ case c: Creature => c }
@@ -56,7 +24,23 @@ class World(val dimensions: Vec2) extends DoubleBuffering[Field] {
   def lookup(pos: Vec2): Option[Thing] = field(pos.y)(pos.x)
   def lookupOption(pos: Vec2): Option[Option[Thing]] = if (isInside(pos)) Some(field(pos.y)(pos.x)) else None
   def apply(pos: Vec2): Option[Thing] = lookup(pos)
-  private def update(pos: Vec2, newValue: Option[Thing]) { field(pos.y)(pos.x) = newValue }
+  def update(pos: Vec2, newValue: Thing) { update(pos, Some(newValue)) }
+  def update(pos: Vec2, newValue: Option[Thing]) { 
+    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
+    (newValue, field(pos.y)(pos.x)) match {
+      case (Some(thing), None) => _things += thing; thing.pos = pos
+      case (None, Some(thing)) => 
+        assert(things contains thing)
+        assert(lookup(thing.pos) == Some(thing))
+        _things -= thing
+      case (Some(thing1), Some(thing2)) =>
+        if(thing1 != thing2)
+          throw new IllegalStateException(s"Trying to add $thing1 on occupied position: ${thing1.pos}")
+      case (None, None) => 
+    }
+    field(pos.y)(pos.x) = newValue 
+    assert(creatures.size == field.flatten.flatten.collect{ case c: Creature => c }.size)
+  }
   def clamp(pos: Vec2): Vec2 = Vec2(0 max pos.x min (dimensions.x - 1), 0 max pos.y min (dimensions.y - 1))
   def isInside(pos: Vec2): Boolean = 0 <= pos.x && pos.x < dimensions.x && 0 <= pos.y && pos.y < dimensions.y
 
@@ -116,4 +100,14 @@ class World(val dimensions: Vec2) extends DoubleBuffering[Field] {
     }
     line.map(desc(_).padTo(4, " ").mkString).mkString("|") + "\n" + "-" * 5 * line.size
   }.mkString("\n")
+
+}
+
+class World(val dimensions: Vec2) extends DoubleBuffering[Field] {
+  //TODO: idea: HashSet[Vec2, Thing] for unlimited sized worlds
+  def bufferInit = new Field(dimensions)
+  def gen = buffer
+  def nextGen = nextBuffer
+
+  override def toString = buffer.toString
 }
