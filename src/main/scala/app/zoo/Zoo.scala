@@ -6,11 +6,11 @@ import aiolia.util._
 
 class ZooConfig(
     val mutationCount:     Int    = 10,
-    val foodProbability:   Double = 0.2,
-    val minimumPopulation: Int    = 5,
+    val foodProbability:   Double = 1.0,
+    val minimumPopulation: Int    = 20,
     val initialEnergy:     Double = 0.8,
     val walkEffort:        Double = 0.005,
-    val thinkEffort:       Double = 0.0001,
+    val thinkEffort:       Double = 0.001,
     val worldDimensions:   Vec2   = Vec2(30, 30)
 ) extends NeuralNetworkGrammarOpConfig { config =>
 
@@ -22,10 +22,10 @@ class ZooConfig(
   val neuronMutationStrength = 0.1
   val synapseMutationStrength = 0.4
   val mutationOperators: List[(Grammar[Double, Double]) => Option[Grammar[Double, Double]]] = (
-    1 -> AddConnectedVertex(config) ::
+    5 -> AddConnectedVertex(config) ::
     20 -> AddEdge(config) ::
-    1 -> MutateVertex(config) ::
-    1 -> MutateEdge(config) ::
+    5 -> MutateVertex(config) ::
+    5 -> MutateEdge(config) ::
     0 -> AddAcyclicEdge(config) ::
     1 -> RemoveInterconnectedEdge(config) ::
     5 -> SplitEdge(config) ::

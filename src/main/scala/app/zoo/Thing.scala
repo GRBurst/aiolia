@@ -6,44 +6,40 @@ import aiolia.graph._
 import aiolia.neuralNetwork.Recurrent
 import aiolia.util.{Vec2, AutoId}
 
-sealed abstract class Thing(initialPos: Vec2) {
-  private var _pos: Vec2 = initialPos
-  private[world] def pos_=(pos: Vec2) { _pos = pos }
-  def pos = _pos
-
+sealed trait Thing {
   def appearance: Double
 }
 
-sealed abstract class Food(initialPos: Vec2) extends Thing(initialPos) {
+sealed trait Food extends Thing {
   val energy: Double
   val symbol: String
   def appearance = energy
 }
 
-class Apple(initialPos: Vec2) extends Food(initialPos) {
+object Apple extends Food {
   val energy = 0.5
   val symbol = "A"
   override def toString = s"Apple($energy)"
 }
 
-class Corpse(val creature: Creature) extends Food(creature.pos) {
-  protected val initialPos = creature.pos
+class Corpse(val creature: Creature) extends Food {
   val energy = creature.energy
-  //TODO: assert(energy > 0.0, energy)
+  assert(energy > 0.0, energy)
   val symbol = "✝"
   override def toString = s"Corpse($creature)"
 }
 
 object Creature {
-  def apply(genotype: Grammar[Double, Double], initialEnergy: Double, pos: Vec2) = new Creature(genotype, initialEnergy, pos)
+  def apply(genotype: Grammar[Double, Double], initialEnergy: Double) = new Creature(genotype, initialEnergy)
 }
 
-class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, initialPos: Vec2) extends Thing(initialPos) {
+class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double) extends Thing {
   import Brain._
 
   val brain = new Brain(genotype)
+  assert(initialEnergy > 0.0)
   energy = initialEnergy
-  def appearance = -brain.agression
+  def appearance = if (brain.agression > 0) -brain.agression else 0.2
 
   private var _energy: Double = _
   def energy_=(newEnergy: Double) { _energy = 0.0 max newEnergy min 1.0 }
@@ -56,10 +52,11 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
   private var _age: Long = 0
   private def age_=(newAge: Long) { _age = newAge }
   def age = _age
-  var walkedDistance = 0
+  var walkedDistance: Double = 0
 
-  def isAlive = energy > 0 && (age - walkedDistance < 15)
-  def canReplicate = energy > 0.8 && age > 5
+  // def isAlive = energy > 0 && (age - walkedDistance < 15)
+  def isAlive = energy > 0
+  def wantsToReplicate = brain.horniness > 0 && energy > 0.8 && age > 5
 
   def think(sensors: Array[Double], effort: Double) {
     brain.feed(energy, sensors)
@@ -71,6 +68,7 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
 
   def walk(distance: Double, effort: Double) {
     energy -= distance * effort
+    walkedDistance += distance
   }
 
   def eat(food: Food) {
@@ -78,19 +76,17 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double, ini
   }
 
   def replicate(): Double = {
-    if (brain.horniness <= 0) return 0
-
     val passedOnEnergy = brain.horniness * energy
     // val passedOnEnergy = 0.3 * energy
     energy -= passedOnEnergy
     passedOnEnergy
   }
 
-  override def toString = s"Creature(energy = $energy, direction = $direction, replication = ${brain.horniness}, pos = $pos)"
+  override def toString = s"C(${hashCode.toString.take(4)},d:${direction * brain.speed},e:${("%4.2f" format energy).drop(2)},a:${brain.agression})"
 }
 
 object Brain {
-  val visionSensors = 3
+  val visionSensors = 4
   private val inAutoId = AutoId(0)
   private def inId = inAutoId.nextId
   private val _inMap: List[(Int, String)] = (
