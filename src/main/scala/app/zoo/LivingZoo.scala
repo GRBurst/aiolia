@@ -50,9 +50,23 @@ class LivingZoo(config: ZooConfig) {
 
   def assureFood(world: World) {
     if (random.r.nextDouble <= foodProbability) {
-      val pos = randomPositionAround(world, world.gen.dimensions / 2, radius = 2.5)
-      if (world.gen.isInside(pos) && world.gen(pos).isEmpty)
-        world.gen(pos) = Apple
+      {
+        val pos = randomPositionAround(world, Vec2(0, 0), radius = 4)
+        if (world.gen.isInside(pos) && world.gen(pos).isEmpty)
+          world.gen(pos) = Apple
+      }
+
+      {
+        val pos = randomPositionAround(world, Vec2(world.dimensions.x, 0), radius = 4)
+        if (world.gen.isInside(pos) && world.gen(pos).isEmpty)
+          world.gen(pos) = Apple
+      }
+
+      {
+        val pos = randomPositionAround(world, world.dimensions / 2, radius = 1)
+        if (world.gen.isInside(pos) && world.gen(pos).isEmpty)
+          world.gen(pos) = Banana
+      }
     }
   }
 

@@ -22,6 +22,12 @@ object Apple extends Food {
   override def toString = s"Apple($energy)"
 }
 
+object Banana extends Food {
+  val energy = 1.0
+  val symbol = "B"
+  override def toString = s"Banana($energy)"
+}
+
 class Corpse(val creature: Creature) extends Food {
   val energy = creature.energy
   assert(energy > 0.0, energy)
