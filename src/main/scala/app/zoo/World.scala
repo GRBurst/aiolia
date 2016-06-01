@@ -81,8 +81,8 @@ class Field(val dimensions: Vec2) {
       val visible = cone.map(p => ((p distance pos) -> appearanceAt(p))).filter{ case (_, a) => a != 0.0 }
       if (visible.isEmpty) Array(1.0, 0.0)
       else {
-        val (distance, appearance) = visible.minBy{ case (distance, _) => distance }
-        Array(distance, appearance)
+        val (distanceSum, appearanceSum) = visible.reduce{ (a, b) => ((a._1 + b._1), (a._2 + b._2)) }
+        Array(distanceSum / visible.size, appearanceSum / visible.size)
       }
     }).flatten
   }
