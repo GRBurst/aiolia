@@ -7,7 +7,7 @@ import aiolia.util._
 class ZooConfig(
     val mutationCount:     Int    = 10,
     val foodProbability:   Double = 1.0,
-    val minimumPopulation: Int    = 20,
+    val minimumPopulation: Int    = 10,
     val initialEnergy:     Double = 0.8,
     val walkEffort:        Double = 0.005,
     val thinkEffort:       Double = 0.001,

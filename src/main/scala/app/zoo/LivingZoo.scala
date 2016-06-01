@@ -138,7 +138,7 @@ class LivingZoo(config: ZooConfig) {
   def fight(creatures: Set[Creature]): Creature = {
     val winner = creatures.maxBy(c => c.energy * c.brain.agression)
     val killed = creatures - winner
-    winner.energy += killed.map(_.energy).sum
+    winner.energy += killed.map(c => if (c.brain.agression > 0) -c.energy else c.energy).sum
     winner
   }
 

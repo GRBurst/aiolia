@@ -84,7 +84,7 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double) ext
   def replicate(): Double = {
     val passedOnEnergy = brain.horniness * energy
     // val passedOnEnergy = 0.3 * energy
-    energy -= passedOnEnergy
+    energy -= passedOnEnergy * 1.1
     passedOnEnergy
   }
 
