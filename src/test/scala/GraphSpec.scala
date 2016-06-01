@@ -119,7 +119,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
     }
     "map" >> {
       val g = graph(V(0 to 3), E(0 -> 1, 1 -> 2, 2 -> 3), vData(0 -> "friedrich", 3 -> "friedhelm"), eData((0 -> 1) -> 0, (2 -> 3) -> 1), List(nt(1, (0, 1))), C(2))
-      g.map(_ + 1) mustEqual graph(V(1 to 4), E(1 -> 2, 2 -> 3, 3 -> 4), vData(1 -> "friedrich", 4 -> "friedhelm"), eData((1 -> 2) -> 0, (3 -> 4) -> 1), List(nt(1, (1, 2))), C(3))
+      g.mapVertices(_ + 1) mustEqual graph(V(1 to 4), E(1 -> 2, 2 -> 3, 3 -> 4), vData(1 -> "friedrich", 4 -> "friedhelm"), eData((1 -> 2) -> 0, (3 -> 4) -> 1), List(nt(1, (1, 2))), C(3))
     }
 
     "assertions" >> {

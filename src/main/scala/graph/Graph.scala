@@ -164,7 +164,7 @@ case class Graph[+V, +E](
     )
   }
 
-  def map(m: Label => Label): Graph[V, E] = {
+  def mapVertices(m: Label => Label): Graph[V, E] = {
     Graph(
       vertices map (_ map m),
       edges map (_ map m),
@@ -189,7 +189,7 @@ case class Graph[+V, +E](
     val vertexMapping: Map[Label, Label] = nonConnectorMapping ++ connectorMapping
 
     assert(vertexMapping.size == replacement.vertices.size)
-    val mappedReplacement = replacement.copy(connectors = Nil) map vertexMapping
+    val mappedReplacement = replacement.copy(connectors = Nil) mapVertices vertexMapping
 
     this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
   }
