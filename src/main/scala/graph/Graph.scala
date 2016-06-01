@@ -86,41 +86,33 @@ case class Graph[+V, +E](
     }.toSet - v
   }
 
-  def neighboursOverNonTerminals(vs: Iterable[Vertex]): Set[Vertex] = {
-    assert(vs.toSet subsetOf vertices)
-    vs.flatMap(neighboursOverNonTerminals).toSet -- vs
+  def neighboursOverNonTerminals(vp: (Vertex) => Boolean): Set[Vertex] = {
+    vertices.filter(vp).flatMap(neighboursOverNonTerminals).filterNot(vp)
   }
 
   def allNeighbours(v: Vertex) = neighbours(v) ++ neighboursOverNonTerminals(v)
-  def allNeighbours(vs: Iterable[Vertex]) = neighbours(vs) ++ neighboursOverNonTerminals(vs)
+  def allNeighbours(vp: (Vertex) => Boolean) = neighbours(vp) ++ neighboursOverNonTerminals(vp)
 
   def incidentNonTerminals(v: Vertex): List[NonTerminal] = {
     assert(vertices contains v)
     nonTerminals.filter(_ contains v)
   }
-  def incidentNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
-    assert(vs.toSet subsetOf vertices)
-    val vsSet = vs.toSet
-    nonTerminals.filter(_.connectors.exists(vsSet))
+  def incidentNonTerminals(vp: (Vertex) => Boolean): List[NonTerminal] = {
+    nonTerminals.filter(_.connectors.exists(vp))
   }
-  def inducedNonTerminals(vs: Iterable[Vertex]): List[NonTerminal] = {
-    assert(vs.toSet subsetOf vertices)
-    val vsSet = vs.toSet
-    nonTerminals.filter(_.connectors.toSet subsetOf vsSet)
+  def inducedNonTerminals(vp: (Vertex) => Boolean): List[NonTerminal] = {
+    nonTerminals.filter(_.connectors.forall(vp))
   }
 
-  def inducedSubGraph(vs: Iterable[Vertex]): Graph[V, E] = {
-    assert(vs.toSet subsetOf vertices, "Can only induce on existing vertices")
-
-    val vsSet = vs.toSet
-    val selectedEdges = inducedEdges(vsSet)
+  def inducedSubGraph(vp: (Vertex) => Boolean): Graph[V, E] = {
+    val selectedEdges = inducedEdges(vp)
     val subGraph = Graph(
-      vsSet,
+      vertices.filter(vp),
       selectedEdges,
-      vertexData filterKeys vsSet,
+      vertexData filterKeys vp,
       edgeData filterKeys selectedEdges,
-      inducedNonTerminals(vsSet),
-      connectors filter vsSet
+      inducedNonTerminals(vp),
+      connectors filter vp
     )
     assert(subGraph subGraphOf this)
     subGraph

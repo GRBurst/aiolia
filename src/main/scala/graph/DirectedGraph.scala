@@ -36,9 +36,8 @@ trait DirectedGraphLike {
   }
 
   // open neighbourhood
-  def neighbours(vs: Iterable[Vertex]): Set[Vertex] = {
-    assert(vs.toSet subsetOf vertices)
-    vs.flatMap(neighbours).toSet -- vs
+  def neighbours(vp: (Vertex) => Boolean): Set[Vertex] = {
+    vertices.filter(vp).flatMap(neighbours).filterNot(vp)
   }
 
   def incidentEdges(v: Vertex): Set[Edge] = {
@@ -46,15 +45,12 @@ trait DirectedGraphLike {
     edges.filter(_ contains v)
   }
 
-  def incidentEdges(vs: Iterable[Vertex]): Set[Edge] = {
-    assert(vs.toSet subsetOf vertices)
-    vs.flatMap(incidentEdges).toSet
+  def incidentEdges(vp: (Vertex) => Boolean): Set[Edge] = {
+    edges.filter(e => vp(e.in) || vp(e.out))
   }
 
-  def inducedEdges(vs: Iterable[Vertex]): Set[Edge] = {
-    assert(vs.toSet subsetOf vertices)
-    val vsSet = vs.toSet
-    edges.filter(e => (vsSet contains e.in) && (vsSet contains e.out))
+  def inducedEdges(vp: (Vertex) => Boolean): Set[Edge] = {
+    edges.filter(e => vp(e.in) && vp(e.out))
   }
 
   def topologicalSort: List[Vertex] = {

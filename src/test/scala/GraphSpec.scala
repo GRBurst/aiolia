@@ -249,7 +249,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.neighbours(V(4)) mustEqual V(2)
           g.neighbours(V(5)) mustEqual V(3)
           g.neighbours(V(6)) mustEqual V()
-          g.neighbours(V(7)) must throwAn[AssertionError]
 
           g.neighbours(V()) mustEqual V()
           g.neighbours(V(1, 2)) mustEqual V(0, 4, 3)
@@ -277,7 +276,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.neighboursOverNonTerminals(V(4)) mustEqual V()
           g.neighboursOverNonTerminals(V(5)) mustEqual V(1, 2, 3)
           g.neighboursOverNonTerminals(V(6)) mustEqual V()
-          g.neighboursOverNonTerminals(V(7)) must throwAn[AssertionError]
 
           g.neighboursOverNonTerminals(V()) mustEqual V()
           g.neighboursOverNonTerminals(V(1, 2)) mustEqual V(3, 5)
@@ -310,7 +308,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.incidentEdges(V(4)) mustEqual E(2 -> 4)
           g.incidentEdges(V(5)) mustEqual E(3 -> 5, 5 -> 3)
           g.incidentEdges(V(6)) mustEqual E()
-          g.incidentEdges(V(7)) must throwAn[AssertionError]
 
           g.incidentEdges(V()) mustEqual E()
           g.incidentEdges(V(2, 3)) mustEqual E(1 -> 2, 2 -> 4, 2 -> 3, 3 -> 5, 5 -> 3)
@@ -328,7 +325,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.incidentNonTerminals(v(4)) mustEqual List()
           g.incidentNonTerminals(v(5)) mustEqual List(nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5)))
           g.incidentNonTerminals(v(6)) mustEqual List()
-          g.incidentNonTerminals(v(7)) must throwAn[AssertionError]
         }
         "multiple vertices" >> {
           g.incidentNonTerminals(V(0)) mustEqual List()
@@ -338,7 +334,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.incidentNonTerminals(V(4)) mustEqual List()
           g.incidentNonTerminals(V(5)) mustEqual List(nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5)))
           g.incidentNonTerminals(V(6)) mustEqual List()
-          g.incidentNonTerminals(V(7)) must throwAn[AssertionError]
 
           g.incidentNonTerminals(V()) mustEqual E()
           g.incidentNonTerminals(V(2, 3)) mustEqual List(nt(4, (2, 3, 5)))
@@ -356,7 +351,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.inducedEdges(V(4)) mustEqual E()
           g.inducedEdges(V(5)) mustEqual E()
           g.inducedEdges(V(6)) mustEqual E()
-          g.inducedEdges(V(7)) must throwAn[AssertionError]
 
           g.inducedEdges(V()) mustEqual E()
           g.inducedEdges(V(2, 3)) mustEqual E(2 -> 3)
@@ -373,7 +367,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.inducedNonTerminals(V(4)) must containTheSameElementsAs(List(nt(1)))
           g.inducedNonTerminals(V(5)) must containTheSameElementsAs(List(nt(1)))
           g.inducedNonTerminals(V(6)) must containTheSameElementsAs(List(nt(1)))
-          g.inducedNonTerminals(V(7)) must throwAn[AssertionError]
 
           g.inducedNonTerminals(V()) must containTheSameElementsAs(List(nt(1)))
           g.inducedNonTerminals(V(2, 3)) must containTheSameElementsAs(List(nt(1)))
@@ -381,9 +374,6 @@ class GraphSpec extends org.specs2.mutable.Specification {
           g.inducedNonTerminals(V(1, 5)) must containTheSameElementsAs(List(nt(1), nt(2, 1), nt (3, (1, 5)), nt(3, (1, 5))))
           g.inducedNonTerminals(V(2, 1, 5, 3)) must containTheSameElementsAs(List(nt(1), nt(2, 1), nt(3, (1, 5)), nt(3, (1, 5)), nt(4, (2, 3, 5))))
           g.inducedNonTerminals(g.vertices) must containTheSameElementsAs(g.nonTerminals)
-        }
-        "subgraph assert" >> {
-          g.inducedSubGraph(V(10 to 12)) must throwAn[AssertionError]
         }
         "subgraph" >> {
           g.inducedSubGraph(V()) mustEqual graph(nt(1))
