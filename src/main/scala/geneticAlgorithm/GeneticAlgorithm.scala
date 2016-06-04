@@ -30,7 +30,7 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
   def mutationCount(g: Genotype) = 1
 
   def stats(g: Genotype): String = ""
-  def afterFitness(population: Population, fitness: (Genotype) => Double) {}
+  def afterFitness(population: Population, fitness: (Genotype) => Double, generation: Int) {}
   def afterMutationOp(g: Genotype): Genotype = g
 }
 
@@ -53,7 +53,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
     fitness = calculateAllFitnesses(population, s"$genPrefix fitness: ")
     val best = population.maxBy(fitness)
 
-    afterFitness(population, fitness)
+    afterFitness(population, fitness, generation)
 
     if (!nested) logln(s"$genPrefix fit: ${"%6.4f" format fitness(best)} ${stats(best)}")
 

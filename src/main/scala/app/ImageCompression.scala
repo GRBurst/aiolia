@@ -90,7 +90,7 @@ case class ImageCompressionConfig(
   override def stats(best: Genotype) = s", width: ${target.w} (${target.pixels}px), dst: ${"%6.4f" format imageDistance(best, target)}, el: ${best.numElements}, comp: ${"%4.2f" format best.compressionRatio}, rules: ${best.productions.size}, components: ${best.expand.connectedComponents.size}"
 
   var nextDraw = Duration.Zero.fromNow
-  override def afterFitness(_population: Population, fitness: (Genotype) => Double) {
+  override def afterFitness(_population: Population, fitness: (Genotype) => Double, generation: Int) {
     if (preview && nextDraw.timeLeft <= Duration.Zero) {
       nextDraw = 1 seconds fromNow
       Future {
