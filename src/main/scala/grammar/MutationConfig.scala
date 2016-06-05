@@ -18,8 +18,8 @@ trait DataGraphGrammarOpConfig[V, E] extends MutationOpConfig[Grammar[V, E]] {
 }
 
 trait InOutGrammarOpConfig[V, E] extends MutationOpConfig[Grammar[V, E]] {
-  val inputs: List[Vertex]
-  val outputs: List[Vertex]
+  val inputs: Array[Vertex]
+  val outputs: Array[Vertex]
 }
 
 trait NeuralNetworkGrammarOpConfig extends DataGraphGrammarOpConfig[Double, Double] with InOutGrammarOpConfig[Double, Double] {

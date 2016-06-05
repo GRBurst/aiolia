@@ -46,7 +46,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     "empty nonterminal axiom" >> {
       val g = grammar(
         A(1),
-        1 -> cgraph(Nil, V(0 to 2), E(0 -> 1, 1 -> 2, 2 -> 1))
+        1 -> cgraph(C(), V(0 to 2), E(0 -> 1, 1 -> 2, 2 -> 1))
       )
 
       g.expand mustEqual graph(V(0 to 2), E(0 -> 1, 1 -> 2, 2 -> 1))
@@ -68,7 +68,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     "run in circles" >> {
       val g = grammar(
         A(1),
-        1 -> cgraph(Nil, V(0 to 1), nts = List(nt(2, (0, 1)))),
+        1 -> cgraph(C(), V(0 to 1), nts = List(nt(2, (0, 1)))),
         2 -> cgraph(C(0, 1), V(0 to 1), nts = List(nt(3, (0, 1)), nt(3, (1, 0)))),
         3 -> cgraph(C(0, 1), V(0 to 2), nts = List(nt(4, (0, 2)), nt(4, (2, 1)))),
         4 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1))
@@ -80,7 +80,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
     "redundant nonterminal" >> {
       val g = grammar(
         A(1),
-        1 -> cgraph(Nil, V(0 to 1), nts = List(nt(2, (0, 1)))),
+        1 -> cgraph(C(), V(0 to 1), nts = List(nt(2, (0, 1)))),
         2 -> cgraph(C(0, 1), V(0 to 1), nts = List(nt(3, (0, 1)), nt(3, (0, 1)))),
         3 -> cgraph(C(0, 1), V(0 to 2), E(0 -> 2, 2 -> 1))
       )
@@ -163,7 +163,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
       "different nonterminal signature in rule" >> {
         grammar(
           A(1),
-          1 -> cgraph(Nil, V(0 to 2), nts = List(nt(2, (0, 1)))),
+          1 -> cgraph(C(), V(0 to 2), nts = List(nt(2, (0, 1)))),
           2 -> cgraph(C(0, 1, 2), V(0 to 2), E(0 -> 2, 1 -> 2))
         ) must throwAn[AssertionError]
       }
@@ -171,7 +171,7 @@ class GrammarSpec extends org.specs2.mutable.Specification {
       "signature does not need to match node ids" >> {
         grammar(
           A(1),
-          1 -> cgraph(Nil, V(0 to 2), nts = List(nt(2, (0, 1)))),
+          1 -> cgraph(C(), V(0 to 2), nts = List(nt(2, (0, 1)))),
           2 -> cgraph(C(2, 3), V(2, 3), E(2 -> 3))
         ) must not(throwAn[AssertionError])
       }

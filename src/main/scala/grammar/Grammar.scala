@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 
 object Grammar {
   def minimal[V, E] = Grammar[V, E](Graph(nonTerminals = List(NonTerminal(1))), Map(1 -> Graph()))
-  def inOut[T](in: List[Vertex], out: List[Vertex], dataFunc: () => Option[T] = () => None) = {
+  def inOut[T](in: Array[Vertex], out: Array[Vertex], dataFunc: () => Option[T] = () => None) = {
     val vertexData = (in ++ out).flatMap(v => dataFunc().map(v -> _)).toMap
     val axiom = Graph(Set.empty ++ in ++ out, nonTerminals = List(NonTerminal(1, in ++ out)), vertexData = vertexData)
     Grammar(axiom, Map(1 -> Graph(axiom.vertices, connectors = in ++ out)))
@@ -88,7 +88,7 @@ case class Grammar[+V, +E](axiom: Graph[V, E], productions: Map[Label, Graph[V, 
 
   override def toString = s"Grammar(\n  Axiom: $axiom\n${
     productions.toList.sortBy(_._1).map{
-      case (l, g) => s"  ${NonTerminal(l, g.connectors)} -> ${g.copy(connectors = Nil)}"
+      case (l, g) => s"  ${NonTerminal(l, g.connectors)} -> ${g.copy(connectors = Array.empty)}"
     }.mkString("\n")
   }\n)"
 }

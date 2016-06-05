@@ -14,11 +14,11 @@ case class Graph[+V, +E](
     vertexData:   Map[Vertex, V]    = Map.empty[Vertex, V],
     edgeData:     Map[Edge, E]      = Map.empty[Edge, E],
     nonTerminals: List[NonTerminal] = Nil,
-    connectors:   List[Vertex]      = Nil
+    connectors:   Array[Vertex]     = Array.empty
 //TODO: order on List[NonTerminal] should not matter, especially on comparison. We probably need a "Bag" datastructure: https://github.com/nicolasstucki/multisets
 ) extends DirectedGraphLike {
 
-  assert(connectors == connectors.distinct, "connectors in graph need to be distinct")
+  assert(connectors.sameElements(connectors.distinct), s"connectors in graph need to be distinct")
   assert(vertexData.keys.toSet.diff(vertices).isEmpty, "Vertex data can only be attached to existing vertices")
   assert(edgeData.keys.toSet.diff(edges).isEmpty, "Edge data can only be attached to existing edges")
   assert(nonTerminals.flatMap(_.connectors).toSet subsetOf vertices, "NonTerminals can only connect existing vertices")
@@ -127,7 +127,7 @@ case class Graph[+V, +E](
 
   def --[E1, V1](subGraph: Graph[E1, V1]) = {
     //TODO: rething connectors in subGraphOf
-    assert(subGraph.copy(connectors = Nil) subGraphOf this, s"Graph can only remove valid subgraph. $this -- $subGraph)")
+    assert(subGraph.copy(connectors = Array.empty) subGraphOf this, s"Graph can only remove valid subgraph. $this -- $subGraph)")
     // assert(subGraph.connectors.isEmpty, "Graph connectors must not be empty")
 
     val removedVertices = subGraph.vertices
@@ -212,7 +212,7 @@ case class Graph[+V, +E](
     val vertexMapping: Map[Label, Label] = nonConnectorMapping ++ connectorMapping
 
     assert(vertexMapping.size == replacement.vertices.size)
-    val mappedReplacement = replacement.copy(connectors = Nil) mapVertices vertexMapping
+    val mappedReplacement = replacement.copy(connectors = Array.empty) mapVertices vertexMapping
 
     this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
   }

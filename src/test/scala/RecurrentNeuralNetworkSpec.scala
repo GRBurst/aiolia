@@ -7,7 +7,7 @@ import aiolia.neuralNetwork.Recurrent
 class RecurrentNeuralNetworkSpec extends org.specs2.mutable.Specification {
   "neuronal network" >> {
     "labels of vertices must be in order 0..|vertices|" >> {
-      Recurrent(in = Nil, out = Nil, Graph(V(1, 2), E(1 -> 2))) must throwAn[AssertionError]
+      Recurrent(in = VL(), out = VL(), Graph(V(1, 2), E(1 -> 2))) must throwAn[AssertionError]
     }
 
     "simple" >> {

@@ -111,9 +111,9 @@ class MutationOpSpec extends org.specs2.mutable.Specification with org.specs2.mo
 
         newSource.copy(nonTerminals = Nil) mustEqual wantedNewSource.copy(nonTerminals = Nil)
 
-        extracted.copy(connectors = Nil, nonTerminals = Nil) mustEqual wantedExtracted.copy(connectors = Nil, nonTerminals = Nil)
+        extracted.copy(connectors = C(), nonTerminals = Nil) mustEqual wantedExtracted.copy(connectors = C(), nonTerminals = Nil)
         extracted.nonTerminals must containTheSameElementsAs(wantedExtracted.nonTerminals)
-        extracted.connectors must containTheSameElementsAs(wantedExtracted.connectors)
+        extracted.connectors.toList must containTheSameElementsAs(wantedExtracted.connectors.toList)
 
         (newSource.nonTerminals diff source.nonTerminals diff extracted.nonTerminals).size mustEqual 1
         val newNonTerminal = (newSource.nonTerminals diff source.nonTerminals diff extracted.nonTerminals).head

@@ -18,7 +18,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
       V() mustEqual Set.empty
     }
     "vertex list" >> {
-      VL(1, 2, 3) mustEqual List(Vertex(1), Vertex(2), Vertex(3))
+      VL(1, 2, 3) === List(Vertex(1), Vertex(2), Vertex(3))
       VL() mustEqual List.empty
     }
     "edge" >> {
@@ -55,6 +55,10 @@ class GraphSpec extends org.specs2.mutable.Specification {
   }
 
   "edge" >> {
+    "accessors" >> {
+      e(2 -> 3).in mustEqual v(2)
+      e(2 -> 3).out mustEqual v(3)
+    }
     "toString" >> {
       e(2 -> 3).toString mustEqual "2 -> 3"
     }
@@ -726,7 +730,7 @@ class GraphSpec extends org.specs2.mutable.Specification {
           ed = eData((5 -> 6) -> "x", (7 -> 4) -> "y"),
           nts = List(nt(2, (2, 3, 5, 6)), nt(2, (2, 8, 4, 5))),
           c = C(1, 2))
-        g.replaceOne(nt(2, (2, 3, 4, 5)), r, AutoId(7)) mustEqual result
+        (g.replaceOne(nt(2, (2, 3, 4, 5)), r, AutoId(7)) isIsomorphicTo result) must beTrue
       }
       "with duplicate nonterminal" >> {
         val g = graph(V(0 to 1), E(), nts = List(nt(1, (0, 1)), nt(1, (0, 1))))

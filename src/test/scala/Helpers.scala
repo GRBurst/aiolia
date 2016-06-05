@@ -14,12 +14,12 @@ object Helpers {
     vd:  Map[Vertex, V]    = Map.empty[Vertex, V],
     ed:  Map[Edge, E]      = Map.empty[Edge, E],
     nts: List[NonTerminal] = Nil,
-    c:   List[Vertex]      = Nil
+    c:   Array[Vertex]     = Array.empty
   ) = Graph(v, e, vd, ed, nts, c)
 
   // production: connectors first and mandatory
   def cgraph[V, E](
-    c:   List[Vertex]      = Nil,
+    c:   Array[Vertex]     = Array.empty,
     v:   Set[Vertex]       = Set.empty,
     e:   Set[Edge]         = Set.empty,
     vd:  Map[Vertex, V]    = Map.empty[Vertex, V],
@@ -45,10 +45,10 @@ object Helpers {
     Grammar(axiom, rules.map{ case (label, graph) => label -> graph }.toMap)
   }
 
-  class MapContains(production: (Label, Graph[_,_])) extends ArgumentMatcher[Map[Label, Graph[_,_]]] {
-    def matches(map: Any): Boolean = map.asInstanceOf[Map[Label, Graph[_,_]]].toList.contains(production)
+  class MapContains(production: (Label, Graph[_, _])) extends ArgumentMatcher[Map[Label, Graph[_, _]]] {
+    def matches(map: Any): Boolean = map.asInstanceOf[Map[Label, Graph[_, _]]].toList.contains(production)
   }
   object MapContains {
-    def apply(production: (Label, Graph[_,_])) = argThat(new MapContains(production))
+    def apply(production: (Label, Graph[_, _])) = argThat(new MapContains(production))
   }
 }

@@ -4,14 +4,14 @@ import aiolia.graph._
 import aiolia.util.Compiler
 
 object FeedForward {
-  def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) = {
+  def apply(in: Array[Vertex], out: Array[Vertex], graph: Graph[Double, Double]) = {
     new FeedForward(in, out, graph)
   }
 }
 
 //TODO: sigmoid: x / Math.sqrt(1 + x*x) ? // which is 1.75 times faster than tanh
 
-class FeedForward private (in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) {
+class FeedForward private (in: Array[Vertex], out: Array[Vertex], graph: Graph[Double, Double]) {
   // Important for data indexing in neural network
   assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
 

@@ -4,13 +4,13 @@ import aiolia.graph._
 import aiolia.util.DoubleBuffering
 
 object Recurrent {
-  def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) = {
+  def apply(in: Array[Vertex], out: Array[Vertex], graph: Graph[Double, Double]) = {
     //TODO: cleanup parts of the network which are not reachable from the output vertices
     new Recurrent(in, out, graph)
   }
 }
 
-class Recurrent private (in: List[Vertex], out: List[Vertex], val graph: Graph[Double, Double]) extends DoubleBuffering[Array[Double]] {
+class Recurrent private (in: Array[Vertex], out: Array[Vertex], val graph: Graph[Double, Double]) extends DoubleBuffering[Array[Double]] {
 
   assert(
     (0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)),

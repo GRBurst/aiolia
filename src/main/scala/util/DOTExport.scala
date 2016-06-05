@@ -6,7 +6,7 @@ import aiolia.graph._
 import scala.collection.mutable
 
 object DOTExport {
-  def toDOT[V, E](graph: Graph[V, E], inputs: List[Vertex] = Nil, outputs: List[Vertex] = Nil, _labelNames: Map[Label, String] = Map.empty.withDefault(_.toString)) = {
+  def toDOT[V, E](graph: Graph[V, E], inputs: Array[Vertex] = Array.empty, outputs: Array[Vertex] = Array.empty, _labelNames: Map[Label, String] = Map.empty.withDefault(_.toString)) = {
     val name = _labelNames.withDefault(_.toString)
     import graph._
 

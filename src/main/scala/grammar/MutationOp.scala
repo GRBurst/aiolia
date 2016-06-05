@@ -290,9 +290,9 @@ object ExtractNonTerminal {
     val extractedVertices = subV ++ source.allNeighbours(subV)
     val extractedEdges = source.inducedEdges(subV) ++ source.incidentEdges(subV)
     val extractedNonTerminals = (source.inducedNonTerminals(subV) ++ source.incidentNonTerminals(subV)) diff (source.inducedNonTerminals(subV) intersect source.incidentNonTerminals(subV))
-    val extractedConnectors = (if (source.connectors.isEmpty && subV.size == source.vertices.size) subV else isolatedVertices.toList ++
+    val extractedConnectors = (if (source.connectors.isEmpty && subV.size == source.vertices.size) subV else isolatedVertices ++
       source.allNeighbours(subV) ++
-      (source.connectors intersect subV.toSeq)).toList.distinct // order does not matter, it just needs to be the same as in newNonTerminal
+      (source.connectors intersect subV.toSeq)).toArray.distinct // order does not matter, it just needs to be the same as in newNonTerminal
     val extractedVertexData = source.vertexData.filterKeys(extractedVertices -- extractedConnectors)
     val extractedEdgeData = source.edgeData.filterKeys(extractedEdges)
     // println(s"extractedVertices: $extractedVertices (neighbours: ${source.neighbours(subV)} ++ neighboursOverNonTerminal: ${source.neighboursOverNonTerminals(subV)})")
@@ -320,10 +320,10 @@ object ExtractNonTerminal {
 case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
-    val candidates = grammar.productions.filter(_._2.vertices.nonEmpty)
+    val candidates = grammar.productions.filter{ case (_, g) => g.vertices.exists(v => g.degree(v) >= 2) }
     random.selectOpt(candidates).flatMap {
       case (srcLabel, source) =>
-        val subVertices = random.selectMinOne(source.vertices).toSet
+        val subVertices = Set(random.select(source.vertices.filter(v => source.degree(v) >= 2)))
         val newLabel = grammar.productions.keys.max + 1
         val (newSource, extracted) = ExtractNonTerminal.extract(source, subVertices, newLabel)
 
@@ -347,7 +347,7 @@ case class ReuseNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extend
     rand.selectOpt(candidates).flatMap {
       case List((srcLabel, source), (targetLabel, target)) =>
         //TODO: target.vertices or target.nonConnectors ?
-        val connectors = rand.select(target.vertices, n = source.connectors.size).toList
+        val connectors = rand.select(target.vertices, n = source.connectors.size).toArray
         val nonTerminal = NonTerminal(srcLabel, connectors)
 
         //TODO: cycle detection!
@@ -366,7 +366,7 @@ case class ReuseNonTerminalAcyclic[V, E](config: InOutGrammarOpConfig[V, E]) ext
     rand.selectOpt(candidates).flatMap {
       case List((srcLabel, source), (targetLabel, target)) =>
         //TODO: target.vertices or target.nonConnectors ?
-        val connectors = rand.select(target.vertices, n = source.connectors.size).toList
+        val connectors = rand.select(target.vertices, n = source.connectors.size).toArray
         val nonTerminal = NonTerminal(srcLabel, connectors)
 
         //TODO: cycle detection!
