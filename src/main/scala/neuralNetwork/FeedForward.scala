@@ -5,20 +5,20 @@ import aiolia.util.Compiler
 
 object FeedForward {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) = {
-    // val badEdges = graph.edges.filter{ case Edge(i, o) => (in contains o) || (out contains i) }
-    // val cleanedGraph = graph.copy(edges = graph.edges -- badEdges, edgeData = graph.edgeData -- badEdges)
     new FeedForward(in, out, graph)
   }
 }
 
 //TODO: sigmoid: x / Math.sqrt(1 + x*x) ? // which is 1.75 times faster than tanh
 
-class FeedForward(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) {
+class FeedForward private (in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) {
   // Important for data indexing in neural network
   assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
 
   assert(in.forall(graph.incomingEdges(_).isEmpty), "Input neurons can not have incoming edges")
   assert(out.forall(graph.outgoingEdges(_).isEmpty), "Output neurons can not have outgoing edges")
+  assert(graph.vertices.size == graph.vertexData.size, "All neurons need to have a bias")
+  assert(graph.edges.size == graph.edgeData.size, "All synapses need to have a weight")
 
   assert(!graph.hasCycle)
 
@@ -31,7 +31,7 @@ class FeedForward(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Doub
 
     val nodes = graph.topologicalSort intersect (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct
     val node_code = nodes map { n =>
-      val nbias = bias.getOrElse(n, 0.0)
+      val nbias = bias(n)
       val outData = in.indexOf(n) match {
         case i if i >= 0 => q"data($i) + $nbias"
         case -1 =>

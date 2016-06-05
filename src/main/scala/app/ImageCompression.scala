@@ -58,7 +58,7 @@ case class ImageCompressionConfig(
 
   val inputs = VL(0, 1)
   val outputs = VL(2, 3, 4)
-  val baseGenotype = Grammar.inOut(inputs, outputs)
+  val baseGenotype = Grammar.inOut(inputs, outputs, () => Some(0.0))
 
   def calculateFitness(g: Genotype, prefix: String): Double = {
     var sum = 0.0

@@ -10,7 +10,7 @@ object Recurrent {
   }
 }
 
-class Recurrent(in: List[Vertex], out: List[Vertex], graph: Graph[Double, Double]) extends DoubleBuffering[Array[Double]] {
+class Recurrent private (in: List[Vertex], out: List[Vertex], val graph: Graph[Double, Double]) extends DoubleBuffering[Array[Double]] {
 
   assert(
     (0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)),
