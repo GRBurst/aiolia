@@ -5,12 +5,12 @@ import aiolia.grammar._
 import aiolia.util._
 
 class ZooConfig(
-    val mutationCount:     Int    = 10,
-    val foodProbability:   Double = 1.0,
-    val minimumPopulation: Int    = 10,
-    val initialEnergy:     Double = 0.8,
-    val walkEffort:        Double = 0.005,
-    val thinkEffort:       Double = 0.001,
+    val mutationCount:     Int    = 3,
+    val foodProbability:   Double = 0.2,
+    val minimumPopulation: Int    = 20,
+    val initialEnergy:     Double = 0.5,
+    val walkEffort:        Double = 0.003,
+    val thinkEffort:       Double = 0.0001,
     val worldDimensions:   Vec2   = Vec2(120, 90) / 2
 ) extends NeuralNetworkGrammarOpConfig { config =>
 

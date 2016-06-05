@@ -61,8 +61,8 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double) ext
   var walkedDistance: Double = 0
 
   // def isAlive = energy > 0 && (age - walkedDistance < 15)
-  def wantsToReplicate = brain.horniness > 0 && energy > 0.8 && age > 5
   def isAlive = isAbleToWalk && energy > 0
+  def wantsToReplicate = brain.horniness > 0 && energy > 0.6 && age > 5
 
   def isAbleToWalk = {
     val speedNeuron = Brain.labelNames.find{ case (_, name) => name == "spd" }.get._1
