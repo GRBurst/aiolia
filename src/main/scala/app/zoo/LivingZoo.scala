@@ -31,8 +31,8 @@ class LivingZoo(config: ZooConfig) {
       if (i > 0) {
         writeDOTToFile(world)
         println(world)
-        Thread.sleep(100)
         println("#" * world.dimensions.x * 3)
+        // Thread.sleep(100)
       }
     }
   }
