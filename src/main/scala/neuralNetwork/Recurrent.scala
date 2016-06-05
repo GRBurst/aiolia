@@ -17,8 +17,8 @@ class Recurrent private (in: List[Vertex], out: List[Vertex], val graph: Graph[D
     s"vertices need to have labels 0..|vertices|\n${graph.vertices}"
   ) // Important for data indexing
 
-  assert(graph.vertices.size == graph.vertexData.size, "All neurons need to have a bias")
-  assert(graph.edges.size == graph.edgeData.size, "All synapses need to have a weight")
+  assert(graph.vertices.forall(v => util.Try(graph.vertexData(v)).isSuccess), "All neurons need to have a bias")
+  assert(graph.edges.forall(e => util.Try(graph.edgeData(e)).isSuccess), "All synapses need to have a weight")
 
   // assert(in.forall(graph.incomingEdges(_).isEmpty), "Input neurons should not have incoming edges")
   // assert(out.forall(graph.outgoingEdges(_).isEmpty), "Output neurons should not have outgoing edges")
