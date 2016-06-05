@@ -5,7 +5,7 @@ import aiolia.grammar._
 import aiolia.util._
 
 class ZooConfig(
-    val mutationCount:     Int    = 3,
+    val mutationCount:     Int    = 20,
     val foodProbability:   Double = 0.2,
     val minimumPopulation: Int    = 20,
     val initialEnergy:     Double = 0.5,

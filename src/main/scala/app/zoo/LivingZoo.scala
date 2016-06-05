@@ -13,7 +13,7 @@ class LivingZoo(config: ZooConfig) {
   import config._
 
   def baseGenotype: Grammar[Double, Double] = Grammar.inOut(Brain.inputs, Brain.outputs, initVertexData)
-  def newCreature = Creature(mutate(baseGenotype), initialEnergy)
+  def newCreature = Creature(mutate(baseGenotype, random.r.nextInt(mutationCount)), initialEnergy)
   def randomPosition(world: World): Vec2 = Vec2(random.r.nextInt(world.gen.dimensions.x), random.r.nextInt(world.gen.dimensions.y))
   //TODO: Clamp to world
   def randomPositionAround(world: World, pos: Vec2, radius: Double = 1): Vec2 = pos + Vec2((random.r.nextGaussian * radius).round.toInt, (random.r.nextGaussian * radius).round.toInt)
@@ -79,7 +79,7 @@ class LivingZoo(config: ZooConfig) {
         val birthPos = world.gen.emptyNeighbourPositions(pos).headOption
         birthPos.foreach { pos =>
           val passedOnEnergy = creature.replicate()
-          val child = Creature(mutate(creature.genotype), passedOnEnergy)
+          val child = Creature(mutate(creature.genotype, (creature.brain.mutationStrength * mutationCount).round.toInt), passedOnEnergy)
           world.gen(pos) = child
           // println(s"$pos spawned new child: ${child.hashCode.toString.take(4)}")
         }
@@ -166,7 +166,7 @@ class LivingZoo(config: ZooConfig) {
     }
   }
 
-  def mutate(genotype: Grammar[Double, Double]): Grammar[Double, Double] = {
+  def mutate(genotype: Grammar[Double, Double], mutationCount: Int): Grammar[Double, Double] = {
     var curr = genotype
     for (_ <- 0 to mutationCount) {
       val mut = random.select(mutationOperators)

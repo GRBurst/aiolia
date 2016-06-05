@@ -116,6 +116,7 @@ object Brain {
     (outId -> "spd") ::
     (outId -> "hrn") ::
     (outId -> "agr") ::
+    (outId -> "mut") ::
     Nil
   )
   private val outMap: Map[Label, String] = _outMap.toMap
@@ -138,6 +139,7 @@ class Brain(val net: Recurrent) {
     def speed = net.outputData(1)
     def horniness = net.outputData(2)
     def agression = net.outputData(3)
+    def mutation = net.outputData(4)
   }
 
   private def thirds(x: Double) = if (x < -0.3) -1 else if (x > 0.3) 1 else 0
@@ -146,4 +148,5 @@ class Brain(val net: Recurrent) {
   def speed: Int = thirds(out.speed)
   def horniness: Double = out.horniness
   def agression: Double = thirds(out.agression)
+  def mutationStrength: Double = (out.mutation + 1) / 2
 }
