@@ -98,12 +98,13 @@ class Field(val dimensions: Vec2) {
         val wantsToFight = c.brain.agression > 0
         val want = if (wantsToReplicate && wantsToFight) "*" else { if (wantsToReplicate) "+" else { if (wantsToFight) "x" else " " } }
         val age = s"${c.age}"
-        val logAge = Math.log(c.age + 1).floor.toInt.toString.padTo(2, " ").mkString
+        val logAge = Math.log(c.age + 1).floor.toInt.toString.take(1).mkString
         s"${logAge}${energy.take(1)}$want"
       case Some(f: Food) => s" ${f.symbol}"
       case None          => ""
     }
-    line.map(desc(_).padTo(4, " ").mkString).mkString("|") + "\n" + "-" * 5 * line.size
+    val w = 3
+    line.map(desc(_).padTo(w, " ").mkString).mkString // + "\n" + "-" * (w + 1) * line.size
 
   }.mkString("\n")
 

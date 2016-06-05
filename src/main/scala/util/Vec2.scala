@@ -3,6 +3,8 @@ package aiolia.util
 case class Vec2(x: Int, y: Int) {
   def +(that: Vec2) = Vec2(x + that.x, y + that.y)
   def -(that: Vec2) = Vec2(x - that.x, y - that.y)
+  def *(that: Vec2) = Vec2(x * that.x, y * that.y)
+  def /(that: Vec2) = Vec2(x / that.x, y / that.y)
 
   def +(s: Int) = Vec2(x + s, y + s)
   def -(s: Int) = Vec2(x - s, y - s)
