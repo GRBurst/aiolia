@@ -65,25 +65,21 @@ class Field(val dimensions: Vec2) {
     }
   }
 
-  def appearanceAt(pos: Vec2): Double = lookupOption(pos) match {
-    case None              => -0.5 // outside field / wall
-    case Some(thingOption) => thingOption.map(_.appearance).getOrElse(0.0)
-  }
-
   def sensors(pos: Vec2, direction: Vec2, count: Int): Array[Double] = {
     val rotation = direction.angle
-    val radius = 10 //TODO -> config
+    val radius = 5 //TODO -> config
     val a = 2 * Math.PI / count
     (Array.tabulate(count){ i =>
       val startAngle = rotation + i * a
       val endAngle = rotation + (i + 1) * a
-      val cone = neighbourCone(pos, radius, startAngle, endAngle)
-      val visible = cone.map(p => ((p distance pos) -> appearanceAt(p))).filter{ case (_, a) => a != 0.0 }
-      if (visible.isEmpty) Array(1.0, 0.0)
-      else {
-        val (distanceSum, appearanceSum) = visible.reduce{ (a, b) => ((a._1 + b._1), (a._2 + b._2)) }
-        Array(distanceSum / visible.size, appearanceSum / visible.size)
-      }
+      val cone = neighbourCone(pos, radius, startAngle, endAngle).filter(isInside)
+      val visible = cone.map(p => ((p distance pos) -> lookup(p))).collect{ case (d, Some(a)) => (d, a) }
+      val visibleCreatures = visible.collect{ case (d, c: Creature) => (d, c) }
+      val visibleFood = visible.collect{ case (d, f: Food) => (d, f) }
+      Array(
+        if (visibleCreatures.isEmpty) 0.0 else visibleCreatures.minBy(_._1)._2.appearance,
+        if (visibleFood.isEmpty) 0.0 else visibleFood.minBy(_._1)._2.appearance
+      )
     }).flatten
   }
 

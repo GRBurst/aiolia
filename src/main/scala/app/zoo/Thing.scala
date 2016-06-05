@@ -45,7 +45,7 @@ class Creature(val genotype: Grammar[Double, Double], initialEnergy: Double) ext
   val brain = new Brain(genotype)
   assert(initialEnergy > 0.0)
   energy = initialEnergy
-  def appearance = if (brain.agression > 0) -brain.agression else 0.2
+  def appearance = brain.agression
 
   private var _energy: Double = _
   def energy_=(newEnergy: Double) { _energy = 0.0 max newEnergy min 1.0 }
@@ -102,7 +102,7 @@ object Brain {
   private def inId = inAutoId.nextId
   private val _inMap: List[(Int, String)] = (
     (inId -> "enr") ::
-    (0 until visionSensors).toList.flatMap(i => List(inId -> s"dst$i", inId -> s"ap$i")) :::
+    (0 until visionSensors).toList.flatMap(i => List(inId -> s"vc$i", inId -> s"vf$i")) :::
     Nil
   )
   private val inMap: Map[Label, String] = _inMap.toMap
