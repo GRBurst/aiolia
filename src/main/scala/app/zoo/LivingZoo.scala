@@ -161,6 +161,7 @@ class LivingZoo(config: ZooConfig) {
       Future {
         val oldest = world.gen.creatures.values.maxBy(_.age)
         File.write("/tmp/oldest.dot", DOTExport.toDOT(oldest.genotype.expand, Brain.inputs, Brain.outputs, Brain.labelNames))
+        File.write("/tmp/oldestg.dot", DOTExport.toDOT(oldest.genotype))
       }
     }
   }
