@@ -12,6 +12,7 @@ libraryDependencies ++=
   "org.scala-lang" % "scala-reflect" % scalaV ::
   "org.scala-lang" % "scala-compiler" % scalaV ::
   "net.coobird" % "thumbnailator" % "0.4.8" ::
+  "org.ode4j" % "core" % "0.3.0" ::
   Nil
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)

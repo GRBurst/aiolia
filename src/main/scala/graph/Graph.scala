@@ -118,6 +118,13 @@ case class Graph[+V, +E](
     subGraph
   }
 
+  def filterEdges(ep: (Edge) => Boolean): Graph[V, E] = {
+    copy(
+      edges = edges filter ep,
+      edgeData = edgeData filterKeys ep
+    )
+  }
+
   def --[E1, V1](subGraph: Graph[E1, V1]) = {
     //TODO: rething connectors in subGraphOf
     assert(subGraph.copy(connectors = Nil) subGraphOf this, s"Graph can only remove valid subgraph. $this -- $subGraph)")
@@ -173,6 +180,22 @@ case class Graph[+V, +E](
       nonTerminals map (_ map m),
       connectors map (_ map m)
     )
+  }
+
+  def mapData[V1, E1](v: (V) => V1 = identity _, e: (E) => E1 = identity _): Graph[V1, E1] = {
+    copy(
+      vertexData = vertexData mapValues v,
+      edgeData = edgeData mapValues e
+    )
+  }
+
+  def collectData[V1, E1](vp: PartialFunction[V, V1], ep: PartialFunction[E, E1]) = {
+    // Graph(
+    //   vertices = vertices.filter(v => vp.isDefinedAt(vertexData(v))),
+    //   edges = edges.filter(v => vp.isDefinedAt(edgeData(v))),
+    //   vertexData = vertexData.collect{case (v,d) if vp.isDefinedAt(d) => (v,vp(d))},
+    // )
+    ???
   }
 
   def replaceOne[V1 >: V, E1 >: E](nonTerminal: NonTerminal, replacement: Graph[V1, E1], autoId: AutoId): Graph[V1, E1] = {
