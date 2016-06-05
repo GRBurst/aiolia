@@ -31,9 +31,9 @@ class ZooConfig(
     5 -> SplitEdge(config) ::
     0 -> ReconnectEdge(config) ::
     0 -> Shrink(config) ::
-    // 1 -> ExtractNonTerminal(config) ::
-    // 1 -> ReuseNonTerminalAcyclic(config) ::
-    // 1 -> InlineNonTerminal(config) ::
+    2 -> ExtractNonTerminal(config) ::
+    5 -> ReuseNonTerminalAcyclic(config) ::
+    1 -> InlineNonTerminal(config) ::
     Nil
   ).flatMap{ case (n, op) => List.fill(n)(op) }
 }
