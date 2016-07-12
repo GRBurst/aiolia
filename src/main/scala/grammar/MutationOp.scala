@@ -389,8 +389,7 @@ case class SplitWireAddGate(config: CircuitConfig) extends MutationOp[Graph[Noth
         val ein1 = Edge(in, gate)
         val eout = Edge(gate, out)
         val ein2 = if (random.r.nextBoolean) {
-          val additionalInput = random.select(vertices -- outputs -- depthFirstSearch(in, predecessors))
-          Some(Edge(additionalInput, gate))
+          random.selectOpt(vertices -- outputs -- depthFirstSearch(in, successors)).map { in => Edge(in, gate) }
         } else None
 
         val newGraph = graph.copy(
@@ -407,19 +406,18 @@ case class AddAcyclicWire(config: CircuitConfig) extends MutationOp[Graph[Nothin
     import graph._
     import config._
 
-    def outCandidates(v: Vertex) = (vertices - v -- successors(v) -- depthFirstSearch(v, predecessors)).filter(inDegree(_) < 2)
+    def outCandidates(v: Vertex) = (vertices -- inputs -- successors(v) -- depthFirstSearch(v, predecessors)).filter(inDegree(_) < 2)
 
     // Only choose vertices that are not fully forwards connected (to all other successor nodes)
-    val vertexInCandidates = vertices.filter(v => outCandidates(v).nonEmpty)
+    val vertexInCandidates = (vertices -- outputs).filter(v => outCandidates(v).nonEmpty)
+
     random.selectOpt(vertexInCandidates).map { vertexIn =>
-      // TODO: performance: this was already computed in the filter before
-      val vertexOutCandidates = outCandidates(vertexIn)
+      // TODO: performance: this was already computed in the filter before:
+      val vertexOutCandidates = outCandidates(vertexIn) -- inputs
       val vertexOut = random.select(vertexOutCandidates)
       val edge = Edge(vertexIn, vertexOut)
       val newGraph = graph + edge
       assert(!newGraph.hasCycle)
-      // TODO: prevent creating cycles in the first place -> in/out connectors?
-      // if (newGraph.hasCycle) None else Some(result)
       newGraph
     }
   }

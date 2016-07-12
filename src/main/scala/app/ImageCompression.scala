@@ -16,28 +16,28 @@ object ImageCompression extends App {
 }
 
 case class ImageCompressionConfig(
-    override val populationSize:               Int    = 24,
-    override val tournamentSize:               Int    = 5,
-    mutationCountPerElement:                   Double = 0.0251,
-    mutationGaussianScale:                     Double = 0.1833,
-    override val neuronMutationStrength:       Double = 0.1,
-    override val synapseMutationStrength:      Double = 0.4602,
-    elementCountPenalty:                       Double = 0.00000079,
-    override val addAcyclicEdgeFreq:           Int    = 189,
-    override val removeInterconnectedEdgeFreq: Int    = 80,
-    override val splitEdgeFreq:                Int    = 82,
-    override val reconnectEdgeFreq:            Int    = 270,
-    override val shrinkFreq:                   Int    = 73,
-    override val mutateVertexFreq:             Int    = 85,
-    override val mutateEdgeFreq:               Int    = 284,
+  override val populationSize: Int = 24,
+  override val tournamentSize: Int = 5,
+  mutationCountPerElement: Double = 0.0251,
+  mutationGaussianScale: Double = 0.1833,
+  override val neuronMutationStrength: Double = 0.1,
+  override val synapseMutationStrength: Double = 0.4602,
+  elementCountPenalty: Double = 0.00000079,
+  override val addAcyclicEdgeFreq: Int = 189,
+  override val removeInterconnectedEdgeFreq: Int = 80,
+  override val splitEdgeFreq: Int = 82,
+  override val reconnectEdgeFreq: Int = 270,
+  override val shrinkFreq: Int = 73,
+  override val mutateVertexFreq: Int = 85,
+  override val mutateEdgeFreq: Int = 284,
 
-    seed:                  Any     = 0,
-    override val parallel: Boolean = true,
-    override val prefix:   String  = "",
-    override val nested:   Boolean = false,
-    preview:               Boolean = true,
-    picture:               String  = "primitives.png",
-    pictureWidth:          Int     = 16
+  seed: Any = 0,
+  override val parallel: Boolean = true,
+  override val prefix: String = "",
+  override val nested: Boolean = false,
+  preview: Boolean = true,
+  picture: String = "primitives.png",
+  pictureWidth: Int = 16
 ) extends Config[Grammar[Double, Double]] with FeedForwardNetworkConfig {
   config =>
   override def toString = "IC(p: %d, ts: %d, mut#: %6.4f, mutSc: %6.4f, mutv: %6.4f, mute: %6.4f, pen:%10.8f, freq: %d %d %d %d %d %d %d)" format (populationSize, tournamentSize, mutationCountPerElement, mutationGaussianScale, neuronMutationStrength, synapseMutationStrength, elementCountPenalty, addAcyclicEdgeFreq, removeInterconnectedEdgeFreq, splitEdgeFreq, reconnectEdgeFreq, shrinkFreq, mutateVertexFreq, mutateEdgeFreq)
