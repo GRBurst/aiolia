@@ -34,7 +34,7 @@ case class SplitEdge(config: InOutGrammarOpConfig[Double, Double]) extends Mutat
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     val requirement = (graph: Graph[Double, Double], edge: Edge) => edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
-    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists(requirement(graph, _)) }
+    val candidates = grammar.productions.filter { case (_, graph) => graph.edges.exists(requirement(graph, _)) }
     random.selectOpt(candidates).map {
       case (label, graph) =>
         val edge = random.select(graph.edges.filter(requirement(graph, _)))
@@ -60,7 +60,7 @@ case class ReconnectEdge[V, E](config: InOutGrammarOpConfig[V, E]) extends Mutat
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
     def requirement(graph: Graph[_, _], edge: Edge) = edge match { case Edge(in, out) => (graph.inDegree(in) > 1 || graph.connectors.contains(in)) && (graph.outDegree(out) > 1 || graph.connectors.contains(out)) }
-    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists(requirement(graph, _)) }
+    val candidates = grammar.productions.filter { case (_, graph) => graph.edges.exists(requirement(graph, _)) }
     random.selectOpt(candidates).flatMap {
       case (label, graph) =>
         import graph._
@@ -124,8 +124,7 @@ case class AddConnectedVertex[V, E](config: DataGraphGrammarOpConfig[V, E]) exte
       val newVertexData = Map.empty ++ initVertexData().map(d => vertex -> d)
       val newGraph = graph.copy(vertices = newVertices, vertexData = newVertexData)
       Some(grammar.updateProduction(label -> newGraph))
-    }
-    else {
+    } else {
       val existingVertex = random.select(graph.vertices)
 
       val newVertex = Vertex(nextLabel(graph.vertices))
@@ -175,19 +174,19 @@ case class AddAcyclicEdge[V, E](config: InOutGrammarOpConfig[V, E] with DataGrap
     import config._
     val candidates = grammar.productions.filter {
       case (_, g) =>
-        g.vertices.exists(v => (g.outDegree(v) < g.vertices.size - 1) && (g.vertices - v -- g.successors(v) -- g.depthFirstSearch(v, g.predecessors)).nonEmpty)
+        g.vertices.exists(v => (g.vertices - v -- g.successors(v) -- g.depthFirstSearch(v, g.predecessors)).nonEmpty)
     }
     random.selectOpt(candidates).flatMap {
       case (label, graph) =>
         // Only choose vertices that are not fully connected (to all other nodes)
-        val vertexInCandidates = graph.vertices.filter(v => (graph.outDegree(v) < graph.vertices.size - 1) && (graph.vertices - v -- graph.successors(v) -- graph.depthFirstSearch(v, graph.predecessors)).nonEmpty)
+        val vertexInCandidates = graph.vertices.filter(v => (graph.vertices - v -- graph.successors(v) -- graph.depthFirstSearch(v, graph.predecessors)).nonEmpty)
         val vertexIn = random.select(vertexInCandidates)
         val vertexOutCandidates = graph.vertices - vertexIn -- graph.successors(vertexIn) -- graph.depthFirstSearch(vertexIn, graph.predecessors)
         val vertexOut = random.select(vertexOutCandidates)
         val edge = Edge(vertexIn, vertexOut)
         val newGraph = (graph + edge, initEdgeData()) match {
           case (graph, Some(data)) => graph.copy(edgeData = graph.edgeData + (edge -> data))
-          case (graph, None)       => graph
+          case (graph, None) => graph
         }
         val result = grammar.updateProduction(label -> newGraph)
         // assert(!result.expand.hasCycle, s"$graph\nedge: $edge\n$grammar\nexpanded: ${grammar.expand}")
@@ -213,7 +212,7 @@ case class AddEdge[V, E](config: DataGraphGrammarOpConfig[V, E]) extends Mutatio
         val edge = Edge(vertexIn, vertexOut)
         val newGraph = (graph + edge, initEdgeData()) match {
           case (graph, Some(data)) => graph.copy(edgeData = graph.edgeData + (edge -> data))
-          case (graph, None)       => graph
+          case (graph, None) => graph
         }
         grammar.updateProduction(label -> newGraph)
     }
@@ -248,10 +247,10 @@ case class RemoveEdge[V, E](config: MutationOpConfig[Grammar[V, E]]) extends Mut
 case class RemoveInterconnectedEdge[V, E](config: MutationOpConfig[Grammar[V, E]]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config._
-    val candidates = grammar.productions.filter{ case (_, graph) => graph.edges.exists{ case Edge(in, out) => graph.outDegree(in) > 1 && graph.inDegree(out) > 1 } }
+    val candidates = grammar.productions.filter { case (_, graph) => graph.edges.exists { case Edge(in, out) => graph.outDegree(in) > 1 && graph.inDegree(out) > 1 } }
     random.selectOpt(candidates).map {
       case (label, graph) =>
-        val edge = random.select(graph.edges.filter{ case Edge(in, out) => graph.outDegree(in) > 1 && graph.inDegree(out) > 1 })
+        val edge = random.select(graph.edges.filter { case Edge(in, out) => graph.outDegree(in) > 1 && graph.inDegree(out) > 1 })
         grammar.updateProduction(label -> (graph - edge))
     }
   }
@@ -340,7 +339,7 @@ case class ExtractNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) exte
 case class ReuseNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config.{random => rand}
-    val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
+    val candidates = grammar.productions.toList.combinations(2).flatMap { case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
 
@@ -359,7 +358,7 @@ case class ReuseNonTerminal[V, E](config: DataGraphGrammarOpConfig[V, E]) extend
 case class ReuseNonTerminalAcyclic[V, E](config: InOutGrammarOpConfig[V, E]) extends MutationOp[Grammar[V, E]] {
   def apply(grammar: Genotype): Option[Genotype] = {
     import config.{random => rand, _}
-    val candidates = grammar.productions.toList.combinations(2).flatMap{ case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
+    val candidates = grammar.productions.toList.combinations(2).flatMap { case ab @ List(a, b) => List(ab, List(b, a)) }.filter {
       case List((_, source), (_, target)) => source.connectors.size <= target.vertices.size
     }.toList //TODO: optimize
 
@@ -370,7 +369,7 @@ case class ReuseNonTerminalAcyclic[V, E](config: InOutGrammarOpConfig[V, E]) ext
         val nonTerminal = NonTerminal(srcLabel, connectors)
 
         //TODO: cycle detection!
-        Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap{ g =>
+        Try(grammar.updateProduction(targetLabel -> (target + nonTerminal))).toOption.flatMap { g =>
           if (g.dependencyGraph.hasCycle ||
             inputs.exists(g.expand.inDegree(_) > 0) ||
             outputs.exists(g.expand.outDegree(_) > 0) ||
@@ -379,3 +378,81 @@ case class ReuseNonTerminalAcyclic[V, E](config: InOutGrammarOpConfig[V, E]) ext
     }
   }
 }
+
+case class SplitWireAddGate(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+    random.selectOpt(graph.edges).map {
+      case replacedEdge @ Edge(in, out) =>
+        val gate = Vertex(nextLabel(vertices))
+        val ein1 = Edge(in, gate)
+        val eout = Edge(gate, out)
+        val ein2 = if (random.r.nextBoolean) {
+          val additionalInput = random.select(vertices -- outputs -- depthFirstSearch(in, predecessors))
+          Some(Edge(additionalInput, gate))
+        } else None
+
+        val newGraph = graph.copy(
+          vertices = vertices + gate,
+          edges = edges - replacedEdge + ein1 + eout ++ ein2
+        )
+        newGraph
+    }
+  }
+}
+
+case class AddAcyclicWire(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+
+    def outCandidates(v: Vertex) = (vertices - v -- successors(v) -- depthFirstSearch(v, predecessors)).filter(inDegree(_) < 2)
+
+    // Only choose vertices that are not fully forwards connected (to all other successor nodes)
+    val vertexInCandidates = vertices.filter(v => outCandidates(v).nonEmpty)
+    random.selectOpt(vertexInCandidates).map { vertexIn =>
+      // TODO: performance: this was already computed in the filter before
+      val vertexOutCandidates = outCandidates(vertexIn)
+      val vertexOut = random.select(vertexOutCandidates)
+      val edge = Edge(vertexIn, vertexOut)
+      val newGraph = graph + edge
+      assert(!newGraph.hasCycle)
+      // TODO: prevent creating cycles in the first place -> in/out connectors?
+      // if (newGraph.hasCycle) None else Some(result)
+      newGraph
+    }
+  }
+}
+
+case class RemoveWire(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+
+    random.selectOpt(edges).map { edge =>
+      graph.copy(edges = edges - edge)
+    }
+  }
+}
+
+// case class MergeWiresRemoveGate(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+//   def apply(graph: Genotype): Option[Genotype] = {
+//     import graph._
+//     import config._
+//     random.selectOpt(graph.vertices -- inputs -- outputs).map {
+//       case removedGate =>
+//         val gate = Vertex(nextLabel(vertices))
+//         val ein1 = Edge(edge.in, gate)
+//         val eout = Edge(gate, edge.out)
+//         val additionalInput = random.select(vertices -- outputs -- depthFirstSearch(in, predecessors))
+//         val ein2 = Edge(additionalInput, gate)
+
+//         val newGraph = copy(
+//           vertices = vertices + gate,
+//           edges = edges - replacedEdge + ein1 + ein2 + eout
+//         )
+//         newGraph
+//     }
+//   }
+// }

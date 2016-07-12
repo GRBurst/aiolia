@@ -53,11 +53,29 @@ trait FeedForwardNetworkConfig extends NeuralNetworkGrammarOpConfig { config =>
     // 1 -> ReuseNonTerminalAcyclic(config) ::
     // 1 -> InlineNonTerminal(config) ::
     Nil
-  ).flatMap{ case (n, op) => List.fill(n)(op) }
+  ).flatMap { case (n, op) => List.fill(n)(op) }
 
   // override def afterMutationOp(g: Grammar[Double, Double]) = g.cleanup
   override def genotypeInvariant(grammar: Grammar[Double, Double]): Boolean = !grammar.expand.hasCycle &&
     inputs.forall(grammar.expand.inDegree(_) == 0) &&
     outputs.forall(grammar.expand.outDegree(_) == 0) &&
     (grammar.expand.vertices -- inputs -- outputs).forall(v => grammar.expand.inDegree(v) > 0 && grammar.expand.outDegree(v) > 0)
+}
+
+trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =>
+  val inputs: List[Vertex]
+  val outputs: List[Vertex]
+
+  val mutationOperators = (
+    1 -> AddAcyclicWire(config) ::
+    1 -> SplitWireAddGate(config) ::
+    1 -> RemoveWire(config) ::
+    // 1 -> MergeWiresRemoveGate(config) ::
+    Nil
+  ).flatMap { case (n, op) => List.fill(n)(op) }
+
+  override def genotypeInvariant(graph: Graph[Nothing, Nothing]): Boolean = !graph.hasCycle &&
+    inputs.forall(graph.inDegree(_) == 0) &&
+    outputs.forall(graph.outDegree(_) == 0) &&
+    (graph.vertices -- inputs).forall(v => (graph.inDegree(v) <= 2))
 }
