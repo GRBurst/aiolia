@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object CircuitDesign extends App {
   val ga = GeneticAlgorithm(CircuitDesignConfig())
-  ga.runFor(1000)
+  ga.runFor(100)
 }
 
 case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with CircuitConfig {
@@ -21,7 +21,7 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
   type Genotype = Graph[Nothing, Nothing]
   type Phenotype = Image
 
-  override val populationSize: Int = 200
+  override val populationSize: Int = 50
   override val tournamentSize = 3
   override def mutationCount(g: Genotype) = 2
 
@@ -44,13 +44,16 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
 
   def calculateFitness(g: Genotype, prefix: String): Double = {
     val circuit = Circuit(inputs, outputs, g)
-    examples.count {
-      case (in, shouldOut) =>
-        val result = circuit.compute(in)
-        // println(g, in.mkString(","), result.mkString(", "))
-        result sameElements shouldOut
-    } + 1.0 / g.numElements
+    var score: Int = 0
+    for ((in, shouldOut) <- examples) {
+      val computedOut = circuit.compute(in)
+      for ((computedOutBit, shouldOutBit) <- computedOut zip shouldOut) {
+        score += (if (computedOutBit == shouldOutBit) 1 else 0)
+      }
+    }
+    val circuitSizeScore = 1.0 / (g.vertices.size)
+    score + circuitSizeScore
   }
 
-  override def stats(best: Genotype) = s", el: ${best.numElements}, g: ${best}"
+  override def stats(best: Genotype) = s", gates: ${best.vertices.size - inputs.size}, e: ${best.edges.size}, g: ${best}"
 }
