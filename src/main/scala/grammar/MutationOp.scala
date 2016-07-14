@@ -401,24 +401,130 @@ case class SplitWireAddGate(config: CircuitConfig) extends MutationOp[Graph[Noth
   }
 }
 
-case class AddAcyclicWire(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+case class OutputXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+    random.selectOpt(outputs.filter(inDegree(_) > 0)).map { output =>
+      val replacedEdge: Edge = random.select(incomingEdges(output))
+      val signal = replacedEdge.in
+      val switch = random.select(vertices -- outputs - signal -- predecessors(output))
+
+      val autoId = AutoId(nextLabel(vertices))
+      // // sometimes invert switch
+      // val (switch, switchInverterGates, switchInverterWires) = if (random.r.nextBoolean) { (switchIn, Nil, Nil) } else {
+      //   val inverter = Vertex(autoId.nextId)
+      //   (inverter, inverter :: Nil, Edge(switchIn, inverter) :: Nil)
+      // }
+      val switchInverterWires = Nil
+      val switchInverterGates = Nil
+
+      // XOR (signal,switch) --> output
+      val gateA = Vertex(autoId.nextId)
+      val gateB = Vertex(autoId.nextId)
+      val gateC = Vertex(autoId.nextId)
+      val gateD = Vertex(autoId.nextId)
+      val xorGates = gateA :: gateB :: gateC :: gateD :: Nil
+      val xorWires = List(
+        Edge(signal, gateA),
+        Edge(signal, gateB),
+        Edge(switch, gateA),
+        Edge(switch, gateC),
+
+        Edge(gateA, gateB),
+        Edge(gateA, gateC),
+
+        Edge(gateB, gateD),
+        Edge(gateC, gateD),
+
+        Edge(gateD, output)
+      )
+
+      val newGraph = graph.copy(
+        vertices = vertices ++ switchInverterGates ++ xorGates,
+        edges = edges - replacedEdge ++ switchInverterWires ++ xorWires
+      )
+      newGraph
+    }
+  }
+}
+
+case class InnerXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+    random.selectOpt((vertices -- inputs -- outputs).filter(inDegree(_) > 0)).flatMap { output =>
+      val replacedEdge: Edge = random.select(incomingEdges(output))
+      val signal = replacedEdge.in
+      random.selectOpt(vertices -- outputs - signal -- predecessors(output) -- depthFirstSearch(signal, successors)) map { switch =>
+        val autoId = AutoId(nextLabel(vertices))
+
+        // sometimes invert switch
+        // val (switch, switchInverterGates, switchInverterWires) = if (random.r.nextBoolean) { (switchIn, Nil, Nil) } else {
+        //   val inverter = Vertex(autoId.nextId)
+        //   (inverter, inverter :: Nil, Edge(switchIn, inverter) :: Nil)
+        // }
+        val switchInverterWires = Nil
+        val switchInverterGates = Nil
+
+        // XOR (signal,switch) --> output
+        val gateA = Vertex(autoId.nextId)
+        val gateB = Vertex(autoId.nextId)
+        val gateC = Vertex(autoId.nextId)
+        val gateD = Vertex(autoId.nextId)
+        val xorGates = gateA :: gateB :: gateC :: gateD :: Nil
+        val xorWires = List(
+          Edge(signal, gateA),
+          Edge(signal, gateB),
+          Edge(switch, gateA),
+          Edge(switch, gateC),
+
+          Edge(gateA, gateB),
+          Edge(gateA, gateC),
+
+          Edge(gateB, gateD),
+          Edge(gateC, gateD),
+
+          Edge(gateD, output)
+        )
+
+        val newGraph = graph.copy(
+          vertices = vertices ++ switchInverterGates ++ xorGates,
+          edges = edges - replacedEdge ++ switchInverterWires ++ xorWires
+        )
+        newGraph
+      }
+    }
+  }
+}
+
+case class AddAcyclicWireOrInverter(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
   def apply(graph: Genotype): Option[Genotype] = {
     import graph._
     import config._
 
-    def outCandidates(v: Vertex) = (vertices -- inputs -- successors(v) -- depthFirstSearch(v, predecessors)).filter(inDegree(_) < 2)
+    val nonInputs = vertices -- inputs
+    def outCandidates(v: Vertex) = (nonInputs -- successors(v) -- depthFirstSearch(v, predecessors)).filter(inDegree(_) < 2)
 
     // Only choose vertices that are not fully forwards connected (to all other successor nodes)
-    val vertexInCandidates = (vertices -- outputs).filter(v => outCandidates(v).nonEmpty)
+    val vertexInCandidates = (vertices -- outputs).map(v => (v -> outCandidates(v))).filter(_._2.nonEmpty)
 
-    random.selectOpt(vertexInCandidates).map { vertexIn =>
-      // TODO: performance: this was already computed in the filter before:
-      val vertexOutCandidates = outCandidates(vertexIn) -- inputs
-      val vertexOut = random.select(vertexOutCandidates)
-      val edge = Edge(vertexIn, vertexOut)
-      val newGraph = graph + edge
-      assert(!newGraph.hasCycle)
-      newGraph
+    random.selectOpt(vertexInCandidates).map {
+      case (vertexIn, vertexOutCandidates) =>
+        val vertexOut = random.select(vertexOutCandidates)
+        val newGraph = if (random.r.nextBoolean) {
+          // just a wire
+          val wire = Edge(vertexIn, vertexOut)
+          graph + wire
+        } else {
+          // add inverter edge
+          val inverter = Vertex(nextLabel(vertices))
+          val wireIn = Edge(vertexIn, inverter)
+          val wireOut = Edge(inverter, vertexOut)
+          graph + inverter + wireIn + wireOut
+        }
+        assert(!newGraph.hasCycle)
+        newGraph
     }
   }
 }
@@ -431,6 +537,22 @@ case class RemoveWire(config: CircuitConfig) extends MutationOp[Graph[Nothing, N
     random.selectOpt(edges).map { edge =>
       graph.copy(edges = edges - edge)
     }
+  }
+}
+
+case class CleanUpCircuit(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+    //TODO: circuit simplification
+
+    val keepVertices = (outputs ++ inputs ++ outputs.flatMap(depthFirstSearch(_, predecessors))).toSet
+    val keepInnerVertices = keepVertices -- outputs -- inputs
+    val removeVertices = vertices -- keepVertices
+    val autoId = AutoId(nextLabel(inputs ++ outputs))
+    val vertexMap = (keepInnerVertices.map(_.label) zip autoId).toMap.withDefault((k: Label) => k)
+    val newGraph = (graph -- removeVertices) mapVertices vertexMap
+    Some(newGraph)
   }
 }
 

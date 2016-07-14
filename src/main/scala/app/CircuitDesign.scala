@@ -23,8 +23,8 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
   type Genotype = Graph[Nothing, Nothing]
   type Phenotype = Image
 
-  override val populationSize: Int = 100
-  override val tournamentSize = 3
+  override val populationSize: Int = 500
+  override val tournamentSize = 5
   override def mutationCount(g: Genotype) = random.nextInt(1, 4)
   // override def mutationCount(g: Genotype) = 1
 
@@ -32,7 +32,7 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
   override val parallel: Boolean = true
 
   val inputs = List.tabulate(128)(x => v(x))
-  val outputs = List.tabulate(128)(x => v(x + 128))
+  val outputs = List.tabulate(1)(x => v(x + 128))
   val baseGenotype = Graph(vertices = (inputs ++ outputs).toSet)
 
   def byteToBoolArray(inBytes: Array[Byte]): Array[Boolean] = {
@@ -53,18 +53,25 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
 
   def genExamples(n: Int) = {
     val random = new scala.util.Random(seed)
-    List.fill(n){
+    List.fill(n) {
       val in = new Array[Byte](16)
       random.nextBytes(in)
       val out = calcMd5Sum(in)
-      byteToBoolArray(in) -> byteToBoolArray(out)
+      byteToBoolArray(in) -> byteToBoolArray(out).take(1)
     }
   }
 
-  override def afterFitness(population: Population, fitness: (Genotype) => Double, generation: Int) {
-    val best = population.map(fitness).max
+  override def afterFitness(_population: Population, fitness: (Genotype) => Double, generation: Int) {
+
+    val population = _population.sortBy(fitness).reverse
+    Future {
+      val best = population.head
+      File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best, inputs, outputs))
+    }
+
+    val best = fitness(population.head)
     if (best >= examples.size * outputs.size) {
-      exampleCount += 1
+      exampleCount *= 2
       examples = genExamples(exampleCount)
     }
   }

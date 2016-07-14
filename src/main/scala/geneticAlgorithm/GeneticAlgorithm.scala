@@ -101,7 +101,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
 
   @tailrec final def mutate(genotype: Genotype, n: Int, prefix: String): Genotype = {
     assert(n >= 0)
-    assert(genotypeInvariant(genotype), genotypeInvariantError)
+    assert(genotypeInvariant(genotype), genotypeInvariantError(genotype))
 
     if (n == 0 || mutationOperators.isEmpty) afterMutationOp(genotype) //TODO: on every mutation op, or after all mutation ops?
     else {
@@ -123,7 +123,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
       val nextGenotype = result match {
         case Nil => genotype
         case List(mutatedGenotype) =>
-          assert(genotypeInvariant(mutatedGenotype), s"$genotypeInvariantError\nbefore ${operator.getClass.getName}:\n$genotype\nafter ${operator.getClass.getName}:\n${mutatedGenotype}")
+          assert(genotypeInvariant(mutatedGenotype), s"${genotypeInvariantError(mutatedGenotype)}\nbefore ${operator.getClass.getName}:\n$genotype\nafter ${operator.getClass.getName}:\n${mutatedGenotype}")
           mutatedGenotype
       }
       mutate(nextGenotype, n - 1, prefix)

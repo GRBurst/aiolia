@@ -6,7 +6,7 @@ import aiolia.util.Random
 trait MutationOpConfig[G] {
   val random: Random
   def genotypeInvariant(g: G): Boolean = true
-  def genotypeInvariantError: String = "Genotype invariant violated."
+  def genotypeInvariantError(g: G): String = "Genotype invariant violated."
 }
 
 trait DataGraphGrammarOpConfig[V, E] extends MutationOpConfig[Grammar[V, E]] {
@@ -67,9 +67,12 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
   val outputs: List[Vertex]
 
   val mutationOperators = (
-    1 -> AddAcyclicWire(config) ::
-    1 -> SplitWireAddGate(config) ::
-    1 -> RemoveWire(config) ::
+    20 -> OutputXor(config) ::
+    30 -> InnerXor(config) ::
+    10 -> AddAcyclicWireOrInverter(config) ::
+    10 -> SplitWireAddGate(config) ::
+    10 -> RemoveWire(config) ::
+    1 -> CleanUpCircuit(config) ::
     // 1 -> MergeWiresRemoveGate(config) ::
     Nil
   ).flatMap { case (n, op) => List.fill(n)(op) }
@@ -78,4 +81,8 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
     inputs.forall(graph.inDegree(_) == 0) &&
     outputs.forall(graph.outDegree(_) == 0) &&
     (graph.vertices -- inputs).forall(v => (graph.inDegree(v) <= 2))
+  override def genotypeInvariantError(graph: Graph[Nothing, Nothing]): String = s"""Genotype Invariant violated
+  inDegree != 0:  ${inputs.filterNot(graph.inDegree(_) == 0)}
+  outDegree != 0: ${outputs.filterNot(graph.outDegree(_) == 0)}
+  inDegree > 2:   ${(graph.vertices -- inputs).filterNot(v => (graph.inDegree(v) <= 2))}"""
 }
