@@ -61,12 +61,16 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
     }
   }
 
+  var nextDraw = Duration.Zero.fromNow
   override def afterFitness(_population: Population, fitness: (Genotype) => Double, generation: Int) {
 
     val population = _population.sortBy(fitness).reverse
-    Future {
-      val best = population.head
-      File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best, inputs, outputs))
+    if (nextDraw.timeLeft <= Duration.Zero) {
+      nextDraw = 3 seconds fromNow
+      Future {
+        val best = population.head
+        File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best, inputs, outputs))
+      }
     }
 
     val best = fitness(population.head)
