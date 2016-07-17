@@ -407,43 +407,12 @@ case class OutputXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, No
     import config._
     random.selectOpt(outputs.filter(inDegree(_) > 0)).map { output =>
       val replacedEdge: Edge = random.select(incomingEdges(output))
-      val signal = replacedEdge.in
-      val switch = random.select(vertices -- outputs - signal -- predecessors(output))
+      val signalA = replacedEdge.in
+      val signalB = random.select(vertices -- outputs - signalA -- predecessors(output))
 
-      val autoId = AutoId(nextLabel(vertices))
-      // // sometimes invert switch
-      // val (switch, switchInverterGates, switchInverterWires) = if (random.r.nextBoolean) { (switchIn, Nil, Nil) } else {
-      //   val inverter = Vertex(autoId.nextId)
-      //   (inverter, inverter :: Nil, Edge(switchIn, inverter) :: Nil)
-      // }
-      val switchInverterWires = Nil
-      val switchInverterGates = Nil
-
-      // XOR (signal,switch) --> output
-      val gateA = Vertex(autoId.nextId)
-      val gateB = Vertex(autoId.nextId)
-      val gateC = Vertex(autoId.nextId)
-      val gateD = Vertex(autoId.nextId)
-      val xorGates = gateA :: gateB :: gateC :: gateD :: Nil
-      val xorWires = List(
-        Edge(signal, gateA),
-        Edge(signal, gateB),
-        Edge(switch, gateA),
-        Edge(switch, gateC),
-
-        Edge(gateA, gateB),
-        Edge(gateA, gateC),
-
-        Edge(gateB, gateD),
-        Edge(gateC, gateD),
-
-        Edge(gateD, output)
-      )
-
-      val newGraph = graph.copy(
-        vertices = vertices ++ switchInverterGates ++ xorGates,
-        edges = edges - replacedEdge ++ switchInverterWires ++ xorWires
-      )
+      val newGraph = Gates.insertXOR(signalA, signalB, output, graph.copy(
+        edges = edges - replacedEdge
+      ))
       newGraph
     }
   }
@@ -455,44 +424,115 @@ case class InnerXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Not
     import config._
     random.selectOpt((vertices -- inputs -- outputs).filter(inDegree(_) > 0)).flatMap { output =>
       val replacedEdge: Edge = random.select(incomingEdges(output))
-      val signal = replacedEdge.in
-      random.selectOpt(vertices -- outputs - signal -- predecessors(output) -- depthFirstSearch(signal, successors)) map { switch =>
-        val autoId = AutoId(nextLabel(vertices))
-
-        // sometimes invert switch
-        // val (switch, switchInverterGates, switchInverterWires) = if (random.r.nextBoolean) { (switchIn, Nil, Nil) } else {
-        //   val inverter = Vertex(autoId.nextId)
-        //   (inverter, inverter :: Nil, Edge(switchIn, inverter) :: Nil)
-        // }
-        val switchInverterWires = Nil
-        val switchInverterGates = Nil
-
-        // XOR (signal,switch) --> output
-        val gateA = Vertex(autoId.nextId)
-        val gateB = Vertex(autoId.nextId)
-        val gateC = Vertex(autoId.nextId)
-        val gateD = Vertex(autoId.nextId)
-        val xorGates = gateA :: gateB :: gateC :: gateD :: Nil
-        val xorWires = List(
-          Edge(signal, gateA),
-          Edge(signal, gateB),
-          Edge(switch, gateA),
-          Edge(switch, gateC),
-
-          Edge(gateA, gateB),
-          Edge(gateA, gateC),
-
-          Edge(gateB, gateD),
-          Edge(gateC, gateD),
-
-          Edge(gateD, output)
-        )
-
-        val newGraph = graph.copy(
-          vertices = vertices ++ switchInverterGates ++ xorGates,
-          edges = edges - replacedEdge ++ switchInverterWires ++ xorWires
-        )
+      val signalA = replacedEdge.in
+      random.selectOpt(vertices -- outputs - signalA -- predecessors(output) -- depthFirstSearch(signalA, successors)) map { signalB =>
+        val newGraph = Gates.insertXOR(signalA, signalB, output, graph.copy(
+          edges = edges - replacedEdge
+        ))
         newGraph
+      }
+    }
+  }
+}
+
+object Gates {
+  def insert1MUX(signalA: Vertex, switch: Vertex, signalB: Vertex, output: Vertex, graph: Graph[Nothing, Nothing]): Graph[Nothing, Nothing] = {
+    import graph._
+    val autoId = AutoId(nextLabel(vertices))
+
+    // 1-MUX (signalA, switch, signalB) --> output
+    val gateA = Vertex(autoId.nextId)
+    val gateB = Vertex(autoId.nextId)
+    val gateC = Vertex(autoId.nextId)
+    val gateD = Vertex(autoId.nextId)
+    val muxGates = gateA :: gateB :: gateC :: gateD :: Nil
+    val muxWires = List(
+      Edge(switch, gateA),
+
+      Edge(signalA, gateB),
+      Edge(gateA, gateB),
+      Edge(switch, gateC),
+      Edge(signalB, gateC),
+
+      Edge(gateB, gateD),
+      Edge(gateC, gateD),
+
+      Edge(gateD, output)
+    )
+
+    graph.copy(
+      vertices = vertices ++ muxGates,
+      edges = edges ++ muxWires
+    )
+  }
+
+  def insertXOR(signalA: Vertex, signalB: Vertex, output: Vertex, graph: Graph[Nothing, Nothing]): Graph[Nothing, Nothing] = {
+    import graph._
+    val autoId = AutoId(nextLabel(vertices))
+
+    // XOR (signalA,signalB) --> output
+    val gateA = Vertex(autoId.nextId)
+    val gateB = Vertex(autoId.nextId)
+    val gateC = Vertex(autoId.nextId)
+    val gateD = Vertex(autoId.nextId)
+    val xorGates = gateA :: gateB :: gateC :: gateD :: Nil
+    val xorWires = List(
+      Edge(signalA, gateA),
+      Edge(signalA, gateB),
+      Edge(signalB, gateA),
+      Edge(signalB, gateC),
+
+      Edge(gateA, gateB),
+      Edge(gateA, gateC),
+
+      Edge(gateB, gateD),
+      Edge(gateC, gateD),
+
+      Edge(gateD, output)
+    )
+
+    graph.copy(
+      vertices = vertices ++ xorGates,
+      edges = edges ++ xorWires
+    )
+  }
+}
+
+case class ReplaceInnerWireBy1Mux(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+    val outputCandidates = (vertices -- inputs -- outputs).filter(inDegree(_) > 0)
+    random.selectOpt(outputCandidates).flatMap { output =>
+      val replacedEdge: Edge = random.select(incomingEdges(output))
+      val signalA = replacedEdge.in
+      val additionalInputCandidates = vertices -- outputs - signalA -- predecessors(output) -- depthFirstSearch(signalA, successors)
+      random.selectOpt(additionalInputCandidates, 2).map(_.toSeq) map {
+        case Seq(signalB, switch) =>
+          val newGraph = Gates.insert1MUX(signalA, switch, signalB, output, graph.copy(
+            edges = edges - replacedEdge
+          ))
+          newGraph
+      }
+    }
+  }
+}
+
+case class ReplaceOutputWireBy1Mux(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+  def apply(graph: Genotype): Option[Genotype] = {
+    import graph._
+    import config._
+    val outputCandidates = (outputs).filter(inDegree(_) > 0)
+    random.selectOpt(outputCandidates).flatMap { output =>
+      val replacedEdge: Edge = random.select(incomingEdges(output))
+      val signalA = replacedEdge.in
+      val additionalInputCandidates = vertices -- outputs - signalA -- predecessors(output) -- depthFirstSearch(signalA, successors)
+      random.selectOpt(additionalInputCandidates, 2).map(_.toSeq) map {
+        case Seq(signalB, switch) =>
+          val newGraph = Gates.insert1MUX(signalA, switch, signalB, output, graph.copy(
+            edges = edges - replacedEdge
+          ))
+          newGraph
       }
     }
   }
