@@ -2,6 +2,7 @@ package aiolia.grammar
 
 import aiolia.graph._
 import aiolia.util.AutoId
+import aiolia.util.{DOTExport, _}
 
 import scala.util.Try
 
@@ -408,7 +409,11 @@ case class OutputXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, No
     random.selectOpt(outputs.filter(inDegree(_) > 0)).map { output =>
       val replacedEdge: Edge = random.select(incomingEdges(output))
       val signalA = replacedEdge.in
-      val signalB = random.select(vertices -- outputs - signalA -- predecessors(output))
+      // println(s"signalA: $signalA")
+      // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
+      val signalBCandidates = vertices -- outputs - signalA
+      // println(s"signalBcand: $signalBCandidates")
+      val signalB = random.select(signalBCandidates)
 
       val newGraph = Gates.insertXOR(signalA, signalB, output, graph.copy(
         edges = edges - replacedEdge
@@ -425,7 +430,7 @@ case class InnerXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Not
     random.selectOpt((vertices -- inputs -- outputs).filter(inDegree(_) > 0)).flatMap { output =>
       val replacedEdge: Edge = random.select(incomingEdges(output))
       val signalA = replacedEdge.in
-      random.selectOpt(vertices -- outputs - signalA -- predecessors(output) -- depthFirstSearch(signalA, successors)) map { signalB =>
+      random.selectOpt(vertices -- outputs - signalA -- depthFirstSearch(signalA, successors)) map { signalB =>
         val newGraph = Gates.insertXOR(signalA, signalB, output, graph.copy(
           edges = edges - replacedEdge
         ))
@@ -506,7 +511,7 @@ case class ReplaceInnerWireBy1Mux(config: CircuitConfig) extends MutationOp[Grap
     random.selectOpt(outputCandidates).flatMap { output =>
       val replacedEdge: Edge = random.select(incomingEdges(output))
       val signalA = replacedEdge.in
-      val additionalInputCandidates = vertices -- outputs - signalA -- predecessors(output) -- depthFirstSearch(signalA, successors)
+      val additionalInputCandidates = vertices -- outputs - signalA -- depthFirstSearch(signalA, successors)
       random.selectOpt(additionalInputCandidates, 2).map(_.toSeq) map {
         case Seq(signalB, switch) =>
           val newGraph = Gates.insert1MUX(signalA, switch, signalB, output, graph.copy(
@@ -526,7 +531,7 @@ case class ReplaceOutputWireBy1Mux(config: CircuitConfig) extends MutationOp[Gra
     random.selectOpt(outputCandidates).flatMap { output =>
       val replacedEdge: Edge = random.select(incomingEdges(output))
       val signalA = replacedEdge.in
-      val additionalInputCandidates = vertices -- outputs - signalA -- predecessors(output) -- depthFirstSearch(signalA, successors)
+      val additionalInputCandidates = vertices -- outputs - signalA -- depthFirstSearch(signalA, successors)
       random.selectOpt(additionalInputCandidates, 2).map(_.toSeq) map {
         case Seq(signalB, switch) =>
           val newGraph = Gates.insert1MUX(signalA, switch, signalB, output, graph.copy(
@@ -581,18 +586,91 @@ case class RemoveWire(config: CircuitConfig) extends MutationOp[Graph[Nothing, N
 }
 
 case class CleanUpCircuit(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
-  def apply(graph: Genotype): Option[Genotype] = {
-    import graph._
-    import config._
-    //TODO: circuit simplification
 
-    val keepVertices = (outputs ++ inputs ++ outputs.flatMap(depthFirstSearch(_, predecessors))).toSet
-    val keepInnerVertices = keepVertices -- outputs -- inputs
-    val removeVertices = vertices -- keepVertices
+  def removeDoubleInversion(graph: Genotype): Genotype = {
+
+    // in --> inv1 --> inv2 --> out
+    // in --> out
+
+    // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
+    def isInverter(v: Vertex, g: Genotype): Boolean = g.inDegree(v) == 1
+
+    var currentGraph = graph
+
+    def findRemovableDoubleInversion(currentGraph: Genotype) = (for (
+      in <- currentGraph.vertices;
+      inv1 <- currentGraph.successors(in) if isInverter(inv1, currentGraph);
+      inv2 <- currentGraph.successors(inv1) if isInverter(inv2, currentGraph);
+      out <- currentGraph.successors(inv2) if currentGraph.outDegree(inv1) == 1 || currentGraph.outDegree(inv2) == 1
+    ) yield {
+      // println(s"double inversion: $in, $inv1, $inv2, $out:\n$graph")
+      (inv1, inv2, Edge(in, out))
+    }).headOption
+
+    var doubleInversion = findRemovableDoubleInversion(currentGraph)
+    while (doubleInversion.isDefined) {
+      val Some((inv1, inv2, addedEdge)) = doubleInversion
+      val removedInverters = Set(inv1, inv2).filter(currentGraph.outDegree(_) == 1)
+
+      // println(s"removing: $removedInverters, adding: $addedEdge")
+      currentGraph = currentGraph.copy(
+        vertices = currentGraph.vertices -- removedInverters,
+        edges = currentGraph.edges -- currentGraph.incidentEdges(removedInverters) + addedEdge
+      )
+      doubleInversion = findRemovableDoubleInversion(currentGraph)
+    }
+
+    // File.write("/tmp/currentgraph1.dot", DOTExport.toDOT(currentGraph))
+    // if (removedInverters.nonEmpty)
+    //   System.exit(0)
+    currentGraph
+  }
+
+  def removeIdenticalSuccessors(graph: Genotype): Genotype = {
+    import graph._
+    // (parentA, parentB) --> childX
+    // (parentA, parentB) --> childY
+    // remove childY connect all successors to start at childX
+
+    for (
+      parentA <- vertices;
+      childX <- successors(parentA);
+      parentB <- predecessors(childX) - parentA;
+      childY <- successors(parentB) - childX
+    ) {
+      println(s"identical successors: $parentA, $parentB, $childX, $childY:\n$graph")
+      File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
+      System.exit(0)
+      // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
+    }
+
+    graph
+  }
+
+  def remapVertexLabels(outputs: Seq[Vertex], inputs: Seq[Vertex], graph: Genotype): Genotype = {
+    import graph._
     val autoId = AutoId(nextLabel(inputs ++ outputs))
-    val vertexMap = (keepInnerVertices.map(_.label) zip autoId).toMap.withDefault((k: Label) => k)
-    val newGraph = (graph -- removeVertices) mapVertices vertexMap
-    Some(newGraph)
+    val vertexMap = ((vertices -- inputs -- outputs).map(_.label) zip autoId).toMap.withDefault(k => k)
+    graph mapVertices vertexMap
+  }
+
+  def removeUnusedCircuits(inputs: Seq[Vertex], outputs: Seq[Vertex], graph: Genotype): Genotype = {
+    import graph._
+    val keepVertices = (outputs ++ inputs ++ outputs.flatMap(depthFirstSearch(_, predecessors))).toSet
+    val removeVertices = vertices -- keepVertices
+    graph -- removeVertices
+  }
+
+  def apply(graph: Genotype): Option[Genotype] = {
+    import config._
+
+    // val simplified = remapVertexLabels(inputs, outputs, removeDoubleInversion(removeUnusedCircuits(inputs, outputs, graph)))
+    // removeIdenticalSuccessors(graph)
+    val graphX = removeUnusedCircuits(inputs, outputs, graph)
+    val graphA = removeDoubleInversion(graphX)
+    // val graphB = removeIdenticalSuccessors(graphA)
+    val graphC = remapVertexLabels(inputs, outputs, graphA)
+    Some(graphC)
   }
 }
 

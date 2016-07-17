@@ -67,14 +67,14 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
   val outputs: List[Vertex]
 
   val mutationOperators = (
-    10 -> OutputXor(config) ::
-    10 -> InnerXor(config) ::
-    10 -> ReplaceOutputWireBy1Mux(config) ::
-    10 -> ReplaceInnerWireBy1Mux(config) ::
+    20 -> OutputXor(config) ::
+    30 -> InnerXor(config) ::
+    20 -> ReplaceOutputWireBy1Mux(config) ::
+    30 -> ReplaceInnerWireBy1Mux(config) ::
     10 -> AddAcyclicWireOrInverter(config) ::
     10 -> SplitWireAddGate(config) ::
     10 -> RemoveWire(config) ::
-    1 -> CleanUpCircuit(config) ::
+    10 -> CleanUpCircuit(config) ::
     // 1 -> MergeWiresRemoveGate(config) ::
     Nil
   ).flatMap { case (n, op) => List.fill(n)(op) }
