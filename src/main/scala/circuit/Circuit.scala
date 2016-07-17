@@ -1,4 +1,4 @@
-package aiolia.neuralNetwork
+package aiolia.circuit
 
 import aiolia.graph._
 
@@ -8,7 +8,7 @@ object Circuit {
   }
 }
 
-class Circuit private (in: List[Vertex], out: List[Vertex], graph: Graph[Nothing, Nothing]) {
+class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: Graph[Nothing, Nothing]) {
   // Important for data indexing in neural network
   assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
 

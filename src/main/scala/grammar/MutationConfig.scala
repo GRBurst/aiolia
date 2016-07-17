@@ -74,8 +74,6 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
     10 -> AddAcyclicWireOrInverter(config) ::
     10 -> SplitWireAddGate(config) ::
     10 -> RemoveWire(config) ::
-    10 -> CleanUpCircuit(config) ::
-    // 1 -> MergeWiresRemoveGate(config) ::
     Nil
   ).flatMap { case (n, op) => List.fill(n)(op) }
 

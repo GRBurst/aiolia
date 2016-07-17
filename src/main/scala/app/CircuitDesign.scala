@@ -2,7 +2,7 @@ package aiolia.app
 
 import aiolia.geneticAlgorithm._
 import aiolia.grammar._
-import aiolia.neuralNetwork._
+import aiolia.circuit._
 import aiolia.util.{DOTExport, _}
 import aiolia.graph.DSL._
 import aiolia.graph.Graph

@@ -1,7 +1,7 @@
 package aiolia.test
 
 import aiolia.graph.DSL._
-import aiolia.neuralNetwork.Circuit
+import aiolia.circuit.Circuit
 import aiolia.test.Helpers._
 
 class CircuitSpec extends org.specs2.mutable.Specification {
