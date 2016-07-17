@@ -17,11 +17,6 @@ class Circuit private (in: List[Vertex], out: List[Vertex], graph: Graph[Nothing
 
   assert(!graph.hasCycle)
 
-  assert(
-    (graph.vertices -- in).forall(v => graph.inDegree(v) <= 2),
-    "Every result node needs to have max 2 inputs"
-  )
-
   import graph.{vertices => gates, edges => wires}
 
   private val computeInputs: Array[Label] = in.map(_.label).toArray
@@ -32,7 +27,6 @@ class Circuit private (in: List[Vertex], out: List[Vertex], graph: Graph[Nothing
     val a = new Array[Array[Label]](gates.size)
     for (g <- computeOrder) {
       a(g) = graph.incomingEdges(Vertex(g)).map { case Edge(pre, _) => pre.label }.toArray
-      assert(a(g).size <= 2)
     }
     a
   }

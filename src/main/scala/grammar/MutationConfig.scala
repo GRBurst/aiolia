@@ -79,10 +79,10 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
 
   override def genotypeInvariant(graph: Graph[Nothing, Nothing]): Boolean = !graph.hasCycle &&
     inputs.forall(graph.inDegree(_) == 0) &&
-    outputs.forall(graph.outDegree(_) == 0) &&
-    (graph.vertices -- inputs).forall(v => (graph.inDegree(v) <= 2))
+    outputs.forall(graph.outDegree(_) == 0)
+
   override def genotypeInvariantError(graph: Graph[Nothing, Nothing]): String = s"""Genotype Invariant violated
   inDegree != 0:  ${inputs.filterNot(graph.inDegree(_) == 0)}
   outDegree != 0: ${outputs.filterNot(graph.outDegree(_) == 0)}
-  inDegree > 2:   ${(graph.vertices -- inputs).filterNot(v => (graph.inDegree(v) <= 2))}"""
+  """
 }

@@ -504,7 +504,7 @@ case class AddAcyclicWireOrInverter(config: CircuitConfig) extends MutationOp[Gr
     import config._
 
     val nonInputs = vertices -- inputs
-    def outCandidates(v: Vertex) = (nonInputs -- successors(v) -- depthFirstSearch(v, predecessors)).filter(inDegree(_) < 2)
+    def outCandidates(v: Vertex) = (nonInputs -- successors(v) -- depthFirstSearch(v, predecessors))
 
     // Only choose vertices that are not fully forwards connected (to all other successor nodes)
     val vertexInCandidates = (vertices -- outputs).map(v => (v -> outCandidates(v))).filter(_._2.nonEmpty)
