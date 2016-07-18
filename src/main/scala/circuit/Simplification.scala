@@ -4,63 +4,27 @@ import aiolia.graph._
 import aiolia.util.{DOTExport, _}
 import scala.util.Try
 
-object Simplification {
+object Types {
   type NANDLogic = Graph[Nothing, Nothing]
-  private def nextLabel(it: Iterable[Vertex]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
+}
+import Types._
+
+object Simplify extends Simplification {
+  val simplifications: List[Simplification] = List(RemoveDoubleInversion)
 
   def simplify(in: List[Vertex], out: List[Vertex], graph: NANDLogic): NANDLogic = {
-    remapVertexLabels(in, out, removeDoubleInversion(graph))
+    simplifications.toStream.flatMap(s => s(in, out, graph)).headOption match {
+      case Some(simplifiedGraph) => simplify(in, out, simplifiedGraph)
+      case None => remapVertexLabels(in, out, graph)
+    }
   }
 
-  def removeDoubleInversion(graph: NANDLogic): NANDLogic = {
-
-    // in --> inv1 --> inv2 --> out
-    // in --> out
-
-    // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
-    def isInverter(v: Vertex, g: NANDLogic): Boolean = g.inDegree(v) == 1
-
-    def findRemovableDoubleInversion(currentGraph: NANDLogic) = {
-      import currentGraph._
-      (for (
-        in <- vertices.toStream;
-        inv1 <- successors(in) if isInverter(inv1, currentGraph);
-        inv2 <- successors(inv1) if isInverter(inv2, currentGraph);
-        out <- successors(inv2) if outDegree(inv1) == 1 || outDegree(inv2) == 1
-      ) yield {
-        // println(s"double inversion: $in, $inv1, $inv2, $out:\n$graph")
-        if (outDegree(inv1) == 1 && outDegree(inv2) == 1) {
-          (Set(inv1, inv2), Edge(in, out) :: Nil)
-        } else if (outDegree(inv2) == 1) {
-          assert(outDegree(inv1) > 1)
-          (Set(inv2), Edge(inv1, out) :: Edge(in, out) :: Nil)
-        } else {
-          assert(outDegree(inv1) == 1)
-          assert(outDegree(inv2) > 1)
-          (Set(inv1, inv2), successors(inv2).map(o => Edge(in, o)))
-        }
-      }).headOption
-    }
-
-    var currentGraph = graph
-    var doubleInversion = findRemovableDoubleInversion(currentGraph)
-    while (doubleInversion.isDefined) {
-      val g = currentGraph
-      import g._
-
-      val Some((removedInverters, addedEdges)) = doubleInversion
-      // println(s"removing: $removedInverters, adding: $addedEdges")
-      currentGraph = copy(
-        vertices = vertices -- removedInverters,
-        edges = edges -- incidentEdges(removedInverters) ++ addedEdges
-      )
-      doubleInversion = findRemovableDoubleInversion(currentGraph)
-    }
-
-    // File.write("/tmp/currentgraph1.dot", DOTExport.toDOT(currentGraph))
-    // if (removedInverters.nonEmpty)
-    //   System.exit(0)
-    currentGraph
+  def apply(in: List[Vertex], out: List[Vertex], graph: NANDLogic): Option[NANDLogic] = {
+    val simplified = simplify(in, out, graph)
+    if (simplified == graph)
+      None
+    else
+      Some(simplified)
   }
 
   def removeIdenticalSuccessors(graph: NANDLogic): NANDLogic = {
@@ -84,6 +48,7 @@ object Simplification {
     graph
   }
 
+  private def nextLabel(it: Iterable[Vertex]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
   def remapVertexLabels(outputs: Seq[Vertex], inputs: Seq[Vertex], graph: NANDLogic): NANDLogic = {
     import graph._
     val autoId = AutoId(nextLabel(inputs ++ outputs))
@@ -96,5 +61,60 @@ object Simplification {
     val keepVertices = (outputs ++ inputs ++ outputs.flatMap(depthFirstSearch(_, predecessors))).toSet
     val removeVertices = vertices -- keepVertices
     graph -- removeVertices
+  }
+}
+
+case class GraphChange(
+  addedVertices: Iterable[Vertex] = Nil,
+  removedVertices: Iterable[Vertex] = Nil,
+  addedEdges: Iterable[Edge] = Nil,
+  removedEdges: Iterable[Edge] = Nil
+) {
+  def apply(graph: NANDLogic): NANDLogic = {
+    import graph._
+    assert((vertices intersect addedVertices.toSet).isEmpty)
+    graph.copy(
+      vertices = vertices -- removedVertices ++ addedVertices,
+      edges = edges -- removedEdges -- incidentEdges(removedVertices.toSet) ++ addedEdges
+    )
+  }
+}
+
+trait Simplification {
+  def apply(in: List[Vertex], out: List[Vertex], graph: NANDLogic): Option[NANDLogic]
+}
+
+object RemoveDoubleInversion extends Simplification {
+  def apply(in: List[Vertex], out: List[Vertex], graph: NANDLogic): Option[NANDLogic] = {
+    import graph._
+    def isInverter(v: Vertex): Boolean = inDegree(v) == 1
+    val changes = (for (
+      in <- vertices.toStream;
+      inv1 <- successors(in) if isInverter(inv1);
+      inv2 <- successors(inv1) if isInverter(inv2);
+      out <- successors(inv2) if outDegree(inv1) == 1 || outDegree(inv2) == 1
+    ) yield {
+      // println(s"double inversion: $in, $inv1, $inv2, $out:\n$graph")
+      if (outDegree(inv1) == 1 && outDegree(inv2) == 1) {
+        GraphChange(
+          removedVertices = Set(inv1, inv2),
+          addedEdges = Edge(in, out) :: Nil
+        )
+      } else if (outDegree(inv2) == 1) {
+        assert(outDegree(inv1) > 1)
+        GraphChange(
+          removedVertices = Set(inv2),
+          addedEdges = Edge(inv1, out) :: Edge(in, out) :: Nil
+        )
+      } else {
+        assert(outDegree(inv1) == 1)
+        assert(outDegree(inv2) > 1)
+        GraphChange(
+          removedVertices = Set(inv1, inv2),
+          addedEdges = successors(inv2).map(o => Edge(in, o))
+        )
+      }
+    }).headOption
+    changes.map(_.apply(graph))
   }
 }
