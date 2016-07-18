@@ -7,6 +7,11 @@ import scala.util.Try
 object Simplification {
   type NANDLogic = Graph[Nothing, Nothing]
   private def nextLabel(it: Iterable[Vertex]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
+
+  def simplify(in: List[Vertex], out: List[Vertex], graph: NANDLogic): NANDLogic = {
+    remapVertexLabels(in, out, removeDoubleInversion(graph))
+  }
+
   def removeDoubleInversion(graph: NANDLogic): NANDLogic = {
 
     // in --> inv1 --> inv2 --> out
@@ -15,27 +20,39 @@ object Simplification {
     // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
     def isInverter(v: Vertex, g: NANDLogic): Boolean = g.inDegree(v) == 1
 
+    def findRemovableDoubleInversion(currentGraph: NANDLogic) = {
+      import currentGraph._
+      (for (
+        in <- vertices.toStream;
+        inv1 <- successors(in) if isInverter(inv1, currentGraph);
+        inv2 <- successors(inv1) if isInverter(inv2, currentGraph);
+        out <- successors(inv2) if outDegree(inv1) == 1 || outDegree(inv2) == 1
+      ) yield {
+        // println(s"double inversion: $in, $inv1, $inv2, $out:\n$graph")
+        if (outDegree(inv1) == 1 && outDegree(inv2) == 1) {
+          (Set(inv1, inv2), Edge(in, out) :: Nil)
+        } else if (outDegree(inv2) == 1) {
+          assert(outDegree(inv1) > 1)
+          (Set(inv2), Edge(inv1, out) :: Edge(in, out) :: Nil)
+        } else {
+          assert(outDegree(inv1) == 1)
+          assert(outDegree(inv2) > 1)
+          (Set(inv1, inv2), successors(inv2).map(o => Edge(in, o)))
+        }
+      }).headOption
+    }
+
     var currentGraph = graph
-
-    def findRemovableDoubleInversion(currentGraph: NANDLogic) = (for (
-      in <- currentGraph.vertices;
-      inv1 <- currentGraph.successors(in) if isInverter(inv1, currentGraph);
-      inv2 <- currentGraph.successors(inv1) if isInverter(inv2, currentGraph);
-      out <- currentGraph.successors(inv2) if currentGraph.outDegree(inv1) == 1 || currentGraph.outDegree(inv2) == 1
-    ) yield {
-      // println(s"double inversion: $in, $inv1, $inv2, $out:\n$graph")
-      (inv1, inv2, Edge(in, out))
-    }).headOption
-
     var doubleInversion = findRemovableDoubleInversion(currentGraph)
     while (doubleInversion.isDefined) {
-      val Some((inv1, inv2, addedEdge)) = doubleInversion
-      val removedInverters = Set(inv1, inv2).filter(currentGraph.outDegree(_) == 1)
+      val g = currentGraph
+      import g._
 
-      // println(s"removing: $removedInverters, adding: $addedEdge")
-      currentGraph = currentGraph.copy(
-        vertices = currentGraph.vertices -- removedInverters,
-        edges = currentGraph.edges -- currentGraph.incidentEdges(removedInverters) + addedEdge
+      val Some((removedInverters, addedEdges)) = doubleInversion
+      // println(s"removing: $removedInverters, adding: $addedEdges")
+      currentGraph = copy(
+        vertices = vertices -- removedInverters,
+        edges = edges -- incidentEdges(removedInverters) ++ addedEdges
       )
       doubleInversion = findRemovableDoubleInversion(currentGraph)
     }

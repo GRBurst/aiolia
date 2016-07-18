@@ -8,8 +8,26 @@ import aiolia.circuit.Simplification._
 
 class CircuitSimplificationSpec extends org.specs2.mutable.Specification {
   "remove simple inversion" >> {
-    val c = Circuit(VL(0), VL(3), graph(V(0, 1, 2, 3), E(0 -> 1, 1 -> 2, 2 -> 3)))
-    removeDoubleInversion(c.graph) mustEqual graph(V(0, 3), E(0 -> 3))
+    val a = Circuit(VL(0), VL(1), graph(V(0, 1, 2, 3), E(0 -> 2, 2 -> 3, 3 -> 1)))
+    val b = Circuit(VL(0), VL(1), graph(V(0, 1), E(0 -> 1)))
+    testSimplification(a, b)
+  }
+
+  "only remove second inversion" >> {
+    val a = Circuit(VL(0), VL(1), graph(V(0, 1, 2, 3), E(0 -> 2, 2 -> 3, 2 -> 1, 3 -> 1)))
+    val b = Circuit(VL(0), VL(1), graph(V(0, 1, 2), E(0 -> 2, 0 -> 1, 2 -> 1)))
+    testSimplification(a, b)
+  }
+
+  "remove both inversions and reconnect" >> {
+    val a = Circuit(VL(0), VL(1), graph(V(0, 1, 2, 3, 4), E(0 -> 2, 2 -> 3, 3 -> 1, 3 -> 4, 4 -> 1)))
+    val b = Circuit(VL(0), VL(1), graph(V(0, 1, 2), E(0 -> 1, 0 -> 2, 2 -> 1)))
+    testSimplification(a, b)
+  }
+
+  def testSimplification(a: Circuit, b: Circuit) = {
+    sameLogic(a, b) must beTrue
+    simplify(a.in, a.out, a.graph) mustEqual b.graph
   }
 
   def sameLogic(circuitA: Circuit, circuitB: Circuit): Boolean = {
