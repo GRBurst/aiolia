@@ -10,12 +10,12 @@ object Circuit {
 
 class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: Graph[Nothing, Nothing]) {
   // Important for data indexing in neural network
-  assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices}")
+  assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices.toSeq.sortBy(_.label)}")
 
   assert(in.forall(graph.incomingEdges(_).isEmpty), "Input neurons can not have incoming edges")
   assert(out.forall(graph.outgoingEdges(_).isEmpty), "Output neurons can not have outgoing edges")
 
-  assert(!graph.hasCycle)
+  assert(!graph.hasCycle, "Graph must not have cycles")
 
   import graph.{vertices => gates, edges => wires}
 

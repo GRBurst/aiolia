@@ -402,7 +402,7 @@ case class SplitWireAddGate(config: CircuitConfig) extends MutationOp[Graph[Noth
   }
 }
 
-case class OutputXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+case class ReplaceOutputWireByXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
   def apply(graph: Genotype): Option[Genotype] = {
     import graph._
     import config._
@@ -423,7 +423,7 @@ case class OutputXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, No
   }
 }
 
-case class InnerXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
+case class ReplaceInnerWireByXor(config: CircuitConfig) extends MutationOp[Graph[Nothing, Nothing]] {
   def apply(graph: Genotype): Option[Genotype] = {
     import graph._
     import config._

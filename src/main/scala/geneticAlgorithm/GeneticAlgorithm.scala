@@ -22,8 +22,9 @@ trait Config[Genotype] extends MutationOpConfig[Genotype] {
   val baseGenotype: Genotype
   def calculateFitness(g: Genotype, prefix: String): Double
 
-  // TODO: post processing of genotype, eg: clean up isolated vertices
   val mutationOperators: List[(Genotype) => Option[Genotype]]
+
+  def genotypeCleanup(g: Genotype) = g
 
   val populationSize: Int = 30
   val tournamentSize = 4
@@ -50,6 +51,7 @@ class GeneticAlgorithm[Genotype, C <: Config[Genotype]](config: C) {
   def nextGeneration() {
     val genPrefix = s"[${"%4d" format generation}]"
     population = mutation(population, prefix = s"$genPrefix mutation: ")
+    population = population map genotypeCleanup
     fitness = calculateAllFitnesses(population, s"$genPrefix fitness: ")
     val best = population.maxBy(fitness)
 

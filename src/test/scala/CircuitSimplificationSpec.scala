@@ -2,6 +2,7 @@ package aiolia.test
 
 import aiolia.graph.DSL._
 import aiolia.test.Helpers._
+import aiolia.util.{DOTExport, _}
 
 import aiolia.circuit._
 
@@ -24,10 +25,19 @@ class CircuitSimplificationSpec extends org.specs2.mutable.Specification {
     testSimplification(a, b, RemoveDoubleInversion)
   }
 
+  "merge identical successors" >> {
+    val a = Circuit(VL(0), VL(1), graph(V(0, 1, 2, 3, 4, 5, 6), E(0 -> 2, 2 -> 3, 0 -> 4, 3 -> 5, 4 -> 5, 3 -> 6, 4 -> 6, 5 -> 1, 6 -> 1)))
+    val b = Circuit(VL(0), VL(1), graph(V(0, 1, 2, 3, 4, 5), E(0 -> 2, 2 -> 4, 0 -> 5, 4 -> 3, 5 -> 3, 3 -> 1)))
+    testSimplification(a, b, MergeIdenticalSuccessors)
+  }
+
   def testSimplification(a: Circuit, b: Circuit, s: Simplification) = {
     sameLogic(a, b) must beTrue
-    sameLogic(a, Circuit(a.in, a.out, Simplify.simplify(a.in, a.out, a.graph))) must beTrue
-    Simplify.remapVertexLabels(a.in, a.out, s(a.in, a.out, a.graph).get) mustEqual b.graph
+    val fullSimplified = Simplify.simplify(a.in, a.out, a.graph)
+    // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(a.graph, a.in, a.out))
+    // File.write("/tmp/currentgraph1.dot", DOTExport.toDOT(fullSimplified, a.in, a.out))
+    sameLogic(a, Circuit(a.in, a.out, fullSimplified)) must beTrue
+    Simplify.remapVertexLabels(a.in, a.out, s(a.in, a.out, a.graph).get).isIsomorphicTo(b.graph) must beTrue
   }
 
   def sameLogic(circuitA: Circuit, circuitB: Circuit): Boolean = {

@@ -10,12 +10,24 @@ object Types {
 import Types._
 
 object Simplify extends Simplification {
-  val simplifications: List[Simplification] = List(RemoveDoubleInversion)
+  val simplifications: List[Simplification] = List(RemoveDoubleInversion, MergeIdenticalSuccessors)
 
   def simplify(in: List[Vertex], out: List[Vertex], graph: NANDLogic): NANDLogic = {
     simplifications.toStream.flatMap(s => s(in, out, graph)).headOption match {
-      case Some(simplifiedGraph) => simplify(in, out, simplifiedGraph)
-      case None => remapVertexLabels(in, out, graph)
+      case Some(simplifiedGraph) =>
+        assert((simplifiedGraph.vertices intersect in.toSet) == in.toSet)
+        assert((simplifiedGraph.vertices intersect out.toSet) == out.toSet)
+        // println(s"found simplification: ${simplifiedGraph.vertices.size}")
+        // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph, in, out))
+        // File.write("/tmp/currentgraph1.dot", DOTExport.toDOT(simplifiedGraph, in, out))
+        assert { Circuit(in, out, remapVertexLabels(in, out, simplifiedGraph)); true }
+        simplify(in, out, simplifiedGraph)
+      case None =>
+        // println("remapping vertices")
+        // println(graph)
+        val ng = remapVertexLabels(in, out, graph)
+        assert { Circuit(in, out, ng); true }
+        ng
     }
   }
 
@@ -25,27 +37,6 @@ object Simplify extends Simplification {
       None
     else
       Some(simplified)
-  }
-
-  def removeIdenticalSuccessors(graph: NANDLogic): NANDLogic = {
-    import graph._
-    // (parentA, parentB) --> childX
-    // (parentA, parentB) --> childY
-    // remove childY connect all successors to start at childX
-
-    for (
-      parentA <- vertices;
-      childX <- successors(parentA);
-      parentB <- predecessors(childX) - parentA;
-      childY <- successors(parentB) - childX
-    ) {
-      println(s"identical successors: $parentA, $parentB, $childX, $childY:\n$graph")
-      File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
-      System.exit(0)
-      // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph))
-    }
-
-    graph
   }
 
   private def nextLabel(it: Iterable[Vertex]) = Try(it.maxBy(_.label).label + 1).getOrElse(0)
@@ -115,6 +106,31 @@ object RemoveDoubleInversion extends Simplification {
         )
       }
     }).headOption
+    changes.map(_.apply(graph))
+  }
+}
+
+object MergeIdenticalSuccessors extends Simplification {
+  def apply(in: List[Vertex], out: List[Vertex], graph: NANDLogic): Option[NANDLogic] = {
+    import graph._
+
+    // (parentA, parentB) --> childX
+    // (parentA, parentB) --> childY
+    // remove childY, move all successors to childX
+
+    val changes = (for (
+      parentA <- vertices.toStream;
+      childX <- successors(parentA) -- out if inDegree(childX) == 2;
+      parentB <- predecessors(childX) - parentA;
+      childY <- successors(parentB) -- out - childX - parentA if inDegree(childY) == 2 && (predecessors(childY) contains parentA)
+    ) yield {
+      // println(s"identical successors: $parentA, $parentB, $childX, $childY:\n$graph")
+      GraphChange(
+        removedVertices = childY :: Nil,
+        addedEdges = (successors(childY) - childX).map(v => Edge(childX, v))
+      )
+    }).headOption
+
     changes.map(_.apply(graph))
   }
 }

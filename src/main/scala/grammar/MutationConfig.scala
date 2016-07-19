@@ -67,9 +67,9 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
   val outputs: List[Vertex]
 
   val mutationOperators = (
-    20 -> OutputXor(config) ::
-    30 -> InnerXor(config) ::
+    20 -> ReplaceOutputWireByXor(config) ::
     20 -> ReplaceOutputWireBy1Mux(config) ::
+    30 -> ReplaceInnerWireByXor(config) ::
     30 -> ReplaceInnerWireBy1Mux(config) ::
     10 -> AddAcyclicWireOrInverter(config) ::
     10 -> SplitWireAddGate(config) ::
@@ -82,7 +82,7 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
     outputs.forall(graph.outDegree(_) == 0)
 
   override def genotypeInvariantError(graph: Graph[Nothing, Nothing]): String = s"""Genotype Invariant violated
-  inDegree != 0:  ${inputs.filterNot(graph.inDegree(_) == 0)}
+  inDegree != 0 : ${inputs.filterNot(graph.inDegree(_) == 0)}
   outDegree != 0: ${outputs.filterNot(graph.outDegree(_) == 0)}
   """
 }

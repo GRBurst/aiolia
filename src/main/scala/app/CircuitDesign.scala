@@ -15,7 +15,7 @@ import java.security.MessageDigest
 
 object CircuitDesign extends App {
   val ga = GeneticAlgorithm(CircuitDesignConfig())
-  ga.runFor(Duration.Inf)
+  ga.runFor(100)
 }
 
 case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with CircuitConfig {
@@ -23,9 +23,9 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
   type Genotype = Graph[Nothing, Nothing]
   type Phenotype = Image
 
-  override val populationSize: Int = 500
-  override val tournamentSize = 5
-  override def mutationCount(g: Genotype) = random.nextInt(1, 4)
+  override val populationSize: Int = 300
+  override val tournamentSize = 4
+  override def mutationCount(g: Genotype) = random.nextInt(1, 3)
   // override def mutationCount(g: Genotype) = 1
 
   val seed = 0
@@ -34,6 +34,7 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
   val inputs = List.tabulate(128)(x => v(x))
   val outputs = List.tabulate(1)(x => v(x + 128))
   val baseGenotype = Graph(vertices = (inputs ++ outputs).toSet)
+  override def genotypeCleanup(g: Genotype) = Simplify.simplify(inputs, outputs, g)
 
   def byteToBoolArray(inBytes: Array[Byte]): Array[Boolean] = {
     val outBools = new Array[Boolean](inBytes.size * 8)
@@ -63,7 +64,6 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
 
   var nextDraw = Duration.Zero.fromNow
   override def afterFitness(_population: Population, fitness: (Genotype) => Double, generation: Int) {
-
     val population = _population.sortBy(fitness).reverse
     if (nextDraw.timeLeft <= Duration.Zero) {
       nextDraw = 3 seconds fromNow
