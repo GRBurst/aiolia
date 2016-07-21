@@ -1,6 +1,7 @@
 package aiolia.circuit
 
 import aiolia.graph._
+import aiolia.util.Compiler
 
 object Circuit {
   def apply(in: List[Vertex], out: List[Vertex], graph: Graph[Nothing, Nothing]) = {
@@ -19,11 +20,11 @@ class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: G
 
   import graph.{vertices => gates, edges => wires}
 
-  private val computeInputs: Array[Label] = in.map(_.label).toArray
-  private val computeOutputs: Array[Label] = out.map(_.label).toArray
-  private val reachableFromOut: List[Vertex] = (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct
-  private val computeOrder: Array[Label] = ((graph.topologicalSort intersect reachableFromOut) diff in).map(_.label).toArray
-  private val computeIncomingWires: Array[Array[Label]] = {
+  private lazy val computeInputs: Array[Label] = in.map(_.label).toArray
+  private lazy val computeOutputs: Array[Label] = out.map(_.label).toArray
+  private lazy val reachableFromOut: List[Vertex] = (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct
+  private lazy val computeOrder: Array[Label] = ((graph.topologicalSort intersect reachableFromOut) diff in).map(_.label).toArray
+  private lazy val computeIncomingWires: Array[Array[Label]] = {
     val a = new Array[Array[Label]](gates.size)
     for (g <- computeOrder) {
       a(g) = graph.incomingEdges(Vertex(g)).map { case Edge(pre, _) => pre.label }.toArray
@@ -53,7 +54,37 @@ class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: G
     results
   }
 
+  private var compute_compiled: Option[(IndexedSeq[Boolean]) => Array[Boolean]] = None
+  def compile() {
+    val universe: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
+    import universe._
+
+    val nodes = graph.topologicalSort intersect (out flatMap { v => graph.depthFirstSearch(v, graph.predecessors) }).distinct
+    val node_code = nodes map { n =>
+      val outData = in.indexOf(n) match {
+        case i if i >= 0 => q"data($i)"
+        case -1 =>
+          graph.incomingEdges(n).toList match {
+            case Nil => q"false"
+            case es =>
+              val ins: List[Tree] = (es map { case e @ Edge(pre, _) => q"${TermName(s"v${pre.label}")}" })
+              val andIn = ins.reduce((a, b) => q"$a && $b")
+              q"!$andIn"
+          }
+      }
+      q"val ${TermName(s"v${n.label}")}:Boolean = $outData"
+    }
+
+    val result = out map { v => q"${TermName(s"v${v.label}")}" }
+
+    val code = q"(data:IndexedSeq[Boolean]) => {..$node_code;Array[Boolean](..$result)}"
+    // println(showCode(code))
+
+    compute_compiled = Some(Compiler[(IndexedSeq[Boolean]) => Array[Boolean]](code))
+  }
+
   def compute(data: Array[Boolean]): Array[Boolean] = {
+    compute_compiled.foreach { computeFunc => return computeFunc(data) }
     val results = computeIntermediateResults(data)
 
     // return Array of results of output vertices

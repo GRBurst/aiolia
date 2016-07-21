@@ -95,6 +95,9 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
 
   def calculateFitness(g: Genotype, prefix: String): Double = {
     val circuit = Circuit(inputs, outputs, g)
+    // println("compiling...")
+    // circuit.compile()
+    // println("evaluating...")
     var score: Int = 0
     for ((in, shouldOut) <- examples) {
       val computedOut = circuit.compute(in)
