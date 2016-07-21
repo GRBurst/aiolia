@@ -31,7 +31,7 @@ class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: G
     a
   }
 
-  def compute(data: Array[Boolean]): Array[Boolean] = {
+  def computeIntermediateResults(data: Array[Boolean]): Array[Boolean] = {
     // intermadiate results
     val results = new Array[Boolean](gates.size)
 
@@ -50,6 +50,11 @@ class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: G
       }
       results(n) = !tmp
     }
+    results
+  }
+
+  def compute(data: Array[Boolean]): Array[Boolean] = {
+    val results = computeIntermediateResults(data)
 
     // return Array of results of output vertices
     computeOutputs map results
