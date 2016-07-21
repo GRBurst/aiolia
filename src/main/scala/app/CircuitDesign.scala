@@ -13,6 +13,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.security.MessageDigest
 
+import boopickle.Default._
+
 object CircuitDesign extends App {
   val ga = GeneticAlgorithm(CircuitDesignConfig())
   ga.runFor(100)
@@ -33,7 +35,7 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
 
   val inputs = List.tabulate(128)(x => v(x))
   val outputs = List.tabulate(1)(x => v(x + 128))
-  val baseGenotype = Graph(vertices = (inputs ++ outputs).toSet)
+  val baseGenotype = pickleFromFile("bestCircuit.boo").getOrElse(Graph(vertices = (inputs ++ outputs).toSet))
   override def genotypeCleanup(g: Genotype) = Simplify.simplify(inputs, outputs, g)
 
   def byteToBoolArray(inBytes: Array[Byte]): Array[Boolean] = {
@@ -70,17 +72,46 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
       Future {
         val best = population.head
         File.write("/tmp/currentgraph.dot", DOTExport.toDOT(best, inputs, outputs))
+        pickleIntoFile(best, "bestCircuit.boo")
       }
     }
 
-    val best = fitness(population.head)
-    if (best >= examples.size * outputs.size) {
+    val bestFitness = fitness(population.head)
+    if (bestFitness >= examples.size * outputs.size) {
       exampleCount *= 2
       examples = genExamples(exampleCount)
     }
   }
 
   var exampleCount = 1
+  def pickleIntoFile(graph: Genotype, file: String) {
+    import java.io.File
+    import java.io.FileOutputStream
+    val channel = new FileOutputStream(new File(file), false).getChannel()
+    val buf = Pickle.intoBytes((graph.vertices, graph.edges))
+    channel.write(buf)
+    channel.close()
+  }
+
+  def pickleFromFile(file: String): Option[Genotype] = {
+    import java.io.File
+    import java.io.FileInputStream
+    import java.nio.ByteBuffer
+    val f = new File(file)
+    if (f.exists && !f.isDirectory) {
+      val fis = new FileInputStream(file)
+      val chan = fis.getChannel()
+      val size = chan.size
+      val buf = ByteBuffer.allocate(size.toInt)
+      chan.read(buf)
+      buf.rewind()
+      chan.close()
+      fis.close()
+      val (vertices, edges) = Unpickle[(Set[Vertex], Set[Edge])].fromBytes(buf)
+      Some(Graph(vertices, edges))
+    } else None
+  }
+
   var examples = genExamples(exampleCount)
   // val examples = (
   //   // Array(
