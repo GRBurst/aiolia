@@ -5,7 +5,7 @@ import aiolia.grammar._
 import aiolia.circuit._
 import aiolia.util.{DOTExport, _}
 import aiolia.graph.DSL._
-import aiolia.graph.Graph
+import aiolia.graph._
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -17,7 +17,7 @@ import boopickle.Default._
 
 object CircuitDesign extends App {
   val ga = GeneticAlgorithm(CircuitDesignConfig())
-  ga.runFor(100)
+  ga.runFor(Duration.Inf)
 }
 
 case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with CircuitConfig {
@@ -25,13 +25,13 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
   type Genotype = Graph[Nothing, Nothing]
   type Phenotype = Image
 
-  override val populationSize: Int = 300
+  override val populationSize: Int = 200
   override val tournamentSize = 4
-  override def mutationCount(g: Genotype) = random.nextInt(1, 3)
+  override def mutationCount(g: Genotype) = random.nextInt(1, 4)
   // override def mutationCount(g: Genotype) = 1
 
   val seed = 0
-  override val parallel: Boolean = true
+  override val parallel: Boolean = false
 
   val inputs = List.tabulate(128)(x => v(x))
   val outputs = List.tabulate(1)(x => v(x + 128))
@@ -83,7 +83,6 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
     }
   }
 
-  var exampleCount = 1
   def pickleIntoFile(graph: Genotype, file: String) {
     import java.io.File
     import java.io.FileOutputStream
@@ -112,7 +111,19 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
     } else None
   }
 
+  var exampleCount = 10240
   var examples = genExamples(exampleCount)
+  // def inputExamples(n: Int): Seq[Array[Boolean]] = {
+  //   assert(n >= 1)
+  //   if (n == 1) List(Array(false), Array(true))
+  //   else inputExamples(n - 1).map(false +: _) ++ inputExamples(n - 1).map(true +: _)
+  // }
+  // val examples = inputExamples(3).map { e =>
+  //   val a = e(0)
+  //   val b = e(1)
+  //   val c = e(2)
+  //   e -> Array(!(!(a && b) && !(a && c)))
+  // }
   // val examples = (
   //   // Array(
   //   Array(false, false) -> Array(false) ::

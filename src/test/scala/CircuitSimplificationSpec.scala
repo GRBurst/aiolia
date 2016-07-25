@@ -31,6 +31,12 @@ class CircuitSimplificationSpec extends org.specs2.mutable.Specification {
     testSimplification(a, b, MergeIdenticalSuccessors)
   }
 
+  "merge redundant inputs" >> {
+    val a = Circuit(VL(0, 1, 2), VL(3), graph(V(0, 1, 2, 3, 4, 5, 6, 7), E(0 -> 4, 1 -> 4, 0 -> 5, 2 -> 5, 4 -> 6, 5 -> 7, 6 -> 3, 7 -> 3)))
+    val b = Circuit(VL(0, 1, 2), VL(3), graph(V(0, 1, 2, 3, 4, 5), E(0 -> 4, 1 -> 4, 2 -> 4, 4 -> 5, 5 -> 3)))
+    testSimplification(a, b, MergeRedundantInputs)
+  }
+
   def testSimplification(a: Circuit, b: Circuit, s: Simplification) = {
     sameLogic(a, b) must beTrue
     val fullSimplified = Simplify.simplify(a.in, a.out, a.graph)

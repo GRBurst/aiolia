@@ -9,7 +9,7 @@ object Circuit {
   }
 }
 
-class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: Graph[Nothing, Nothing]) {
+final class Circuit private (val in: List[Vertex], val out: List[Vertex], val graph: Graph[Nothing, Nothing]) {
   // Important for data indexing in neural network
   assert((0 until graph.vertices.size).forall(graph.vertices contains Vertex(_)), s"vertices need to have labels 0..|vertices|\n${graph.vertices.toSeq.sortBy(_.label)}")
 

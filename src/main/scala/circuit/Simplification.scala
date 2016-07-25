@@ -10,25 +10,28 @@ object Types {
 import Types._
 
 object Simplify extends Simplification {
-  val simplifications: List[Simplification] = List(RemoveDoubleInversion, MergeIdenticalSuccessors)
+  val simplifications: List[Simplification] = List(RemoveDoubleInversion, MergeIdenticalSuccessors) //, MergeRedundantInputs)
 
   def simplify(in: List[Vertex], out: List[Vertex], graph: NANDLogic): NANDLogic = {
-    simplifications.toStream.flatMap(s => s(in, out, graph)).headOption match {
-      case Some(simplifiedGraph) =>
-        assert((simplifiedGraph.vertices intersect in.toSet) == in.toSet)
-        assert((simplifiedGraph.vertices intersect out.toSet) == out.toSet)
-        // println(s"found simplification: ${simplifiedGraph.vertices.size}")
-        // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph, in, out))
-        // File.write("/tmp/currentgraph1.dot", DOTExport.toDOT(simplifiedGraph, in, out))
-        assert { Circuit(in, out, remapVertexLabels(in, out, simplifiedGraph)); true }
-        simplify(in, out, simplifiedGraph)
-      case None =>
-        // println("remapping vertices")
-        // println(graph)
-        val ng = remapVertexLabels(in, out, graph)
-        assert { Circuit(in, out, ng); true }
-        ng
+    def recurse(in: List[Vertex], out: List[Vertex], graph: NANDLogic): NANDLogic = {
+      simplifications.toStream.flatMap(s => s(in, out, graph)).headOption match {
+        case Some(simplifiedGraph) =>
+          assert((simplifiedGraph.vertices intersect in.toSet) == in.toSet)
+          assert((simplifiedGraph.vertices intersect out.toSet) == out.toSet)
+          // println(s"found simplification: ${simplifiedGraph.vertices.size}")
+          // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph, in, out))
+          // File.write("/tmp/currentgraph1.dot", DOTExport.toDOT(simplifiedGraph, in, out))
+          assert { Circuit(in, out, remapVertexLabels(in, out, simplifiedGraph)); true }
+          recurse(in, out, simplifiedGraph)
+        case None =>
+          // println("remapping vertices")
+          // println(graph)
+          val ng = remapVertexLabels(in, out, graph)
+          assert { Circuit(in, out, ng); true }
+          ng
+      }
     }
+    recurse(in, out, removeUnusedCircuits(in, out, graph))
   }
 
   def apply(in: List[Vertex], out: List[Vertex], graph: NANDLogic): Option[NANDLogic] = {
@@ -85,7 +88,7 @@ object RemoveDoubleInversion extends Simplification {
       inv2 <- successors(inv1) if isInverter(inv2);
       out <- successors(inv2) if outDegree(inv1) == 1 || outDegree(inv2) == 1
     ) yield {
-      // println(s"double inversion: $in, $inv1, $inv2, $out:\n$graph")
+      // println(s"double inversion: $in, $inv1, $inv2, $out")
       if (outDegree(inv1) == 1 && outDegree(inv2) == 1) {
         GraphChange(
           removedVertices = Set(inv1, inv2),
@@ -124,11 +127,79 @@ object MergeIdenticalSuccessors extends Simplification {
       parentB <- predecessors(childX) - parentA;
       childY <- successors(parentB) -- out - childX - parentA if inDegree(childY) == 2 && (predecessors(childY) contains parentA)
     ) yield {
-      // println(s"identical successors: $parentA, $parentB, $childX, $childY:\n$graph")
+      // println(s"identical successors: $parentA, $parentB, $childX, $childY")
       GraphChange(
         removedVertices = childY :: Nil,
         addedEdges = (successors(childY) - childX).map(v => Edge(childX, v))
       )
+    }).headOption
+
+    changes.map(_.apply(graph))
+  }
+}
+
+object ForwardSplittedInput extends Simplification {
+  def apply(in: List[Vertex], out: List[Vertex], graph: NANDLogic): Option[NANDLogic] = {
+    import graph._
+
+    // !(!(a && b) && !(a && c))
+    // becomes:
+    // !(!(a && b) && !(a && c))
+
+    def isInverter(v: Vertex): Boolean = inDegree(v) == 1
+
+    val changes = (for (
+      a <- vertices.toStream;
+      and1 <- successors(a).toStream;
+      and2 <- (successors(a) - and1 -- successors(and1)).toStream;
+      inv1 <- successors(and1) - and2 if isInverter(inv1);
+      inv2 <- successors(and2) - and1 if isInverter(inv2) && inv1 != inv2;
+      d <- successors(inv1) if successors(inv2) contains d
+    ) yield {
+      println(s"redundant inputs: $a -> ($and1, $and2) -> ($inv1, $inv2) -> $d")
+      // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph, in, out))
+      val cs = predecessors(and2) -- predecessors(and1)
+      val change = GraphChange(
+        removedVertices = and2 :: inv2 :: Nil,
+        addedEdges = cs.map(c => Edge(c, and1))
+      )
+      println(s"change: $change")
+      change
+    }).headOption
+
+    changes.map(_.apply(graph))
+  }
+}
+
+object MergeRedundantInputs extends Simplification {
+  def apply(in: List[Vertex], out: List[Vertex], graph: NANDLogic): Option[NANDLogic] = {
+    import graph._
+
+    // (a && b1, b2, ...) && (a && c1, c2, ...)
+    // (a,b1,b2,...) --> and1 --> inv1 --> d
+    // (a,c1,c2,...) --> and2 --> inv2 --> d
+    // becomes:
+    // (a,b1,b2,c1,c2,...) --> and1 --> inv1 --> d
+    //
+    def isInverter(v: Vertex): Boolean = inDegree(v) == 1
+
+    val changes = (for (
+      a <- vertices.toStream;
+      and1 <- successors(a).toStream;
+      and2 <- (successors(a) - and1 -- successors(and1)).toStream;
+      inv1 <- successors(and1) - and2 if isInverter(inv1);
+      inv2 <- successors(and2) - and1 if isInverter(inv2) && inv1 != inv2;
+      d <- successors(inv1) if successors(inv2) contains d
+    ) yield {
+      println(s"redundant inputs: $a -> ($and1, $and2) -> ($inv1, $inv2) -> $d")
+      // File.write("/tmp/currentgraph.dot", DOTExport.toDOT(graph, in, out))
+      val cs = predecessors(and2) -- predecessors(and1)
+      val change = GraphChange(
+        removedVertices = and2 :: inv2 :: Nil,
+        addedEdges = cs.map(c => Edge(c, and1))
+      )
+      println(s"change: $change")
+      change
     }).headOption
 
     changes.map(_.apply(graph))
