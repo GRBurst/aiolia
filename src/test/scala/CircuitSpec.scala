@@ -17,7 +17,7 @@ class CircuitSpec extends org.specs2.mutable.Specification {
   }
 
   "single NAND gate" >> {
-    val c = Circuit(VL(0, 1), VL(2), graph(V(0, 1, 2), E(0 -> 2, 1 -> 2)))
+    val c = Circuit(VL(0, 1), VL(2), graph(V(0, 1, 2, 3), E(0 -> 3, 1 -> 3, 3 -> 2)))
     c.compute(Array(false, false)) mustEqual Array(true)
     c.compute(Array(false, true)) mustEqual Array(true)
     c.compute(Array(true, false)) mustEqual Array(true)
@@ -30,7 +30,7 @@ class CircuitSpec extends org.specs2.mutable.Specification {
   }
 
   "not gate" >> {
-    val c = Circuit(VL(0), VL(1), graph(V(0, 1), E(0 -> 1)))
+    val c = Circuit(VL(0), VL(1), graph(V(0, 1, 2), E(0 -> 2, 2 -> 1)))
     c.compute(Array(false)) mustEqual Array(true)
     c.compute(Array(true)) mustEqual Array(false)
     c.compile()
@@ -39,7 +39,7 @@ class CircuitSpec extends org.specs2.mutable.Specification {
   }
 
   "two gates" >> {
-    val c = Circuit(VL(0, 1), VL(3), graph(V(0, 1, 2, 3), E(0 -> 2, 1 -> 2, 2 -> 3, 0 -> 3)))
+    val c = Circuit(VL(0, 1), VL(3), graph(V(0, 1, 2, 3, 4), E(0 -> 2, 1 -> 2, 2 -> 4, 0 -> 4, 4 -> 3)))
     c.compute(Array(false, false)) mustEqual Array(true)
     c.compute(Array(false, true)) mustEqual Array(true)
     c.compute(Array(true, false)) mustEqual Array(false)
@@ -49,5 +49,12 @@ class CircuitSpec extends org.specs2.mutable.Specification {
     c.compute(Array(false, true)) mustEqual Array(true)
     c.compute(Array(true, false)) mustEqual Array(false)
     c.compute(Array(true, true)) mustEqual Array(true)
+  }
+
+  "insert subcircuit" >> {
+    val c = Circuit(VL(0, 1), VL(3), graph(V(0, 1, 2, 3, 4), E(0 -> 2, 1 -> 2, 2 -> 4, 0 -> 4, 4 -> 3)))
+    val sub = Circuit(VL(0, 1), VL(2), graph(V(0, 1, 2, 3), E(0 -> 3, 1 -> 3, 3 -> 2)))
+    c.insertSubCircuit(VL(0, 2), VL(4), sub) mustEqual Circuit(VL(0, 1), VL(3), graph(V(0, 1, 2, 3, 4, 5), E(0 -> 2, 1 -> 2, 2 -> 4, 0 -> 4, 4 -> 3,
+      0 -> 5, 2 -> 5, 5 -> 4)))
   }
 }

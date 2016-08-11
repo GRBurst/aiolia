@@ -79,7 +79,8 @@ trait CircuitConfig extends MutationOpConfig[Graph[Nothing, Nothing]] { config =
 
   override def genotypeInvariant(graph: Graph[Nothing, Nothing]): Boolean = !graph.hasCycle &&
     inputs.forall(graph.inDegree(_) == 0) &&
-    outputs.forall(graph.outDegree(_) == 0)
+    outputs.forall(graph.outDegree(_) == 0) &&
+    outputs.forall(graph.inDegree(_) <= 1)
 
   override def genotypeInvariantError(graph: Graph[Nothing, Nothing]): String = s"""Genotype Invariant violated
   inDegree != 0 : ${inputs.filterNot(graph.inDegree(_) == 0)}
