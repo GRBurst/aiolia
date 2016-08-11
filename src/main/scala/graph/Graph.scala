@@ -9,12 +9,12 @@ object Graph {
 }
 
 case class Graph[+V, +E](
-    vertices:     Set[Vertex]       = Set.empty,
-    edges:        Set[Edge]         = Set.empty,
-    vertexData:   Map[Vertex, V]    = Map.empty[Vertex, V],
-    edgeData:     Map[Edge, E]      = Map.empty[Edge, E],
-    nonTerminals: List[NonTerminal] = Nil,
-    connectors:   List[Vertex]      = Nil
+  vertices: Set[Vertex] = Set.empty,
+  edges: Set[Edge] = Set.empty,
+  vertexData: Map[Vertex, V] = Map.empty[Vertex, V],
+  edgeData: Map[Edge, E] = Map.empty[Edge, E],
+  nonTerminals: List[NonTerminal] = Nil,
+  connectors: List[Vertex] = Nil
 //TODO: order on List[NonTerminal] should not matter, especially on comparison. We probably need a "Bag" datastructure: https://github.com/nicolasstucki/multisets
 ) extends DirectedGraphLike {
 
@@ -80,7 +80,7 @@ case class Graph[+V, +E](
 
   def neighboursOverNonTerminals(v: Vertex): Set[Vertex] = {
     assert(vertices contains v)
-    nonTerminals.flatMap{
+    nonTerminals.flatMap {
       case NonTerminal(_, connectors) if connectors contains v => connectors
       case _ => Nil
     }.toSet - v
@@ -198,29 +198,34 @@ case class Graph[+V, +E](
     ???
   }
 
+  def insertSubGraph[V1 >: V, E1 >: E](connectors: Seq[Vertex], replacementConnectors: Seq[Vertex], replacement: Graph[V1, E1], autoId: AutoId): Graph[V1, E1] = {
+    def autoIdFor(v: Vertex): Label = autoId.nextId
+    // def autoIdFor(v: Vertex):Label = if(this.vertices.contains(v)) autoId.nextId else { autoId.setIfHigher(v.label); v.label }
+
+    val connectorMapping = (replacementConnectors.map(_.label) zip connectors.map(_.label)).toMap
+    val nonConnectorMapping = (replacement.vertices -- replacementConnectors).map(v => v.label -> autoIdFor(v)).toMap
+    val vertexMapping: Map[Label, Label] = nonConnectorMapping ++ connectorMapping
+
+    assert(vertexMapping.size == replacement.vertices.size)
+    val mappedReplacement = replacement.copy(connectors = Nil) mapVertices vertexMapping
+    this ++ mappedReplacement
+  }
+
   def replaceOne[V1 >: V, E1 >: E](nonTerminal: NonTerminal, replacement: Graph[V1, E1], autoId: AutoId): Graph[V1, E1] = {
     //TODO: optimization: replace first nonTerminal in graph
     // we have to remove the nonTerminal from graph, instead we could just use this.nonTerminals.tail
     assert(this.nonTerminals contains nonTerminal)
     assert(nonTerminal.connectors.size == replacement.connectors.size)
 
-    def autoIdFor(v: Vertex): Label = autoId.nextId
-    // def autoIdFor(v: Vertex):Label = if(this.vertices.contains(v)) autoId.nextId else { autoId.setIfHigher(v.label); v.label }
+    val newGraph = insertSubGraph(nonTerminal.connectors, replacement.connectors, replacement, autoId)
 
-    val connectorMapping = (replacement.connectors.map(_.label) zip nonTerminal.connectors.map(_.label)).toMap
-    val nonConnectorMapping = replacement.nonConnectors.map(v => v.label -> autoIdFor(v)).toMap
-    val vertexMapping: Map[Label, Label] = nonConnectorMapping ++ connectorMapping
-
-    assert(vertexMapping.size == replacement.vertices.size)
-    val mappedReplacement = replacement.copy(connectors = Nil) mapVertices vertexMapping
-
-    this.copy(nonTerminals = this.nonTerminals diff List(nonTerminal)) ++ mappedReplacement
+    newGraph.copy(nonTerminals = newGraph.nonTerminals diff List(nonTerminal))
   }
 
   override def toString = s"G(V(${vertices.toList.sortBy(_.label).mkString(", ")}), " +
     s"E(${edges.toList.sortBy(_.out.label).sortBy(_.in.label).mkString(", ")})" +
-    (if (vertexData.nonEmpty) s", {${vertexData.toList.sortBy(_._1.label).map{ case (v, d) => s"$v: $d" }.mkString(", ")}}" else "") +
-    (if (edgeData.nonEmpty) s", {${edgeData.toList.sortBy(_._1.out.label).sortBy(_._1.in.label).map{ case (Edge(in, out), d) => s"$in->$out: $d" }.mkString(", ")}}" else "") +
+    (if (vertexData.nonEmpty) s", {${vertexData.toList.sortBy(_._1.label).map { case (v, d) => s"$v: $d" }.mkString(", ")}}" else "") +
+    (if (edgeData.nonEmpty) s", {${edgeData.toList.sortBy(_._1.out.label).sortBy(_._1.in.label).map { case (Edge(in, out), d) => s"$in->$out: $d" }.mkString(", ")}}" else "") +
     (if (nonTerminals.nonEmpty) s", NTS(${nonTerminals.sortBy(_.connectors.headOption.map(_.label)).sortBy(_.label).mkString(", ")})" else "") +
     (if (connectors.nonEmpty) s", C(${connectors.mkString("-")})" else "") +
     ")"
