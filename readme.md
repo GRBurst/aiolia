@@ -19,8 +19,7 @@ $ sbt run
 
 Then look at `/tmp/population.png`.
 
-![Example population for image compression]
-(example_imagecompression_population.gif)
+![Example population for image compression](example_imagecompression_population.gif)
 
 The top left image is the target image.
 
@@ -40,8 +39,7 @@ $ sbt run
 It generates a `dot` graph at `/tmp/currentgraph.dot`.
 Convert it to svg using: `dot -Tsvg currentgraph.dot > currentgraph.svg`
 
-![Example XOR from NANDs]
-(example_circuit_xor.svg)
+![Example XOR from NANDs](example_circuit_xor.svg)
 
 Insight: The algorithm is able successfully synthesise a [minimal XOR from NAND gates](https://en.wikipedia.org/wiki/NAND_logic#XOR), but does not scale well to bigger problems. The search space seems too big.
 
@@ -56,5 +54,4 @@ $ sbt run
 # then choose aiolia.app.zoo.Zoo
 ```
 
-![Example Zoo]
-(example_zoo.gif)
+![Example Zoo](example_zoo.gif)
