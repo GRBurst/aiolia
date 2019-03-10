@@ -29,7 +29,7 @@ Insight: The generated image gets into the direction of the target image but get
 
 Design a circuit of [NAND gates](https://en.wikipedia.org/wiki/NAND_logic) to represent a boolean function. The boolean function is described by a set of examples.
 
-See (CircuitDesign.scala)[src/main/scala/app/CircuitDesign.scala].
+See [CircuitDesign.scala](src/main/scala/app/CircuitDesign.scala).
 
 ```
 $ sbt run
@@ -47,7 +47,7 @@ Insight: The algorithm is able successfully synthesise a [minimal XOR from NAND 
 
 On a 2D-Grid artificial creatures should compete for food to survive. Food is randomly placed on the grid over time. The creatures can walk across the grid and see what's around them. The consist of a [recurrent neural network](https://en.wikipedia.org/wiki/Recurrent_neural_network) which maps their `sight field` and `energy level` to actions like `move`, `replicate`, `fight`. At replication a mutation is applied to the grammar.
 
-See (LivingZoo.scala)[src/main/scala/app/zoo/LivingZoo.scala].
+See [LivingZoo.scala](src/main/scala/app/zoo/LivingZoo.scala).
 
 ```
 $ sbt run
