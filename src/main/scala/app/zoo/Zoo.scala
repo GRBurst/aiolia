@@ -11,7 +11,7 @@ class ZooConfig(
     val initialEnergy:     Double = 0.5,
     val walkEffort:        Double = 0.003,
     val thinkEffort:       Double = 0.0001,
-    val worldDimensions:   Vec2   = Vec2(120, 90) / 2
+    val worldDimensions:   Vec2   = Vec2(80, 80) / 2
 ) extends NeuralNetworkGrammarOpConfig { config =>
 
   val inputs = Brain.inputs

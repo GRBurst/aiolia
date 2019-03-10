@@ -33,9 +33,12 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
   val seed = 0
   override val parallel: Boolean = false
 
-  val inputs = List.tabulate(128)(x => v(x))
-  val outputs = List.tabulate(1)(x => v(x + 128))
-  val baseGenotype = pickleFromFile("bestCircuit.boo").getOrElse(Graph(vertices = (inputs ++ outputs).toSet))
+  // val inputs = List.tabulate(128)(x => v(x))
+  // val outputs = List.tabulate(1)(x => v(x + 128))
+  val inputs = VL(0,1)
+  val outputs = VL(2)
+  // val baseGenotype = pickleFromFile("bestCircuit.boo").getOrElse(Graph(vertices = (inputs ++ outputs).toSet))
+  val baseGenotype = Graph(vertices = (inputs ++ outputs).toSet)
   override def genotypeCleanup(g: Genotype) = Simplify.simplify(inputs, outputs, g)
 
   def byteToBoolArray(inBytes: Array[Byte]): Array[Boolean] = {
@@ -48,21 +51,21 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
     outBools
   }
 
-  def calcMd5Sum(inBytes: Array[Byte]): Array[Byte] = {
-    val md = MessageDigest.getInstance("MD5")
-    md.update(inBytes)
-    md.digest()
-  }
+  // def calcMd5Sum(inBytes: Array[Byte]): Array[Byte] = {
+  //   val md = MessageDigest.getInstance("MD5")
+  //   md.update(inBytes)
+  //   md.digest()
+  // }
 
-  def genExamples(n: Int) = {
-    val random = new scala.util.Random(seed)
-    List.fill(n) {
-      val in = new Array[Byte](16)
-      random.nextBytes(in)
-      val out = calcMd5Sum(in)
-      byteToBoolArray(in) -> byteToBoolArray(out).take(1)
-    }
-  }
+  // def genExamples(n: Int) = {
+  //   val random = new scala.util.Random(seed)
+  //   List.fill(n) {
+  //     val in = new Array[Byte](16)
+  //     random.nextBytes(in)
+  //     val out = calcMd5Sum(in)
+  //     byteToBoolArray(in) -> byteToBoolArray(out).take(1)
+  //   }
+  // }
 
   var nextDraw = Duration.Zero.fromNow
   override def afterFitness(_population: Population, fitness: (Genotype) => Double, generation: Int) {
@@ -76,11 +79,11 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
       }
     }
 
-    val bestFitness = fitness(population.head)
-    if (bestFitness >= examples.size * outputs.size) {
-      exampleCount *= 2
-      examples = genExamples(exampleCount)
-    }
+    // val bestFitness = fitness(population.head)
+    // if (bestFitness >= examples.size * outputs.size) {
+    //   exampleCount *= 2
+    //   examples = genExamples(exampleCount)
+    // }
   }
 
   def pickleIntoFile(graph: Genotype, file: String) {
@@ -111,29 +114,29 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
     } else None
   }
 
-  var exampleCount = 10240
-  var examples = genExamples(exampleCount)
-  // def inputExamples(n: Int): Seq[Array[Boolean]] = {
-  //   assert(n >= 1)
-  //   if (n == 1) List(Array(false), Array(true))
-  //   else inputExamples(n - 1).map(false +: _) ++ inputExamples(n - 1).map(true +: _)
-  // }
+  // var exampleCount = 10240
+  // var examples = genExamples(exampleCount)
+  def inputExamples(n: Int): Seq[Array[Boolean]] = {
+    assert(n >= 1)
+    if (n == 1) List(Array(false), Array(true))
+    else inputExamples(n - 1).map(false +: _) ++ inputExamples(n - 1).map(true +: _)
+  }
   // val examples = inputExamples(3).map { e =>
   //   val a = e(0)
   //   val b = e(1)
   //   val c = e(2)
   //   e -> Array(!(!(a && b) && !(a && c)))
   // }
-  // val examples = (
-  //   // Array(
-  //   Array(false, false) -> Array(false) ::
-  //   Array(false, true) -> Array(true) ::
-  //   Array(true, false) -> Array(true) ::
-  //   Array(true, true) -> Array(false) ::
-  //   // Array(true) -> Array(false) ::
-  //   // Array(false) -> Array(true) ::
-  //   Nil
-  // )
+  val examples = (
+    // Array(
+    Array(false, false) -> Array(false) ::
+    Array(false, true) -> Array(true) ::
+    Array(true, false) -> Array(true) ::
+    Array(true, true) -> Array(false) ::
+    // Array(true) -> Array(false) ::
+    // Array(false) -> Array(true) ::
+    Nil
+  )
 
   def calculateFitness(g: Genotype, prefix: String): Double = {
     val circuit = Circuit(inputs, outputs, g)
@@ -151,5 +154,6 @@ case class CircuitDesignConfig() extends Config[Graph[Nothing, Nothing]] with Ci
     (score + circuitSizeScore)
   }
 
-  override def stats(best: Genotype) = s"/ ${(examples.size * outputs.size)}[$exampleCount], gates: ${best.vertices.size - inputs.size}, e: ${best.edges.size}"
+  // override def stats(best: Genotype) = s"/ ${(examples.size * outputs.size)}[$exampleCount], gates: ${best.vertices.size - inputs.size}, e: ${best.edges.size}"
+  override def stats(best: Genotype) = s"/ ${(examples.size * outputs.size)}, gates: ${best.vertices.size - inputs.size}, e: ${best.edges.size}"
 }
